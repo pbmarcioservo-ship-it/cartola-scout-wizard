@@ -13,6 +13,7 @@ export function AtletasView() {
   const [search, setSearch] = useState('');
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
+  const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
   const { data: mercadoData, isLoading, error } = useMercado();
 
