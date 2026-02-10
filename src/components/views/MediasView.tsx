@@ -96,9 +96,10 @@ export function MediasView() {
               <div 
                 key={atleta.atleta_id}
                 className={cn(
-                  'flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors',
+                  'flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer',
                   idx < 3 && 'bg-primary/5'
                 )}
+                onClick={() => setSelectedAtleta(atleta)}
               >
                 <div className="w-10 text-center">
                   {idx < 3 ? (
