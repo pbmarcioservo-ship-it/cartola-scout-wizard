@@ -2,14 +2,17 @@ import { useState, useMemo } from 'react';
 import { FilterBar } from '@/components/FilterBar';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, POSICOES } from '@/hooks/useCartolaData';
 import { PosicaoFilter } from '@/types/cartola';
 import { AlertCircle, Medal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CartolaAtleta } from '@/lib/cartola-api';
 
 export function MediasView() {
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
   const [time, setTime] = useState('todos');
+  const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
   const { data: mercadoData, isLoading, error } = useMercado();
 
@@ -93,9 +96,10 @@ export function MediasView() {
               <div 
                 key={atleta.atleta_id}
                 className={cn(
-                  'flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors',
+                  'flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors cursor-pointer',
                   idx < 3 && 'bg-primary/5'
                 )}
+                onClick={() => setSelectedAtleta(atleta)}
               >
                 <div className="w-10 text-center">
                   {idx < 3 ? (
@@ -138,6 +142,14 @@ export function MediasView() {
           })}
         </div>
       </div>
+
+      <PlayerDetailModal
+        atleta={selectedAtleta}
+        clube={selectedAtleta ? clubes[selectedAtleta.clube_id] : undefined}
+        clubes={clubes}
+        open={!!selectedAtleta}
+        onOpenChange={(open) => !open && setSelectedAtleta(null)}
+      />
     </div>
   );
 }

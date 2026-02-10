@@ -2,15 +2,18 @@ import { useState, useMemo } from 'react';
 import { FilterBar } from '@/components/FilterBar';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, POSICOES, STATUS_ATLETA } from '@/hooks/useCartolaData';
 import { PosicaoFilter } from '@/types/cartola';
 import { AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CartolaAtleta } from '@/lib/cartola-api';
 
 export function AtletasView() {
   const [search, setSearch] = useState('');
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
+  const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
   const { data: mercadoData, isLoading, error } = useMercado();
 
@@ -104,9 +107,10 @@ export function AtletasView() {
                 <tr 
                   key={atleta.atleta_id} 
                   className={cn(
-                    'border-b border-border hover:bg-muted/30 transition-colors',
+                    'border-b border-border hover:bg-muted/30 transition-colors cursor-pointer',
                     idx % 2 === 0 ? 'bg-card' : 'bg-muted/10'
                   )}
+                  onClick={() => setSelectedAtleta(atleta)}
                 >
                   <td className="p-3">
                     <div className="flex items-center gap-3">
@@ -181,6 +185,14 @@ export function AtletasView() {
           </div>
         )}
       </div>
+
+      <PlayerDetailModal
+        atleta={selectedAtleta}
+        clube={selectedAtleta ? clubes[selectedAtleta.clube_id] : undefined}
+        clubes={clubes}
+        open={!!selectedAtleta}
+        onOpenChange={(open) => !open && setSelectedAtleta(null)}
+      />
     </div>
   );
 }

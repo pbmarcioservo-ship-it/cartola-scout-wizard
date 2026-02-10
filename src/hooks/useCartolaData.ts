@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { cartolaApi, CartolaMercado, CartolaAtletasPontuados, CartolaRodada, CartolaClube, CartolaPartida } from '@/lib/cartola-api';
 
 export function useMercado() {
   return useQuery<CartolaMercado>({
     queryKey: ['cartola', 'mercado'],
     queryFn: () => cartolaApi.getMercado(),
-    staleTime: 1000 * 60 * 5, // 5 minutos
+    staleTime: 1000 * 60 * 5,
     refetchInterval: 1000 * 60 * 5,
   });
 }
@@ -14,7 +14,7 @@ export function usePontuados() {
   return useQuery<CartolaAtletasPontuados>({
     queryKey: ['cartola', 'pontuados'],
     queryFn: () => cartolaApi.getPontuados(),
-    staleTime: 1000 * 60 * 2, // 2 minutos
+    staleTime: 1000 * 60 * 2,
     refetchInterval: 1000 * 60 * 2,
   });
 }
@@ -39,8 +39,30 @@ export function useClubes() {
   return useQuery<Record<string, CartolaClube>>({
     queryKey: ['cartola', 'clubes'],
     queryFn: () => cartolaApi.getClubes(),
-    staleTime: 1000 * 60 * 60, // 1 hora
+    staleTime: 1000 * 60 * 60,
   });
+}
+
+// Busca pontuados das últimas N rodadas
+export function useHistoricoRodadas(rodadaAtual: number | undefined, numRodadas: number = 7) {
+  const rodadas = rodadaAtual
+    ? Array.from({ length: numRodadas }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0)
+    : [];
+
+  const queries = useQueries({
+    queries: rodadas.map(rodada => ({
+      queryKey: ['cartola', 'pontuados-rodada', rodada],
+      queryFn: () => cartolaApi.getPontuadosRodada(rodada),
+      staleTime: 1000 * 60 * 30, // 30 min cache for historical data
+      enabled: !!rodadaAtual,
+    })),
+  });
+
+  return {
+    data: queries.map((q, i) => ({ rodada: rodadas[i], data: q.data })),
+    isLoading: queries.some(q => q.isLoading),
+    isError: queries.some(q => q.isError),
+  };
 }
 
 // Posições do Cartola
