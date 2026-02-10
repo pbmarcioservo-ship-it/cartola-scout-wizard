@@ -178,4 +178,13 @@ export const cartolaApi = {
     if (error) throw error;
     return data;
   },
+
+  // Busca pontuados de uma rodada específica
+  async getPontuadosRodada(rodada: number): Promise<CartolaAtletasPontuados> {
+    const { data, error } = await supabase.functions.invoke('cartola-api', {
+      body: { endpoint: 'pontuados-rodada', rodada: String(rodada) },
+    });
+    if (error) throw error;
+    return data;
+  },
 };
