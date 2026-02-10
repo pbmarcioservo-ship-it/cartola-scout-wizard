@@ -107,9 +107,10 @@ export function AtletasView() {
                 <tr 
                   key={atleta.atleta_id} 
                   className={cn(
-                    'border-b border-border hover:bg-muted/30 transition-colors',
+                    'border-b border-border hover:bg-muted/30 transition-colors cursor-pointer',
                     idx % 2 === 0 ? 'bg-card' : 'bg-muted/10'
                   )}
+                  onClick={() => setSelectedAtleta(atleta)}
                 >
                   <td className="p-3">
                     <div className="flex items-center gap-3">
