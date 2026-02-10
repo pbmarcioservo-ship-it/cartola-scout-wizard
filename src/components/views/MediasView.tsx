@@ -142,6 +142,14 @@ export function MediasView() {
           })}
         </div>
       </div>
+
+      <PlayerDetailModal
+        atleta={selectedAtleta}
+        clube={selectedAtleta ? clubes[selectedAtleta.clube_id] : undefined}
+        clubes={clubes}
+        open={!!selectedAtleta}
+        onOpenChange={(open) => !open && setSelectedAtleta(null)}
+      />
     </div>
   );
 }
