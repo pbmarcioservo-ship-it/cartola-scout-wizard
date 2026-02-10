@@ -59,7 +59,7 @@ serve(async (req) => {
     }
 
     // Add rodada param if provided
-    if (rodada && endpoint === 'partidas') {
+    if (rodada && (endpoint === 'partidas' || endpoint === 'pontuados-rodada')) {
       apiPath = `${apiPath}/${rodada}`;
     }
 
