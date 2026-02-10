@@ -49,19 +49,32 @@ export function useHistoricoRodadas(rodadaAtual: number | undefined, numRodadas:
     ? Array.from({ length: numRodadas }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0)
     : [];
 
-  const queries = useQueries({
+  const pontuadosQueries = useQueries({
     queries: rodadas.map(rodada => ({
       queryKey: ['cartola', 'pontuados-rodada', rodada],
       queryFn: () => cartolaApi.getPontuadosRodada(rodada),
-      staleTime: 1000 * 60 * 30, // 30 min cache for historical data
+      staleTime: 1000 * 60 * 30,
+      enabled: !!rodadaAtual,
+    })),
+  });
+
+  const partidasQueries = useQueries({
+    queries: rodadas.map(rodada => ({
+      queryKey: ['cartola', 'partidas', rodada],
+      queryFn: () => cartolaApi.getPartidas(rodada),
+      staleTime: 1000 * 60 * 30,
       enabled: !!rodadaAtual,
     })),
   });
 
   return {
-    data: queries.map((q, i) => ({ rodada: rodadas[i], data: q.data })),
-    isLoading: queries.some(q => q.isLoading),
-    isError: queries.some(q => q.isError),
+    data: rodadas.map((rodada, i) => ({
+      rodada,
+      data: pontuadosQueries[i].data,
+      partidas: partidasQueries[i].data,
+    })),
+    isLoading: pontuadosQueries.some(q => q.isLoading) || partidasQueries.some(q => q.isLoading),
+    isError: pontuadosQueries.some(q => q.isError) || partidasQueries.some(q => q.isError),
   };
 }
 
