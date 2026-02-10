@@ -128,19 +128,20 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
       .slice(0, 20);
   }, [atleta, historico]);
 
-  if (!atleta) return null;
-  const posicaoInfo = POSICOES[atleta.posicao_id];
+  const posicaoInfo = atleta ? POSICOES[atleta.posicao_id] : null;
 
   // Aggregate athlete's total scouts
   const totalScouts = useMemo(() => {
     const totals: Record<string, number> = {};
-    if (atleta.scout) {
+    if (atleta?.scout) {
       for (const [k, v] of Object.entries(atleta.scout)) {
         if (v) totals[k] = (totals[k] || 0) + v;
       }
     }
     return totals;
   }, [atleta]);
+
+  if (!atleta) return null;
 
   const positiveScouts = Object.entries(totalScouts).filter(([k]) => SCOUT_LABELS[k]?.positive);
   const negativeScouts = Object.entries(totalScouts).filter(([k]) => !SCOUT_LABELS[k]?.positive);
