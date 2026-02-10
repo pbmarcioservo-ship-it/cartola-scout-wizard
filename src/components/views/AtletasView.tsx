@@ -2,10 +2,12 @@ import { useState, useMemo } from 'react';
 import { FilterBar } from '@/components/FilterBar';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, POSICOES, STATUS_ATLETA } from '@/hooks/useCartolaData';
 import { PosicaoFilter } from '@/types/cartola';
 import { AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CartolaAtleta } from '@/lib/cartola-api';
 
 export function AtletasView() {
   const [search, setSearch] = useState('');
