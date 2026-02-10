@@ -12,6 +12,7 @@ import { CartolaAtleta } from '@/lib/cartola-api';
 export function MediasView() {
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
   const [time, setTime] = useState('todos');
+  const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
   const { data: mercadoData, isLoading, error } = useMercado();
 
