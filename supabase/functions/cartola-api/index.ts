@@ -19,6 +19,7 @@ const endpoints: Record<string, CartolaEndpoint> = {
   'rodada': { path: '/mercado/status', description: 'Status do mercado/rodada' },
   'clubes': { path: '/clubes', description: 'Lista de clubes' },
   'posicoes': { path: '/atletas/posicoes', description: 'Posições dos atletas' },
+  'pontuados-rodada': { path: '/atletas/pontuados', description: 'Pontuados de uma rodada específica' },
 };
 
 serve(async (req) => {
