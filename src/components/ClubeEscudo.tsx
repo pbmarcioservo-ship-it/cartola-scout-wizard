@@ -3,18 +3,20 @@ import { cn } from '@/lib/utils';
 
 interface ClubeEscudoProps {
   clube: CartolaClube;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   showName?: boolean;
 }
 
 const sizeClasses = {
+  xs: 'w-4 h-4',
   sm: 'w-5 h-5',
   md: 'w-8 h-8',
   lg: 'w-12 h-12',
 };
 
 export function ClubeEscudo({ clube, size = 'md', showName = false }: ClubeEscudoProps) {
-  const escudoUrl = size === 'sm' ? clube.escudos['30x30'] : 
+  const escudoUrl = size === 'xs' ? clube.escudos['30x30'] :
+                    size === 'sm' ? clube.escudos['30x30'] : 
                     size === 'md' ? clube.escudos['45x45'] : 
                     clube.escudos['60x60'];
 

@@ -216,10 +216,10 @@ export function CruzamentoView() {
         </table>
       </div>
 
-      {/* Tabela Visitantes */}
+      {/* Tabela Visitantes - Mandante CEDE (vermelho esquerda) vs Visitante CONQUISTA (verde direita) */}
       <div>
         <div className="bg-secondary text-secondary-foreground p-3 font-bold text-center rounded-t-lg text-sm">
-          📊 VISITANTE CONQUISTA ({scoutLabel} - {posicaoLabel}) vs MANDANTE CEDE — Últimas {ultimas} rodadas
+          📊 MANDANTE CEDE ({scoutLabel} - {posicaoLabel}) vs VISITANTE CONQUISTA — Últimas {ultimas} rodadas
         </div>
         <table className="w-full bg-card shadow-lg rounded-b-lg overflow-hidden">
           <tbody>
@@ -228,12 +228,12 @@ export function CruzamentoView() {
               const clubeVisitante = clubes[partida.clube_visitante_id];
               if (!clubeCasa || !clubeVisitante) return null;
 
-              const conquistaVal = mando === 'casa_fora' && statsPerClubByMando
-                ? (statsPerClubByMando.conquistaFora[partida.clube_visitante_id] || 0)
-                : (statsPerClub.conquista[partida.clube_visitante_id] || 0);
               const cedeVal = mando === 'casa_fora' && statsPerClubByMando
                 ? (statsPerClubByMando.cedeCasa[partida.clube_casa_id] || 0)
                 : (statsPerClub.cede[partida.clube_casa_id] || 0);
+              const conquistaVal = mando === 'casa_fora' && statsPerClubByMando
+                ? (statsPerClubByMando.conquistaFora[partida.clube_visitante_id] || 0)
+                : (statsPerClub.conquista[partida.clube_visitante_id] || 0);
 
               return (
                 <tr key={partida.partida_id} className="border-b border-border hover:bg-muted/30 transition-colors">
@@ -245,11 +245,11 @@ export function CruzamentoView() {
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
                     <div className="flex items-center justify-center gap-2">
-                      <ClubeEscudo clube={clubeVisitante} size="sm" />
-                      <span className="font-black text-xs">
-                        {clubeVisitante.abreviacao} x {clubeCasa.abreviacao}
-                      </span>
                       <ClubeEscudo clube={clubeCasa} size="sm" />
+                      <span className="font-black text-xs">
+                        {clubeCasa.abreviacao} x {clubeVisitante.abreviacao}
+                      </span>
+                      <ClubeEscudo clube={clubeVisitante} size="sm" />
                     </div>
                   </td>
                   <td className="w-[25%]">

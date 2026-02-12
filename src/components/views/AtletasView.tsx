@@ -13,26 +13,31 @@ export function AtletasView() {
   const [search, setSearch] = useState('');
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
+  const [status, setStatus] = useState('todos');
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
   const { data: mercadoData, isLoading, error } = useMercado();
+
+  // Build club options from API data
+  const clubeOptions = useMemo(() => {
+    if (!mercadoData?.clubes) return [];
+    return Object.values(mercadoData.clubes)
+      .sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [mercadoData]);
 
   const atletasFiltrados = useMemo(() => {
     if (!mercadoData?.atletas) return [];
 
     return mercadoData.atletas
       .filter(atleta => {
-        // Filtro de busca
         if (search && !atleta.apelido.toLowerCase().includes(search.toLowerCase())) {
           return false;
         }
         
-        // Filtro de time
         if (time !== 'todos' && atleta.clube_id !== Number(time)) {
           return false;
         }
         
-        // Filtro de posição
         if (posicao !== 'todos') {
           const posicaoId = posicao === 'goleiro' ? 1 :
                            posicao === 'lateral' ? 2 :
@@ -41,12 +46,16 @@ export function AtletasView() {
                            posicao === 'atacante' ? 5 : 6;
           if (atleta.posicao_id !== posicaoId) return false;
         }
+
+        if (status !== 'todos' && atleta.status_id !== Number(status)) {
+          return false;
+        }
         
         return true;
       })
       .sort((a, b) => b.media_num - a.media_num)
-      .slice(0, 50); // Limita a 50 para performance
-  }, [mercadoData, search, time, posicao]);
+      .slice(0, 50);
+  }, [mercadoData, search, time, posicao, status]);
 
   const clubes = mercadoData?.clubes || {};
 
@@ -74,12 +83,16 @@ export function AtletasView() {
         showSearchFilter
         showTimeFilter
         showPosicaoFilter
+        showStatusFilter
         search={search}
         onSearchChange={setSearch}
         time={time}
         onTimeChange={setTime}
         posicao={posicao}
         onPosicaoChange={setPosicao}
+        status={status}
+        onStatusChange={setStatus}
+        clubeOptions={clubeOptions}
       />
 
       <div className="bg-card rounded-lg shadow-lg overflow-hidden">
