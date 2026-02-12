@@ -113,6 +113,28 @@ export interface CartolaAtletasPontuados {
   rodada: number;
 }
 
+export interface CartolaDestaques {
+  rodada_atual: number;
+  atletas_populares: {
+    atleta_id: number;
+    apelido: string;
+    foto: string;
+    posicao_id: number;
+    clube_id: number;
+    escalacoes: number;
+    porcentagem: number;
+  }[];
+  capitaes: {
+    atleta_id: number;
+    apelido: string;
+    foto: string;
+    posicao_id: number;
+    clube_id: number;
+    escalacoes: number;
+    porcentagem: number;
+  }[];
+}
+
 async function fetchCartolaEndpoint<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
   const queryParams = new URLSearchParams({ endpoint, ...params });
   
@@ -183,6 +205,15 @@ export const cartolaApi = {
   async getPontuadosRodada(rodada: number): Promise<CartolaAtletasPontuados> {
     const { data, error } = await supabase.functions.invoke('cartola-api', {
       body: { endpoint: 'pontuados-rodada', rodada: String(rodada) },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Busca destaques (mais escalados)
+  async getDestaques(): Promise<any> {
+    const { data, error } = await supabase.functions.invoke('cartola-api', {
+      body: { endpoint: 'destaques' },
     });
     if (error) throw error;
     return data;

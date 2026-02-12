@@ -6,6 +6,7 @@ import { MediasView } from '@/components/views/MediasView';
 import { TopsView } from '@/components/views/TopsView';
 import { ProvaveisView } from '@/components/views/ProvaveisView';
 import { BatedoresView } from '@/components/views/BatedoresView';
+import { MaisEscaladosView } from '@/components/views/MaisEscaladosView';
 import { ViewType } from '@/types/cartola';
 import { useRodada } from '@/hooks/useCartolaData';
 import { Calendar, Clock, Users } from 'lucide-react';
@@ -28,6 +29,8 @@ export default function Index() {
         return <ProvaveisView />;
       case 'batedores':
         return <BatedoresView />;
+      case 'escalados':
+        return <MaisEscaladosView />;
       default:
         return <CruzamentoView />;
     }

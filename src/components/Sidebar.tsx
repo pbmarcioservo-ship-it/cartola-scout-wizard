@@ -7,7 +7,8 @@ import {
   Trophy, 
   Users, 
   Target,
-  Zap
+  Zap,
+  Flame
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ const menuItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
   { id: 'tops', label: 'Tops da Rodada', icon: <Trophy className="w-5 h-5" /> },
   { id: 'provaveis', label: 'Prováveis', icon: <Users className="w-5 h-5" /> },
   { id: 'batedores', label: 'Batedores', icon: <Target className="w-5 h-5" /> },
+  { id: 'escalados', label: 'Mais Escalados', icon: <Flame className="w-5 h-5" /> },
 ];
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
