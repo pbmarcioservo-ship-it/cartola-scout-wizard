@@ -82,4 +82,5 @@ export type ViewType =
   | 'medias' 
   | 'tops' 
   | 'provaveis' 
-  | 'batedores';
+  | 'batedores'
+  | 'escalados';

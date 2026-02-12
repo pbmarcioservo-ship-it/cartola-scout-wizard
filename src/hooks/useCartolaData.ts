@@ -1,5 +1,5 @@
 import { useQuery, useQueries } from '@tanstack/react-query';
-import { cartolaApi, CartolaMercado, CartolaAtletasPontuados, CartolaRodada, CartolaClube, CartolaPartida } from '@/lib/cartola-api';
+import { cartolaApi, CartolaMercado, CartolaAtletasPontuados, CartolaRodada, CartolaClube, CartolaPartida, CartolaDestaques } from '@/lib/cartola-api';
 
 export function useMercado() {
   return useQuery<CartolaMercado>({
@@ -40,6 +40,15 @@ export function useClubes() {
     queryKey: ['cartola', 'clubes'],
     queryFn: () => cartolaApi.getClubes(),
     staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useDestaques() {
+  return useQuery({
+    queryKey: ['cartola', 'destaques'],
+    queryFn: () => cartolaApi.getDestaques(),
+    staleTime: 1000 * 60 * 5,
+    refetchInterval: 1000 * 60 * 5,
   });
 }
 
