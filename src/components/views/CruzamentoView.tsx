@@ -14,8 +14,21 @@ const SCOUT_KEY_MAP: Record<ScoutFilter, keyof CartolaScout> = {
   desarmes: 'DS',
   finalizacaoDefendida: 'FD',
   finalizacaoFora: 'FF',
+  finalizacaoTrave: 'FT',
   defesas: 'DE',
+  defesaPenalti: 'DP',
   semGol: 'SG',
+  roubadaBola: 'RB',
+  faltaSofrida: 'FS',
+  passeCerto: 'PS',
+  cartaoAmarelo: 'CA',
+  cartaoVermelho: 'CV',
+  faltaCometida: 'FC',
+  golContra: 'GC',
+  penaltiPerdido: 'PP',
+  impedimento: 'I',
+  passeErrado: 'PE',
+  golSofrido: 'GS',
 };
 
 const POSICAO_ID_MAP: Record<string, number> = {

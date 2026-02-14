@@ -277,19 +277,33 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Preço', value: `C$ ${atleta.preco_num.toFixed(2)}` },
-                  { label: 'Média', value: atleta.media_num.toFixed(2) },
-                  { label: 'Pontos', value: atleta.pontos_num.toFixed(1) },
-                  { label: 'Jogos', value: String(atleta.jogos_num) },
-                  { label: 'Variação', value: atleta.variacao_num.toFixed(2), color: atleta.variacao_num > 0 ? 'text-success' : atleta.variacao_num < 0 ? 'text-destructive' : undefined },
-                ].map(stat => (
-                  <div key={stat.label} className="bg-muted/50 rounded-lg p-3 text-center border border-border">
-                    <p className="text-xs text-muted-foreground font-bold uppercase">{stat.label}</p>
-                    <p className={cn('text-lg font-black', stat.color || 'text-primary')}>{stat.value}</p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {(() => {
+                  // Calculate home/away averages from history
+                  let totalCasa = 0, jogosCasa = 0, totalFora = 0, jogosFora = 0;
+                  for (const r of atletaHistorico) {
+                    if (r.partida) {
+                      const isHome = r.partida.clube_casa_id === atleta.clube_id;
+                      if (isHome) { totalCasa += r.pontuacao; jogosCasa++; }
+                      else { totalFora += r.pontuacao; jogosFora++; }
+                    }
+                  }
+                  const mediaCasa = jogosCasa > 0 ? (totalCasa / jogosCasa) : 0;
+                  const mediaFora = jogosFora > 0 ? (totalFora / jogosFora) : 0;
+
+                  return [
+                    { label: 'Preço', value: `C$ ${atleta.preco_num.toFixed(2)}` },
+                    { label: 'Média', value: atleta.media_num.toFixed(2) },
+                    { label: 'Jogos', value: String(atleta.jogos_num) },
+                    { label: 'Méd. Casa', value: mediaCasa.toFixed(2), color: 'text-success' },
+                    { label: 'Méd. Fora', value: mediaFora.toFixed(2), color: 'text-amber-500' },
+                  ].map(stat => (
+                    <div key={stat.label} className="bg-muted/50 rounded-lg p-3 text-center border border-border">
+                      <p className="text-xs text-muted-foreground font-bold uppercase">{stat.label}</p>
+                      <p className={cn('text-lg font-black', stat.color || 'text-primary')}>{stat.value}</p>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 

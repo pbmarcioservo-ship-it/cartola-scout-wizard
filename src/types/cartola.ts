@@ -73,8 +73,21 @@ export type ScoutFilter =
   | 'desarmes' 
   | 'finalizacaoDefendida' 
   | 'finalizacaoFora' 
+  | 'finalizacaoTrave'
   | 'defesas' 
-  | 'semGol';
+  | 'defesaPenalti'
+  | 'semGol'
+  | 'roubadaBola'
+  | 'faltaSofrida'
+  | 'passeCerto'
+  | 'cartaoAmarelo'
+  | 'cartaoVermelho'
+  | 'faltaCometida'
+  | 'golContra'
+  | 'penaltiPerdido'
+  | 'impedimento'
+  | 'passeErrado'
+  | 'golSofrido';
 
 export type ViewType = 
   | 'cruzamento' 
