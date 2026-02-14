@@ -171,6 +171,8 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
       for (const [id, data] of Object.entries(h.data.atletas)) {
         if (data.posicao_id !== atleta.posicao_id) continue;
         if (id === String(atleta.atleta_id)) continue;
+        // Exclude players from the opponent team itself
+        if (data.clube_id === upcomingOpponentId) continue;
 
         // Find match this player was in
         const partida = findMatchForClub(h.partidas.partidas, data.clube_id);
