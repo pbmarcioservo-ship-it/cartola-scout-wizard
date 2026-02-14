@@ -389,50 +389,33 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                   Nenhum {posicaoInfo?.nome?.toLowerCase()} enfrentou {opponentClube?.abreviacao || 'o oponente'} {isPlayingAway ? 'fora' : 'em casa'} nas últimas 7 rodadas.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {mesmaPosicaoVsOponente.map((player) => {
+                <div className="space-y-1.5">
+                  {mesmaPosicaoVsOponente.slice(0, 7).map((player) => {
                     const playerClube = clubes[player.clube_id];
+                    // Show the most recent round for this player
+                    const latestRound = player.rounds.sort((a, b) => b.rodada - a.rodada)[0];
+                    const allClubes = latestRound ? { ...clubes, ...latestRound.partidaClubes } : clubes;
                     return (
-                      <div key={player.id} className="bg-muted/20 rounded-lg p-3 border border-border">
-                        <div className="flex items-center gap-3 mb-2">
-                          <img
-                            src={player.foto?.replace('FORMATO', '80x80')}
-                            alt={player.apelido}
-                            className="w-10 h-10 rounded-full object-cover bg-muted"
-                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-foreground">{player.apelido}</span>
-                              {playerClube && <ClubeEscudo clube={playerClube} size="sm" />}
+                      <div key={player.id} className="bg-muted/20 rounded-md px-2.5 py-1.5 border border-border">
+                        <div className="flex items-center gap-2">
+                          {playerClube && <ClubeEscudo clube={playerClube} size="xs" />}
+                          <span className="font-bold text-xs text-foreground min-w-[80px]">{player.apelido}</span>
+                          <div className="flex-1 flex flex-wrap gap-0.5">
+                            <ScoutSummary scout={latestRound?.scout} />
+                          </div>
+                          {latestRound?.partida && (
+                            <div className="flex items-center gap-1.5 ml-auto shrink-0">
+                              <MatchDisplay partida={latestRound.partida} clubes={allClubes} compact />
+                              <span className="text-[10px] text-muted-foreground">R{latestRound.rodada}</span>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-xs text-muted-foreground">Média vs {opponentClube?.abreviacao}</span>
-                            <p className="font-black text-primary">{player.media.toFixed(2)}</p>
-                          </div>
+                          )}
+                          <span className={cn(
+                            'text-sm font-black shrink-0 ml-1',
+                            (latestRound?.pontuacao ?? 0) > 0 ? 'text-success' : (latestRound?.pontuacao ?? 0) < 0 ? 'text-destructive' : 'text-muted-foreground'
+                          )}>
+                            {latestRound?.pontuacao.toFixed(1)}
+                          </span>
                         </div>
-                        {/* Each round vs this opponent */}
-                        {player.rounds.sort((a, b) => b.rodada - a.rodada).map(r => {
-                          const allClubes = { ...clubes, ...r.partidaClubes };
-                          return (
-                            <div key={r.rodada} className="bg-card rounded p-2 mb-1 border border-border">
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">R{r.rodada}</span>
-                                  {r.partida && <MatchDisplay partida={r.partida} clubes={allClubes} compact />}
-                                </div>
-                                <span className={cn(
-                                  'text-sm font-black',
-                                  r.pontuacao > 0 ? 'text-success' : r.pontuacao < 0 ? 'text-destructive' : 'text-muted-foreground'
-                                )}>
-                                  {r.pontuacao.toFixed(1)} pts
-                                </span>
-                              </div>
-                              <ScoutSummary scout={r.scout} />
-                            </div>
-                          );
-                        })}
                       </div>
                     );
                   })}
