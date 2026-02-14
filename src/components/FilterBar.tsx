@@ -119,13 +119,26 @@ export function FilterBar({
           onChange={(e) => onScoutChange?.(e.target.value as ScoutFilter)}
           className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer"
         >
-          <option value="desarmes">Desarmes</option>
-          <option value="gols">Gols</option>
-          <option value="assistencias">Assistências</option>
-          <option value="finalizacaoDefendida">Fin. Defendida</option>
-          <option value="finalizacaoFora">Fin. para Fora</option>
-          <option value="defesas">Defesas</option>
-          <option value="semGol">SG</option>
+          <option value="gols">⚽ Gols (G)</option>
+          <option value="assistencias">🅰️ Assist (A)</option>
+          <option value="desarmes">🛡️ Desarme (DS)</option>
+          <option value="finalizacaoDefendida">🧤 Fin.Def (FD)</option>
+          <option value="finalizacaoFora">💨 Fin.Fora (FF)</option>
+          <option value="finalizacaoTrave">🥅 Fin.Trave (FT)</option>
+          <option value="defesas">🧱 Defesa (DE)</option>
+          <option value="defesaPenalti">🏆 Def.Pen (DP)</option>
+          <option value="semGol">🚫 Sem Gol (SG)</option>
+          <option value="roubadaBola">💪 Roub (RB)</option>
+          <option value="faltaSofrida">🤕 F.Sofr (FS)</option>
+          <option value="passeCerto">✅ Pass.C (PS)</option>
+          <option value="cartaoAmarelo">🟨 C.Amar (CA)</option>
+          <option value="cartaoVermelho">🟥 C.Verm (CV)</option>
+          <option value="faltaCometida">⚠️ F.Com (FC)</option>
+          <option value="golContra">😱 G.Contra (GC)</option>
+          <option value="penaltiPerdido">❌ Pen.Perd (PP)</option>
+          <option value="impedimento">🚩 Imped (I)</option>
+          <option value="passeErrado">🔴 Pass.Err (PE)</option>
+          <option value="golSofrido">😞 G.Sofr (GS)</option>
         </select>
       )}
       
