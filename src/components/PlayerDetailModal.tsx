@@ -348,34 +348,57 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 <LoadingSpinner size="md" text="Carregando histórico..." />
               ) : atletaHistorico.length === 0 ? (
                 <p className="text-muted-foreground text-sm py-4 text-center">Nenhum dado de rodadas anteriores disponível.</p>
-              ) : (
-                <div className="space-y-3">
-                  {atletaHistorico.sort((a, b) => b.rodada - a.rodada).map(round => {
-                    const allClubes = { ...clubes, ...round.partidaClubes };
-                    return (
-                      <div key={round.rodada} className="bg-muted/20 rounded-lg p-3 border border-border">
-                        <div className="flex justify-between items-center mb-2">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
-                              R{round.rodada}
-                            </span>
-                            {round.partida && (
-                              <MatchDisplay partida={round.partida} clubes={allClubes} compact />
-                            )}
-                          </div>
-                          <span className={cn(
-                            'text-xl font-black',
-                            round.pontuacao > 0 ? 'text-success' : round.pontuacao < 0 ? 'text-destructive' : 'text-muted-foreground'
-                          )}>
-                            {round.pontuacao.toFixed(1)} pts
+              ) : (() => {
+                const sorted = [...atletaHistorico].sort((a, b) => b.rodada - a.rodada);
+                const casaRounds = sorted.filter(r => r.partida && r.partida.clube_casa_id === atleta!.clube_id);
+                const foraRounds = sorted.filter(r => r.partida && r.partida.clube_visitante_id === atleta!.clube_id);
+
+                const renderRound = (round: typeof sorted[0]) => {
+                  const allClubes = { ...clubes, ...round.partidaClubes };
+                  return (
+                    <div key={round.rodada} className="bg-muted/20 rounded-lg p-3 border border-border">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                            R{round.rodada}
                           </span>
+                          {round.partida && (
+                            <MatchDisplay partida={round.partida} clubes={allClubes} compact />
+                          )}
                         </div>
-                        <ScoutSummary scout={round.scout} />
+                        <span className={cn(
+                          'text-xl font-black',
+                          round.pontuacao > 0 ? 'text-success' : round.pontuacao < 0 ? 'text-destructive' : 'text-muted-foreground'
+                        )}>
+                          {round.pontuacao.toFixed(1)} pts
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                      <ScoutSummary scout={round.scout} />
+                    </div>
+                  );
+                };
+
+                return (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-xs font-bold text-success uppercase mb-2 text-center">🏠 Em Casa</h4>
+                      {casaRounds.length === 0 ? (
+                        <p className="text-muted-foreground text-xs text-center py-3">Nenhum jogo em casa.</p>
+                      ) : (
+                        <div className="space-y-3">{casaRounds.map(renderRound)}</div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-500 uppercase mb-2 text-center">✈️ Fora</h4>
+                      {foraRounds.length === 0 ? (
+                        <p className="text-muted-foreground text-xs text-center py-3">Nenhum jogo fora.</p>
+                      ) : (
+                        <div className="space-y-3">{foraRounds.map(renderRound)}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Jogadores da mesma posição que enfrentaram o mesmo oponente */}
