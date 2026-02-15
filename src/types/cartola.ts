@@ -96,4 +96,5 @@ export type ViewType =
   | 'tops' 
   | 'provaveis' 
   | 'batedores'
-  | 'escalados';
+  | 'escalados'
+  | 'intocaveis';

@@ -1,0 +1,335 @@
+import { useState, useMemo } from 'react';
+import { ClubeEscudo } from '@/components/ClubeEscudo';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useMercado, useRodada, useHistoricoRodadas, POSICOES } from '@/hooks/useCartolaData';
+import { AlertCircle, Shield } from 'lucide-react';
+import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
+import { PosicaoFilter } from '@/types/cartola';
+
+export function IntocaveisView() {
+  const [mando, setMando] = useState('casa_fora');
+  const [time, setTime] = useState('todos');
+  const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
+  const [search, setSearch] = useState('');
+  const [rodadaInicio, setRodadaInicio] = useState(1);
+  const [rodadaFim, setRodadaFim] = useState(38);
+
+  const { data: mercadoData, isLoading: loadingMercado, error: errorMercado } = useMercado();
+  const { data: rodadaData } = useRodada();
+  const rodadaAtual = rodadaData?.rodada_atual;
+
+  // Fetch historical data
+  const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(rodadaAtual, rodadaAtual ? rodadaAtual - 1 : 0);
+
+  const clubes = useMemo(() => Object.values(mercadoData?.clubes || {}), [mercadoData]);
+
+  // Build per-athlete stats from historical rounds
+  const atletaStats = useMemo(() => {
+    if (!historicoData || !mercadoData) return {};
+
+    const stats: Record<number, {
+      jogos: number;
+      totalPontos: number;
+      jogosCasa: number;
+      totalPontosCasa: number;
+      jogosFora: number;
+      totalPontosFora: number;
+    }> = {};
+
+    for (const rodadaInfo of historicoData) {
+      if (!rodadaInfo.data?.atletas || !rodadaInfo.partidas?.partidas) continue;
+      
+      const rodadaNum = rodadaInfo.rodada;
+      if (rodadaNum < rodadaInicio || rodadaNum > rodadaFim) continue;
+
+      const partidas = rodadaInfo.partidas.partidas;
+
+      for (const [atletaId, atletaData] of Object.entries(rodadaInfo.data.atletas)) {
+        const id = Number(atletaId);
+        const clubeId = atletaData.clube_id;
+
+        // Determine if home or away
+        const partida = partidas.find(
+          p => p.clube_casa_id === clubeId || p.clube_visitante_id === clubeId
+        );
+        if (!partida) continue;
+
+        const isHome = partida.clube_casa_id === clubeId;
+
+        if (!stats[id]) {
+          stats[id] = { jogos: 0, totalPontos: 0, jogosCasa: 0, totalPontosCasa: 0, jogosFora: 0, totalPontosFora: 0 };
+        }
+
+        stats[id].jogos++;
+        stats[id].totalPontos += atletaData.pontuacao;
+        if (isHome) {
+          stats[id].jogosCasa++;
+          stats[id].totalPontosCasa += atletaData.pontuacao;
+        } else {
+          stats[id].jogosFora++;
+          stats[id].totalPontosFora += atletaData.pontuacao;
+        }
+      }
+    }
+
+    return stats;
+  }, [historicoData, mercadoData, rodadaInicio, rodadaFim]);
+
+  // Filter and group athletes
+  const intocaveis = useMemo(() => {
+    if (!mercadoData) return [];
+
+    const atletas = mercadoData.atletas.filter(a => a.status_id === 7); // Prováveis only
+
+    // Apply filters
+    let filtered = atletas;
+
+    if (time !== 'todos') {
+      filtered = filtered.filter(a => a.clube_id === Number(time));
+    }
+
+    const posicaoMap: Record<string, number> = {
+      goleiro: 1, lateral: 2, zagueiro: 3, meia: 4, atacante: 5, tecnico: 6
+    };
+    if (posicao !== 'todos') {
+      filtered = filtered.filter(a => a.posicao_id === posicaoMap[posicao]);
+    }
+
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      filtered = filtered.filter(a => a.apelido.toLowerCase().includes(s) || a.nome.toLowerCase().includes(s));
+    }
+
+    // Group by club + position, keep max 2 per position (1 for GK)
+    const grouped: Record<string, CartolaAtleta[]> = {};
+    for (const a of filtered) {
+      const key = `${a.clube_id}-${a.posicao_id}`;
+      if (!grouped[key]) grouped[key] = [];
+      const maxPerPos = a.posicao_id === 1 ? 1 : 2;
+      if (grouped[key].length < maxPerPos) {
+        grouped[key].push(a);
+      }
+    }
+
+    const result = Object.values(grouped).flat();
+
+    // Sort by media descending
+    return result.sort((a, b) => {
+      const statsA = atletaStats[a.atleta_id];
+      const statsB = atletaStats[b.atleta_id];
+      const mediaA = statsA && statsA.jogos > 0 ? statsA.totalPontos / statsA.jogos : a.media_num;
+      const mediaB = statsB && statsB.jogos > 0 ? statsB.totalPontos / statsB.jogos : b.media_num;
+      return mediaB - mediaA;
+    });
+  }, [mercadoData, time, posicao, search, atletaStats, mando]);
+
+  const getAtletaDisplayStats = (atleta: CartolaAtleta) => {
+    const stats = atletaStats[atleta.atleta_id];
+    if (!stats || stats.jogos === 0) {
+      return {
+        jogos: atleta.jogos_num,
+        media: atleta.media_num,
+        total: atleta.pontos_num * (atleta.jogos_num || 1),
+        minutos: atleta.gato_mestre?.minutos_jogados || 0,
+      };
+    }
+
+    if (mando === 'casa_fora') {
+      return {
+        jogos: stats.jogos,
+        media: stats.totalPontos / stats.jogos,
+        total: stats.totalPontos,
+        minutos: atleta.gato_mestre?.minutos_jogados || 0,
+      };
+    }
+    // If we had separate casa/fora stats we could filter here
+    return {
+      jogos: stats.jogos,
+      media: stats.totalPontos / stats.jogos,
+      total: stats.totalPontos,
+      minutos: atleta.gato_mestre?.minutos_jogados || 0,
+    };
+  };
+
+  const isLoading = loadingMercado || loadingHistorico;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" text="Carregando intocáveis..." />
+      </div>
+    );
+  }
+
+  if (errorMercado) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-destructive gap-3">
+        <AlertCircle className="w-12 h-12" />
+        <p className="font-bold">Erro ao carregar dados</p>
+      </div>
+    );
+  }
+
+  const maxTotal = Math.max(...intocaveis.map(a => getAtletaDisplayStats(a).total), 1);
+
+  return (
+    <div className="animate-fade-in">
+      <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+        <Shield className="w-7 h-7 text-primary" />
+        TOP INTOCÁVEIS
+      </h2>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
+        <select
+          value={mando}
+          onChange={(e) => setMando(e.target.value)}
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+        >
+          <option value="casa_fora">Casa x Fora</option>
+          <option value="todos">Todos</option>
+        </select>
+
+        <select
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+        >
+          <option value="todos">Todos os Times</option>
+          {clubes.map(c => (
+            <option key={c.id} value={c.id}>{c.nome}</option>
+          ))}
+        </select>
+
+        <select
+          value={posicao}
+          onChange={(e) => setPosicao(e.target.value as PosicaoFilter)}
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+        >
+          <option value="todos">Todas Posições</option>
+          <option value="goleiro">Goleiro</option>
+          <option value="lateral">Lateral</option>
+          <option value="zagueiro">Zagueiro</option>
+          <option value="meia">Meia</option>
+          <option value="atacante">Atacante</option>
+          <option value="tecnico">Técnico</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Buscar Atleta..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70"
+        />
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground font-bold">Rodadas:</label>
+          <select
+            value={rodadaInicio}
+            onChange={(e) => setRodadaInicio(Number(e.target.value))}
+            className="bg-primary text-primary-foreground border-none px-3 py-2.5 rounded-md font-bold cursor-pointer"
+          >
+            {Array.from({ length: 38 }, (_, i) => i + 1).map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          <span className="text-muted-foreground font-bold">a</span>
+          <select
+            value={rodadaFim}
+            onChange={(e) => setRodadaFim(Number(e.target.value))}
+            className="bg-primary text-primary-foreground border-none px-3 py-2.5 rounded-md font-bold cursor-pointer"
+          >
+            {Array.from({ length: 38 }, (_, i) => i + 1).map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="bg-card rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-primary/10 p-3 border-b border-border">
+          <p className="text-sm text-muted-foreground">
+            Máx. 2 por posição/time (1 goleiro) • Apenas Prováveis • 
+            <span className="font-bold text-foreground ml-1">{intocaveis.length} atletas</span>
+          </p>
+        </div>
+
+        <div className="divide-y divide-border">
+          {intocaveis.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">
+              Nenhum atleta encontrado com os filtros selecionados.
+            </div>
+          ) : (
+            intocaveis.map((atleta, index) => {
+              const clube = mercadoData?.clubes?.[String(atleta.clube_id)];
+              const posInfo = POSICOES[atleta.posicao_id];
+              const displayStats = getAtletaDisplayStats(atleta);
+              const barWidth = maxTotal > 0 ? (displayStats.total / maxTotal) * 100 : 0;
+
+              return (
+                <div
+                  key={atleta.atleta_id}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in"
+                  style={{ animationDelay: `${index * 20}ms` }}
+                >
+                  {/* Photo */}
+                  <img
+                    src={atleta.foto?.replace('FORMATO', '80x80')}
+                    alt={atleta.apelido}
+                    className="w-10 h-10 rounded-full object-cover bg-muted flex-shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder.svg';
+                    }}
+                  />
+
+                  {/* Name + Club shield */}
+                  <div className="flex items-center gap-2 min-w-[160px] w-[160px]">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-foreground text-sm truncate">{atleta.apelido}</p>
+                      <span className="text-xs text-muted-foreground">{posInfo?.abreviacao}</span>
+                    </div>
+                    {clube && <ClubeEscudo clube={clube} size="xs" />}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-center gap-4 text-xs flex-shrink-0">
+                    <div className="text-center">
+                      <p className="text-muted-foreground">Jogos</p>
+                      <p className="font-black text-foreground">{displayStats.jogos}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-muted-foreground">Média</p>
+                      <p className="font-black text-foreground">{displayStats.media.toFixed(1)}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-muted-foreground">Total</p>
+                      <p className="font-black text-primary">{displayStats.total.toFixed(1)}</p>
+                    </div>
+                    {displayStats.minutos > 0 && (
+                      <div className="text-center">
+                        <p className="text-muted-foreground">Min</p>
+                        <p className="font-black text-foreground">{Math.round(displayStats.minutos)}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bar */}
+                  <div className="flex-1 ml-3">
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-500"
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
