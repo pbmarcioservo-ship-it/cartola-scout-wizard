@@ -205,7 +205,7 @@ export function CruzamentoView() {
                     {conquistaVal}
                   </td>
                   <td className="w-[25%]">
-                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" reverse />
+                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" reverse showValue={false} />
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
                     <div className="flex items-center justify-center gap-2">
@@ -217,7 +217,7 @@ export function CruzamentoView() {
                     </div>
                   </td>
                   <td className="w-[25%]">
-                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" />
+                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" showValue={false} />
                   </td>
                   <td className="w-[15%] text-left pl-2 font-black text-destructive text-sm py-3">
                     {cedeVal}
@@ -254,7 +254,7 @@ export function CruzamentoView() {
                     {cedeVal}
                   </td>
                   <td className="w-[25%]">
-                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" reverse />
+                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" reverse showValue={false} />
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
                     <div className="flex items-center justify-center gap-2">
@@ -266,7 +266,7 @@ export function CruzamentoView() {
                     </div>
                   </td>
                   <td className="w-[25%]">
-                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" />
+                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" showValue={false} />
                   </td>
                   <td className="w-[15%] text-left pl-2 font-black text-success text-sm py-3">
                     {conquistaVal}
