@@ -120,10 +120,10 @@ export function CruzamentoView() {
 
         if (isHome) {
           conquistaCasa[clubeId] = (conquistaCasa[clubeId] || 0) + val;
-          cedeCasa[opponentId] = (cedeCasa[opponentId] || 0) + val;
+          cedeFora[opponentId] = (cedeFora[opponentId] || 0) + val;
         } else {
           conquistaFora[clubeId] = (conquistaFora[clubeId] || 0) + val;
-          cedeFora[opponentId] = (cedeFora[opponentId] || 0) + val;
+          cedeCasa[opponentId] = (cedeCasa[opponentId] || 0) + val;
         }
       }
     }
