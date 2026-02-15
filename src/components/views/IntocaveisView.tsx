@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, useRodada, useHistoricoRodadas, POSICOES } from '@/hooks/useCartolaData';
 import { AlertCircle, Shield } from 'lucide-react';
 import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
@@ -8,6 +9,7 @@ import { PosicaoFilter } from '@/types/cartola';
 
 export function IntocaveisView() {
   const [mando, setMando] = useState('casa_fora');
+  const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
   const [search, setSearch] = useState('');
@@ -271,7 +273,8 @@ export function IntocaveisView() {
               return (
                 <div
                   key={atleta.atleta_id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in cursor-pointer"
+                  onClick={() => setSelectedAtleta(atleta)}
                   style={{ animationDelay: `${index * 20}ms` }}
                 >
                   {/* Photo */}
@@ -300,11 +303,11 @@ export function IntocaveisView() {
                       <p className="font-black text-foreground">{displayStats.jogos}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-muted-foreground">Média</p>
+                      <p className="text-muted-foreground">Média Pontos</p>
                       <p className="font-black text-foreground">{displayStats.media.toFixed(1)}</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-muted-foreground">Total</p>
+                      <p className="text-muted-foreground">Pontos Totais</p>
                       <p className="font-black text-primary">{displayStats.total.toFixed(1)}</p>
                     </div>
                     {displayStats.minutos > 0 && (
@@ -330,6 +333,13 @@ export function IntocaveisView() {
           )}
         </div>
       </div>
+      <PlayerDetailModal
+        atleta={selectedAtleta}
+        clube={selectedAtleta ? mercadoData?.clubes?.[String(selectedAtleta.clube_id)] : undefined}
+        clubes={mercadoData?.clubes ? Object.fromEntries(Object.entries(mercadoData.clubes).map(([k, v]) => [Number(k), v])) : {}}
+        open={!!selectedAtleta}
+        onOpenChange={(open) => !open && setSelectedAtleta(null)}
+      />
     </div>
   );
 }
