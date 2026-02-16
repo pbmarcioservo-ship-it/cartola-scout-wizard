@@ -3,9 +3,12 @@ import { FilterBar } from '@/components/FilterBar';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PlayerDetailModal } from '@/components/PlayerDetailModal';
+import { CompareModal } from '@/components/CompareModal';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { useMercado, POSICOES, STATUS_ATLETA } from '@/hooks/useCartolaData';
 import { PosicaoFilter } from '@/types/cartola';
-import { AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { AlertCircle, TrendingUp, TrendingDown, Minus, GitCompare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CartolaAtleta } from '@/lib/cartola-api';
 
@@ -16,9 +19,13 @@ export function AtletasView() {
   const [status, setStatus] = useState('todos');
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
+  // Compare mode state
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSelection, setCompareSelection] = useState<CartolaAtleta[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+
   const { data: mercadoData, isLoading, error } = useMercado();
 
-  // Build club options from API data
   const clubeOptions = useMemo(() => {
     if (!mercadoData?.clubes) return [];
     return Object.values(mercadoData.clubes)
@@ -30,27 +37,13 @@ export function AtletasView() {
 
     return mercadoData.atletas
       .filter(atleta => {
-        if (search && !atleta.apelido.toLowerCase().includes(search.toLowerCase())) {
-          return false;
-        }
-        
-        if (time !== 'todos' && atleta.clube_id !== Number(time)) {
-          return false;
-        }
-        
+        if (search && !atleta.apelido.toLowerCase().includes(search.toLowerCase())) return false;
+        if (time !== 'todos' && atleta.clube_id !== Number(time)) return false;
         if (posicao !== 'todos') {
-          const posicaoId = posicao === 'goleiro' ? 1 :
-                           posicao === 'lateral' ? 2 :
-                           posicao === 'zagueiro' ? 3 :
-                           posicao === 'meia' ? 4 :
-                           posicao === 'atacante' ? 5 : 6;
+          const posicaoId = posicao === 'goleiro' ? 1 : posicao === 'lateral' ? 2 : posicao === 'zagueiro' ? 3 : posicao === 'meia' ? 4 : posicao === 'atacante' ? 5 : 6;
           if (atleta.posicao_id !== posicaoId) return false;
         }
-
-        if (status !== 'todos' && atleta.status_id !== Number(status)) {
-          return false;
-        }
-        
+        if (status !== 'todos' && atleta.status_id !== Number(status)) return false;
         return true;
       })
       .sort((a, b) => b.media_num - a.media_num)
@@ -58,6 +51,27 @@ export function AtletasView() {
   }, [mercadoData, search, time, posicao, status]);
 
   const clubes = mercadoData?.clubes || {};
+
+  const toggleCompareMode = () => {
+    if (compareMode) {
+      setCompareMode(false);
+      setCompareSelection([]);
+    } else {
+      setCompareMode(true);
+      setCompareSelection([]);
+    }
+  };
+
+  const toggleAtletaSelection = (atleta: CartolaAtleta) => {
+    setCompareSelection(prev => {
+      const exists = prev.find(a => a.atleta_id === atleta.atleta_id);
+      if (exists) return prev.filter(a => a.atleta_id !== atleta.atleta_id);
+      if (prev.length >= 2) return prev;
+      return [...prev, atleta];
+    });
+  };
+
+  const isSelected = (id: number) => compareSelection.some(a => a.atleta_id === id);
 
   if (isLoading) {
     return (
@@ -93,12 +107,40 @@ export function AtletasView() {
         status={status}
         onStatusChange={setStatus}
         clubeOptions={clubeOptions}
-      />
+      >
+        <Button
+          variant={compareMode ? 'destructive' : 'outline'}
+          size="sm"
+          onClick={toggleCompareMode}
+          className="font-bold gap-1.5"
+        >
+          {compareMode ? <X className="w-4 h-4" /> : <GitCompare className="w-4 h-4" />}
+          {compareMode ? 'Cancelar' : 'Comparar'}
+        </Button>
+      </FilterBar>
+
+      {/* Compare action bar */}
+      {compareMode && (
+        <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 mb-4 flex items-center justify-between animate-fade-in">
+          <p className="text-sm text-foreground font-bold">
+            {compareSelection.length === 0 && 'Selecione 2 atletas para comparar'}
+            {compareSelection.length === 1 && `1 atleta selecionado — selecione mais 1`}
+            {compareSelection.length === 2 && '2 atletas selecionados!'}
+          </p>
+          {compareSelection.length === 2 && (
+            <Button size="sm" onClick={() => setCompareOpen(true)} className="font-bold gap-1.5">
+              <GitCompare className="w-4 h-4" />
+              Comparar Agora
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="bg-card rounded-lg shadow-lg overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="bg-primary text-primary-foreground text-sm">
+              {compareMode && <th className="p-3 w-10"></th>}
               <th className="p-3 text-left">Atleta</th>
               <th className="p-3 text-center">Pos</th>
               <th className="p-3 text-center">Clube</th>
@@ -115,16 +157,34 @@ export function AtletasView() {
               const clube = clubes[atleta.clube_id];
               const posicaoInfo = POSICOES[atleta.posicao_id];
               const statusInfo = STATUS_ATLETA[atleta.status_id];
+              const checked = isSelected(atleta.atleta_id);
               
               return (
                 <tr 
                   key={atleta.atleta_id} 
                   className={cn(
                     'border-b border-border hover:bg-muted/30 transition-colors cursor-pointer',
-                    idx % 2 === 0 ? 'bg-card' : 'bg-muted/10'
+                    idx % 2 === 0 ? 'bg-card' : 'bg-muted/10',
+                    checked && 'bg-primary/10 hover:bg-primary/15'
                   )}
-                  onClick={() => setSelectedAtleta(atleta)}
+                  onClick={() => {
+                    if (compareMode) {
+                      toggleAtletaSelection(atleta);
+                    } else {
+                      setSelectedAtleta(atleta);
+                    }
+                  }}
                 >
+                  {compareMode && (
+                    <td className="p-3 text-center">
+                      <Checkbox
+                        checked={checked}
+                        disabled={!checked && compareSelection.length >= 2}
+                        onCheckedChange={() => toggleAtletaSelection(atleta)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                  )}
                   <td className="p-3">
                     <div className="flex items-center gap-3">
                       <img 
@@ -205,6 +265,13 @@ export function AtletasView() {
         clubes={clubes}
         open={!!selectedAtleta}
         onOpenChange={(open) => !open && setSelectedAtleta(null)}
+      />
+
+      <CompareModal
+        atletas={compareSelection.length === 2 ? [compareSelection[0], compareSelection[1]] : null}
+        clubes={clubes}
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
       />
     </div>
   );
