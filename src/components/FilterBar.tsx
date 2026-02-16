@@ -11,6 +11,7 @@ interface FilterBarProps {
   showTimeFilter?: boolean;
   showSearchFilter?: boolean;
   showStatusFilter?: boolean;
+  children?: React.ReactNode;
   
   mando?: string;
   onMandoChange?: (value: string) => void;
@@ -59,6 +60,7 @@ export function FilterBar({
   status,
   onStatusChange,
   clubeOptions,
+  children,
 }: FilterBarProps) {
   const clubeList = clubeOptions || [];
 
@@ -178,6 +180,8 @@ export function FilterBar({
           <option value="2">❓ Duv</option>
         </select>
       )}
+
+      {children}
     </div>
   );
 }
