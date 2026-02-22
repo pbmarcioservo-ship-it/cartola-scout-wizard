@@ -44,11 +44,13 @@ export function useClubes() {
 }
 
 export function useDestaques() {
+  const { data: rodada } = useRodada();
   return useQuery({
-    queryKey: ['cartola', 'destaques'],
+    queryKey: ['cartola', 'destaques', rodada?.status_mercado, rodada?.rodada_atual],
     queryFn: () => cartolaApi.getDestaques(),
-    staleTime: 1000 * 60 * 5,
-    refetchInterval: 1000 * 60 * 5,
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: true,
+    refetchInterval: 1000 * 60 * 2,
   });
 }
 

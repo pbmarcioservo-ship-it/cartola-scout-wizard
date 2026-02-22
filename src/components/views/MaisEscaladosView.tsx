@@ -13,31 +13,29 @@ export function MaisEscaladosView() {
   const isLoading = loadingDestaques || loadingMercado;
   const clubes = mercadoData?.clubes || {};
 
-  // The destaques API returns different structures - normalize
+  // Normalize API response to consistent arrays
   const { populares, capitaes } = useMemo(() => {
     if (!destaquesData) return { populares: [], capitaes: [] };
 
-    // The Cartola destaques endpoint returns arrays directly or nested
     const raw = destaquesData;
     
-    // Try to extract populares
     let populares: any[] = [];
     let capitaes: any[] = [];
 
     if (Array.isArray(raw)) {
-      // If the API returns a flat array, treat as populares
       populares = raw.slice(0, 15);
     } else if (raw.atletas_populares) {
       populares = raw.atletas_populares?.slice(0, 15) || [];
       capitaes = raw.capitaes?.slice(0, 5) || [];
+    } else if (raw.destaques?.atletas_populares || raw.destaques?.capitaes) {
+      populares = raw.destaques.atletas_populares?.slice(0, 15) || [];
+      capitaes = raw.destaques.capitaes?.slice(0, 5) || [];
     } else if (raw.Pilotos || raw.populares) {
       populares = (raw.populares || []).slice(0, 15);
       capitaes = (raw.capitaes || []).slice(0, 5);
     }
 
-    // If no capitaes from API, derive from mercado (top by escalações)
     if (capitaes.length === 0 && mercadoData?.atletas) {
-      // Use mercado atletas sorted by a heuristic
       const sorted = [...mercadoData.atletas].sort((a, b) => b.media_num - a.media_num);
       capitaes = sorted.slice(0, 5).map(a => ({
         atleta_id: a.atleta_id,
@@ -61,6 +59,7 @@ export function MaisEscaladosView() {
   }
 
   if (error) {
+    console.log(error);
     return (
       <div className="flex flex-col items-center justify-center h-64 text-destructive gap-3">
         <AlertCircle className="w-12 h-12" />

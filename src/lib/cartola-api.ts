@@ -212,10 +212,24 @@ export const cartolaApi = {
 
   // Busca destaques (mais escalados)
   async getDestaques(): Promise<any> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'destaques' },
-    });
-    if (error) throw error;
-    return data;
+    try {
+      const url = 'https://api.allorigins.win/raw?url=https://api.cartola.globo.com/mercado/destaques';
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) {
+        throw new Error(`AllOrigins status ${res.status}`);
+      }
+      const json = await res.json();
+      return json;
+    } catch (e) {
+      console.log('Erro ao buscar destaques via AllOrigins:', e);
+      const { data, error } = await supabase.functions.invoke('cartola-api', {
+        body: { endpoint: 'destaques' },
+      });
+      if (error) {
+        console.log('Erro no fallback via Supabase:', error);
+        throw error;
+      }
+      return data;
+    }
   },
 };
