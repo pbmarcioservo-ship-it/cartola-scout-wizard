@@ -102,12 +102,12 @@ export function IntocaveisView() {
       filtered = filtered.filter(a => a.apelido.toLowerCase().includes(s) || a.nome.toLowerCase().includes(s));
     }
 
-    // Group by club + position, keep max 2 per position (1 for GK)
+    // Group by club + position, keep max per position (GK: 1, others: 3)
     const grouped: Record<string, CartolaAtleta[]> = {};
     for (const a of filtered) {
       const key = `${a.clube_id}-${a.posicao_id}`;
       if (!grouped[key]) grouped[key] = [];
-      const maxPerPos = a.posicao_id === 1 ? 1 : 2;
+      const maxPerPos = a.posicao_id === 1 ? 1 : 3;
       if (grouped[key].length < maxPerPos) {
         grouped[key].push(a);
       }
@@ -253,7 +253,7 @@ export function IntocaveisView() {
       <div className="bg-card rounded-lg shadow-lg overflow-hidden">
         <div className="bg-primary/10 p-3 border-b border-border">
           <p className="text-sm text-muted-foreground">
-            Máx. 2 por posição/time (1 goleiro) • Apenas Prováveis • 
+            Máx. 3 por posição/time (1 goleiro) • Apenas Prováveis • 
             <span className="font-bold text-foreground ml-1">{intocaveis.length} atletas</span>
           </p>
         </div>
