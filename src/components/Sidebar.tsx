@@ -6,7 +6,6 @@ import {
   TrendingUp, 
   Trophy, 
   Users, 
-  Target,
   Zap,
   Flame,
   Shield
@@ -25,7 +24,6 @@ const menuItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
   { id: 'time-rodada', label: 'Time da Rodada', icon: <Users className="w-5 h-5" /> },
   { id: 'artilheiros', label: 'Top Artilheiros', icon: <TrendingUp className="w-5 h-5" /> },
   { id: 'provaveis', label: 'Prováveis', icon: <Users className="w-5 h-5" /> },
-  { id: 'batedores', label: 'Batedores', icon: <Target className="w-5 h-5" /> },
   { id: 'escalados', label: 'Mais Escalados', icon: <Flame className="w-5 h-5" /> },
   { id: 'intocaveis', label: 'Top Intocáveis', icon: <Shield className="w-5 h-5" /> },
 ];
