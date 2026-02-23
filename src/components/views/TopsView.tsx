@@ -851,35 +851,28 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: nu
   return (
     <div className="flex gap-4">
       <div className="flex-1">
-        <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner">
-          {/* Perímetro do campo */}
+        <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner min-h-[520px]">
           <div className="absolute inset-2 rounded-2xl border-4 border-white/70 pointer-events-none"></div>
-          {/* Linha de meio-campo */}
-          <div className="absolute inset-y-1/2 left-4 right-4 border-t-2 border-white/70 pointer-events-none"></div>
-          {/* Círculo central */}
+          <div className="absolute top-1/2 left-4 right-4 -translate-y-1/2 h-0 border-t-2 border-white/70 pointer-events-none"></div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full border-4 border-white/70 pointer-events-none"></div>
-          {/* Grandes áreas */}
-          <div className="absolute left-4 top-10 bottom-10 w-28 border-4 border-white/70 pointer-events-none"></div>
-          <div className="absolute right-4 top-10 bottom-10 w-28 border-4 border-white/70 pointer-events-none"></div>
-          {/* Pequenas áreas */}
-          <div className="absolute left-4 top-24 bottom-24 w-14 border-4 border-white/70 pointer-events-none"></div>
-          <div className="absolute right-4 top-24 bottom-24 w-14 border-4 border-white/70 pointer-events-none"></div>
-          {/* Setas de direção (laterais) */}
-          <svg className="pointer-events-none absolute left-1 top-1/2 -translate-y-1/2" width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <path d="M4 12h12M10 6l6 6-6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <div className="absolute top-4 left-10 right-10 h-28 border-4 border-white/70 pointer-events-none"></div>
+          <div className="absolute bottom-4 left-10 right-10 h-28 border-4 border-white/70 pointer-events-none"></div>
+          <div className="absolute top-4 left-24 right-24 h-14 border-4 border-white/70 pointer-events-none"></div>
+          <div className="absolute bottom-4 left-24 right-24 h-14 border-4 border-white/70 pointer-events-none"></div>
+          <svg className="pointer-events-none absolute left-2 bottom-6" width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 18V6M6 12l6-6 6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <svg className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <path d="M4 12h12M10 6l6 6-6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <svg className="pointer-events-none absolute right-2 bottom-6" width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M12 18V6M6 12l6-6 6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {/* Identificação tática */}
           <div className="pointer-events-none absolute left-4 bottom-3 text-white/90 text-xs font-bold">
             4-3-3
           </div>
           <div className="relative">
-            <div className="pt-4">{renderRow([gk])}</div>
-            <div>{renderRow([lats[0] || null, zags[0] || null, zags[1] || null, lats[1] || null])}</div>
+            <div className="pt-4">{renderRow([atacs[0] || null, atacs[1] || null, atacs[2] || null])}</div>
             <div>{renderRow([meis[0] || null, meis[1] || null, meis[2] || null])}</div>
-            <div className="pb-2">{renderRow([atacs[0] || null, atacs[1] || null, atacs[2] || null])}</div>
+            <div>{renderRow([lats[0] || null, zags[0] || null, zags[1] || null, lats[1] || null])}</div>
+            <div className="pb-2">{renderRow([gk])}</div>
           </div>
         </div>
       </div>
