@@ -371,12 +371,6 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
           <TabsTrigger value="capitaes" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
             👑 Top 3 Capitães
           </TabsTrigger>
-          <TabsTrigger value="time" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
-            🟩 Time da Rodada
-          </TabsTrigger>
-          <TabsTrigger value="artilheiros" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
-            🎯 Top Artilheiros
-          </TabsTrigger>
         </TabsList>
         <div className="text-xs text-muted-foreground mb-4">
           Legenda: (G) Gol • (DES) Desarme • (SG) Saldo de Gol • (ASS) Assistência
@@ -658,22 +652,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
           />
         </TabsContent>
 
-        <TabsContent value="time">
-          <TimeDaRodada
-            getTop={(posId, n) => topPlayersForPos(posId, n)}
-            capitao={capitaesTop3?.[0] || null}
-            tecnico={(topPlayersForPos(6,1)[0] || null)}
-            clubes={mercadoData?.clubes || {}}
-          />
-        </TabsContent>
-
-        <TabsContent value="artilheiros">
-          <TopArtilheiros
-            atletas={atletasProvaveis}
-            acumulados={acumuladosPorAtleta}
-            clubes={mercadoData?.clubes || {}}
-          />
-        </TabsContent>
+        {/* Removed 'time' and 'artilheiros' tabs in full Tops view */}
       </Tabs>
       )}
     </div>
