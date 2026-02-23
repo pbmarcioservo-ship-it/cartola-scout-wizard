@@ -91,6 +91,7 @@ export function MediasView() {
         onPosicaoChange={setPosicao}
         time={time}
         onTimeChange={setTime}
+        clubeOptions={Object.values(mercadoData?.clubes || {})}
       />
 
       <div className="bg-card rounded-lg shadow-lg overflow-hidden">
@@ -100,7 +101,7 @@ export function MediasView() {
         
         <div className="divide-y divide-border">
           {topAtletas.map((atleta, idx) => {
-            const clube = clubes[atleta.clube_id];
+            const clube = clubes[String(atleta.clube_id)] || clubes[atleta.clube_id];
             const posicaoInfo = POSICOES[atleta.posicao_id];
             
             return (
