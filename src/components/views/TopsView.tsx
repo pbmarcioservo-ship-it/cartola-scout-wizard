@@ -622,34 +622,58 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         </TabsContent>
 
         <TabsContent value="capitaes">
-          <ListAtletas
-            title="👑 Top 3 Capitães (G/ASS/FIN)"
-            atletas={capitaesTop3}
-            clubes={mercadoData?.clubes || {}}
-            medals
-            getConfronto={(a) => {
-              const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
-              if (!partida) return null;
-              const casa = partidasData?.clubes?.[partida.clube_casa_id];
-              const fora = partidasData?.clubes?.[partida.clube_visitante_id];
-              return { casa, fora };
-            }}
-            calcKeyScore={(a, key) => {
-              const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
-              if (!opp) return 0;
-              const isHome = opp.clube_casa_id === a.clube_id;
-              const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
-              if (key === 'FIN') {
-                return teamScoreForMatch(a.clube_id, opponentId, isHome, 'FD')
-                  + teamScoreForMatch(a.clube_id, opponentId, isHome, 'FF')
-                  + teamScoreForMatch(a.clube_id, opponentId, isHome, 'FT');
-              }
-              return teamScoreForMatch(a.clube_id, opponentId, isHome, key as any);
-            }}
-            keysToDisplay={['G', 'A', 'FIN']}
-            acumulados={acumuladosPorAtleta}
-            sanitizeNomeClube={sanitizeNomeClube}
-          />
+          <div className="flex gap-4 items-start">
+            <div className="flex-1">
+              <ListAtletas
+                title="👑 Top 3 Capitães (G/ASS/FIN)"
+                atletas={capitaesTop3}
+                clubes={mercadoData?.clubes || {}}
+                medals
+                getConfronto={(a) => {
+                  const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+                  if (!partida) return null;
+                  const casa = partidasData?.clubes?.[partida.clube_casa_id];
+                  const fora = partidasData?.clubes?.[partida.clube_visitante_id];
+                  return { casa, fora };
+                }}
+                calcKeyScore={(a, key) => {
+                  const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+                  if (!opp) return 0;
+                  const isHome = opp.clube_casa_id === a.clube_id;
+                  const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
+                  if (key === 'FIN') {
+                    return teamScoreForMatch(a.clube_id, opponentId, isHome, 'FD')
+                      + teamScoreForMatch(a.clube_id, opponentId, isHome, 'FF')
+                      + teamScoreForMatch(a.clube_id, opponentId, isHome, 'FT');
+                  }
+                  return teamScoreForMatch(a.clube_id, opponentId, isHome, key as any);
+                }}
+                keysToDisplay={['G', 'A', 'FIN']}
+                acumulados={acumuladosPorAtleta}
+                sanitizeNomeClube={sanitizeNomeClube}
+              />
+            </div>
+            <div className="w-64">
+              <div className="bg-card rounded-xl overflow-hidden shadow-lg">
+                <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground">
+                  Técnico
+                </div>
+                <div className="p-4 flex justify-center">
+                  {(topPlayersForPos(6,1)[0]) ? (
+                    <PlayerCard
+                      atleta={topPlayersForPos(6,1)[0]}
+                      clube={(() => {
+                        const t = topPlayersForPos(6,1)[0];
+                        return t ? (mercadoData?.clubes?.[String(t.clube_id)] || mercadoData?.clubes?.[t.clube_id]) : null;
+                      })()}
+                    />
+                  ) : (
+                    <div className="text-muted-foreground text-sm">Sem técnico</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Removed 'time' and 'artilheiros' tabs in full Tops view */}
