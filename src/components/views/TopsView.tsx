@@ -21,7 +21,7 @@ const POSICAO_ID_MAP: Record<string, number> = {
   goleiro: 1, lateral: 2, zagueiro: 3, meia: 4, atacante: 5, tecnico: 6,
 };
 
-export function TopsView({ initialTab }: { initialTab?: string } = {}) {
+export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' } = {}) {
   const [ultimas, setUltimas] = useState(5);
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
@@ -316,6 +316,19 @@ export function TopsView({ initialTab }: { initialTab?: string } = {}) {
           * Baseado em apenas {historicoData.length} jogos
         </div>
       )}
+      {mode === 'artilheiros-only' ? (
+        <div className="w-full">
+          <div className="text-xs text-muted-foreground mb-4">
+            Legenda: (G) Gol • (ASS) Assistência • (FD) Finalização defendida • (FF) Finalização pra fora • (FS) Faltas sofridas
+          </div>
+          <TopArtilheiros
+            atletas={atletasProvaveis}
+            acumulados={acumuladosPorAtleta}
+            clubes={mercadoData?.clubes || {}}
+            title="Top Artilheiros"
+          />
+        </div>
+      ) : (
       <Tabs defaultValue={initialTab ?? 'sg'} className="w-full">
         <TabsList className="w-full max-w-4xl bg-primary/20 mb-2 flex flex-wrap">
           <TabsTrigger value="sg" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
@@ -646,6 +659,7 @@ export function TopsView({ initialTab }: { initialTab?: string } = {}) {
           />
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 }
@@ -869,7 +883,7 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: nu
   );
 }
 
-function TopArtilheiros({ atletas, acumulados, clubes }: { atletas: any[]; acumulados: Record<number, { G: number }>; clubes: Record<string, any> }) {
+function TopArtilheiros({ atletas, acumulados, clubes, title = '🎯 Top 10 Artilheiros' }: { atletas: any[]; acumulados: Record<number, { G: number }>; clubes: Record<string, any>; title?: string }) {
   const lista = [...(atletas || [])]
     .map(a => ({ atleta: a, g: acumulados?.[a.atleta_id]?.G || 0 }))
     .filter(x => x.g > 0)
@@ -878,7 +892,7 @@ function TopArtilheiros({ atletas, acumulados, clubes }: { atletas: any[]; acumu
   return (
     <div className="bg-card rounded-xl overflow-hidden shadow-lg">
       <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground">
-        🎯 Top 10 Artilheiros
+        {title}
       </div>
       <div>
         {lista.length === 0 ? (
