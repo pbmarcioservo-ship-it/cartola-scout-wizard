@@ -9,6 +9,8 @@ import { BatedoresView } from '@/components/views/BatedoresView';
 import { MaisEscaladosView } from '@/components/views/MaisEscaladosView';
 import { IntocaveisView } from '@/components/views/IntocaveisView';
 import { ViewType } from '@/types/cartola';
+import { TimeRodadaView } from '@/components/views/TimeRodadaView';
+import { TopArtilheirosView } from '@/components/views/TopArtilheirosView';
 import { useRodada } from '@/hooks/useCartolaData';
 import { Calendar, Clock, Users } from 'lucide-react';
 
@@ -34,6 +36,10 @@ export default function Index() {
         return <MaisEscaladosView />;
       case 'intocaveis':
         return <IntocaveisView />;
+      case 'time-rodada':
+        return <TimeRodadaView />;
+      case 'artilheiros':
+        return <TopArtilheirosView />;
       default:
         return <CruzamentoView />;
     }

@@ -6,6 +6,17 @@ import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { CartolaAtleta, CartolaClube, CartolaScout } from '@/lib/cartola-api';
 import { POSICOES } from '@/hooks/useCartolaData';
 import { cn } from '@/lib/utils';
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
 
 interface CompareModalProps {
   atletas: [CartolaAtleta, CartolaAtleta] | null;
@@ -84,7 +95,13 @@ function PlayerHeader({ atleta, clube }: { atleta: CartolaAtleta; clube?: Cartol
         className="w-20 h-20 rounded-full object-cover bg-muted border-2 border-primary"
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
-      <h3 className="font-black text-foreground text-center text-sm">{atleta.apelido}</h3>
+      <h3 className="font-black text-foreground text-center text-sm">
+        {atleta.apelido}
+        {atleta.posicao_id === 2 && (() => {
+          const side = getLateralSideFromStore(atleta.atleta_id);
+          return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+        })()}
+      </h3>
       <div className="flex items-center gap-2">
         {clube && <ClubeEscudo clube={clube} size="sm" />}
         <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold">

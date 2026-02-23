@@ -5,6 +5,18 @@ import { useRodada, useHistoricoRodadas, useMercado, usePartidas, POSICOES } fro
 import { AlertCircle, X, ChevronRight, Target } from 'lucide-react';
 import { CartolaClube } from '@/lib/cartola-api';
 
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
+
 interface BatedorInfo {
   id: string;
   apelido: string;
@@ -203,7 +215,13 @@ export function BatedoresView() {
                             onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
                           />
                           <div className="flex-1">
-                            <p className="font-bold text-foreground">{atleta.apelido}</p>
+                            <p className="font-bold text-foreground">
+                              {atleta.apelido}
+                              {atleta.posicao_id === 2 && (() => {
+                                const side = getLateralSideFromStore(Number(atleta.id));
+                                return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                              })()}
+                            </p>
                             <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold">
                               {posicaoInfo?.nome}
                             </span>

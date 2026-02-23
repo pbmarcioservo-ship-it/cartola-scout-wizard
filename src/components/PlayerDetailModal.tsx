@@ -8,6 +8,17 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useRodada, usePartidas, useHistoricoRodadas, POSICOES } from '@/hooks/useCartolaData';
 import { CartolaAtleta, CartolaClube, CartolaScout, CartolaPartida } from '@/lib/cartola-api';
 import { cn } from '@/lib/utils';
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
 import { TrendingUp, Shield, Target, Award, Swords } from 'lucide-react';
 
 interface PlayerDetailModalProps {
@@ -265,7 +276,13 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
               />
               <div className="flex-1">
-                <h2 className="text-2xl font-black text-foreground">{atleta.apelido}</h2>
+                <h2 className="text-2xl font-black text-foreground">
+                  {atleta.apelido}
+                  {atleta.posicao_id === 2 && (() => {
+                    const side = getLateralSideFromStore(atleta.atleta_id);
+                    return side ? <span className="ml-1 text-base text-muted-foreground">({side})</span> : null;
+                  })()}
+                </h2>
                 <p className="text-sm text-muted-foreground">{atleta.nome}</p>
                 <div className="flex items-center gap-3 mt-2">
                   <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-bold">

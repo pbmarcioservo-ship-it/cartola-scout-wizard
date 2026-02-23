@@ -4,6 +4,17 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useMercado, STATUS_ATLETA, POSICOES } from '@/hooks/useCartolaData';
 import { AlertCircle, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
 import { CartolaClube, CartolaAtleta } from '@/lib/cartola-api';
 
 export function ProvaveisView() {
@@ -106,7 +117,13 @@ export function ProvaveisView() {
                         }}
                       />
                       <div className="flex-1">
-                        <p className="font-bold text-foreground">{atleta.apelido}</p>
+                        <p className="font-bold text-foreground">
+                          {atleta.apelido}
+                          {atleta.posicao_id === 2 && (() => {
+                            const side = getLateralSideFromStore(atleta.atleta_id);
+                            return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                          })()}
+                        </p>
                         <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold">
                           {posicaoInfo?.nome}
                         </span>

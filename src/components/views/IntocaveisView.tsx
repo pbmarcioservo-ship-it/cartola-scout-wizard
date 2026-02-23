@@ -6,6 +6,17 @@ import { useMercado, useRodada, useHistoricoRodadas, POSICOES } from '@/hooks/us
 import { AlertCircle, Shield } from 'lucide-react';
 import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
 import { PosicaoFilter } from '@/types/cartola';
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
 
 export function IntocaveisView() {
   const [mando, setMando] = useState('casa_fora');
@@ -290,7 +301,13 @@ export function IntocaveisView() {
                   {/* Name + Club shield */}
                   <div className="flex items-center gap-2 min-w-[160px] w-[160px]">
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-foreground text-sm truncate">{atleta.apelido}</p>
+                      <p className="font-bold text-foreground text-sm truncate">
+                        {atleta.apelido}
+                        {atleta.posicao_id === 2 && (() => {
+                          const side = getLateralSideFromStore(atleta.atleta_id);
+                          return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                        })()}
+                      </p>
                       <span className="text-xs text-muted-foreground">{posInfo?.abreviacao}</span>
                     </div>
                     {clube && <ClubeEscudo clube={clube} size="xs" />}

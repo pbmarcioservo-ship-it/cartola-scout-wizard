@@ -5,6 +5,17 @@ import { useDestaques, useMercado, POSICOES } from '@/hooks/useCartolaData';
 import { AlertCircle, Crown } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
 
 export function MaisEscaladosView() {
   const { data: destaquesData, isLoading: loadingDestaques, error } = useDestaques();
@@ -117,7 +128,13 @@ export function MaisEscaladosView() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-foreground truncate">{atleta.apelido}</p>
+                        <p className="font-bold text-foreground truncate">
+                          {atleta.apelido}
+                          {atleta.posicao_id === 2 && (() => {
+                            const side = getLateralSideFromStore(atleta.atleta_id || atleta.id);
+                            return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                          })()}
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {posicao && (
                             <span className="bg-muted px-1.5 py-0.5 rounded font-bold">
@@ -188,7 +205,13 @@ export function MaisEscaladosView() {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-foreground truncate">{atleta.apelido}</p>
+                        <p className="font-bold text-foreground truncate">
+                          {atleta.apelido}
+                          {atleta.posicao_id === 2 && (() => {
+                            const side = getLateralSideFromStore(atleta.atleta_id || atleta.id);
+                            return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                          })()}
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {posicao && (
                             <span className="bg-muted px-1.5 py-0.5 rounded font-bold">

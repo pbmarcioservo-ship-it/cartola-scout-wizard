@@ -10,6 +10,17 @@ import { useMercado, POSICOES, STATUS_ATLETA } from '@/hooks/useCartolaData';
 import { PosicaoFilter } from '@/types/cartola';
 import { AlertCircle, TrendingUp, TrendingDown, Minus, GitCompare, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    if (!raw) return null;
+    const map = JSON.parse(raw) as Record<string, 'LD' | 'LE'>;
+    return map[String(atletaId)] || null;
+  } catch {
+    return null;
+  }
+}
 import { CartolaAtleta } from '@/lib/cartola-api';
 
 export function AtletasView() {
@@ -196,7 +207,13 @@ export function AtletasView() {
                         }}
                       />
                       <div>
-                        <p className="font-bold text-foreground">{atleta.apelido}</p>
+                        <p className="font-bold text-foreground">
+                          {atleta.apelido}
+                          {atleta.posicao_id === 2 && (() => {
+                            const side = getLateralSideFromStore(atleta.atleta_id);
+                            return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                          })()}
+                        </p>
                         <p className="text-xs text-muted-foreground">{atleta.nome}</p>
                       </div>
                     </div>

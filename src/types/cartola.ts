@@ -97,4 +97,6 @@ export type ViewType =
   | 'provaveis' 
   | 'batedores'
   | 'escalados'
-  | 'intocaveis';
+  | 'intocaveis'
+  | 'time-rodada'
+  | 'artilheiros';

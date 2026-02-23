@@ -1,13 +1,91 @@
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { cartolaApi, CartolaMercado, CartolaAtletasPontuados, CartolaRodada, CartolaClube, CartolaPartida, CartolaDestaques } from '@/lib/cartola-api';
 
+const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
+function normName(s?: string) {
+  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
+}
+function seedLateralSides(data: CartolaMercado) {
+  try {
+    const raw = localStorage.getItem(LS_KEY_LATERAL);
+    const store = raw ? (JSON.parse(raw) as Record<string, 'LD' | 'LE'>) : {};
+    const nameSide: Record<string, 'LD' | 'LE'> = {
+      'MAYKE': 'LD',
+      'PIQUEREZ': 'LE',
+      'VARELA': 'LD',
+      'AYRTON LUCAS': 'LE',
+      'SAMUEL XAVIER': 'LD',
+      'MARCELO': 'LE',
+      'DI PLACIDO': 'LD',
+      'MARCAL': 'LE',
+      'FAGNER': 'LD',
+      'MATHEUS BIDU': 'LE',
+      'FABIO': 'LD',
+      'REINALDO': 'LE',
+      'MARIANO': 'LD',
+      'GUILHERME ARANA': 'LE',
+      'RENAN LODI': 'LE',
+      'WILLIAM': 'LD',
+      'MARLON': 'LE',
+      'ADERLAN': 'LD',
+      'JUNINHO CAPIXABA': 'LE',
+      'IGOR VINICIUS': 'LD',
+      'WELLINGTON': 'LE',
+      'PAULO HENRIQUE': 'LD',
+      'LUCAS PITON': 'LE',
+      'BRUNO PACHECO': 'LE',
+      'TINGA': 'LD',
+      'ROMAN GOMEZ': 'LD',
+      'UENDEL': 'LE',
+      'IGOR FORMIGA': 'LD',
+      'ALAN RUSCHEL': 'LE',
+      'BUSTOS': 'LD',
+      'RENE': 'LE',
+      'MADSON': 'LD',
+    };
+    const laterais = data.atletas.filter(a => a.posicao_id === 2);
+    const byClub: Record<number, typeof laterais> = {};
+    for (const a of laterais) {
+      if (!byClub[a.clube_id]) byClub[a.clube_id] = [];
+      byClub[a.clube_id].push(a);
+    }
+    for (const [clubIdStr, arr] of Object.entries(byClub)) {
+      const arrSorted = [...arr].sort((a, b) => b.jogos_num - a.jogos_num);
+      const assigned: Record<number, 'LD' | 'LE'> = {};
+      for (const a of arrSorted) {
+        if (store[String(a.atleta_id)]) continue;
+        const s = nameSide[normName(a.apelido)];
+        if (s) assigned[a.atleta_id] = s;
+      }
+      const needAssign = arrSorted.filter(a => !assigned[a.atleta_id]);
+      if (needAssign.length === 1) {
+        const otherSide = Object.values(assigned).includes('LE') ? 'LD' : Object.values(assigned).includes('LD') ? 'LE' : 'LD';
+        assigned[needAssign[0].atleta_id] = otherSide as 'LD' | 'LE';
+      } else if (needAssign.length >= 2) {
+        let toggle: 'LD' | 'LE' = Object.values(assigned).includes('LD') ? 'LE' : 'LD';
+        for (const a of needAssign) {
+          assigned[a.atleta_id] = toggle;
+          toggle = toggle === 'LD' ? 'LE' : 'LD';
+        }
+      }
+      for (const [aidStr, side] of Object.entries(assigned)) {
+        store[aidStr] = side;
+      }
+    }
+    localStorage.setItem(LS_KEY_LATERAL, JSON.stringify(store));
+  } catch {}
+}
 export function useMercado() {
-  return useQuery<CartolaMercado>({
+  const q = useQuery<CartolaMercado>({
     queryKey: ['cartola', 'mercado'],
     queryFn: () => cartolaApi.getMercado(),
     staleTime: 1000 * 60 * 5,
     refetchInterval: 1000 * 60 * 5,
   });
+  if (q.data) {
+    seedLateralSides(q.data);
+  }
+  return q;
 }
 
 export function usePontuados() {
