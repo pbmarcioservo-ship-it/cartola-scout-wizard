@@ -849,18 +849,18 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: nu
     </div>
   );
   return (
-    <div className="flex items-end justify-center gap-4">
-      {tecnico ? (
-        <div className="bg-card rounded-xl shadow px-3 py-2">
-          <div className="scale-95">
-            <PlayerCard atleta={tecnico} clube={tecnico ? (clubes?.[String(tecnico.clube_id)] || clubes?.[tecnico.clube_id]) : null} />
-          </div>
-        </div>
-      ) : (
-        <div className="text-muted-foreground text-sm">Sem técnico</div>
-      )}
+    <div className="flex justify-center">
       <div className="w-full">
         <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto max-w-[520px] min-h-[720px]">
+          {tecnico && (
+            <div className="absolute left-0 bottom-3 -translate-x-full">
+              <div className="bg-card rounded-xl shadow px-3 py-2">
+                <div className="scale-95">
+                  <PlayerCard atleta={tecnico} clube={tecnico ? (clubes?.[String(tecnico.clube_id)] || clubes?.[tecnico.clube_id]) : null} />
+                </div>
+              </div>
+            </div>
+          )}
           <div className="absolute inset-2 rounded-2xl border-4 border-white pointer-events-none"></div>
           <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-0 border-t-4 border-white pointer-events-none"></div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white pointer-events-none"></div>
