@@ -849,8 +849,8 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: nu
     </div>
   );
   return (
-    <div className="flex gap-4">
-      <div className="flex-1">
+    <div className="flex flex-col gap-3">
+      <div className="w-full">
         <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto max-w-[520px] min-h-[720px]">
           <div className="absolute inset-2 rounded-2xl border-4 border-white pointer-events-none"></div>
           <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-0 border-t-4 border-white pointer-events-none"></div>
@@ -865,9 +865,6 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: nu
           <svg className="pointer-events-none absolute right-1 top-10" width="56" height="260" viewBox="0 0 24 260" fill="none">
             <path d="M12 240V20 M4 36 L12 20 L20 36" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <div className="pointer-events-none absolute left-4 bottom-4">
-            <span className="inline-block bg-black text-white px-2 py-1 rounded-md text-xl font-extrabold tracking-wide">4-3-3</span>
-          </div>
           <div className="relative flex flex-col justify-between min-h-[640px] py-4">
             <div>{renderRow([atacs[0] || null, atacs[1] || null, atacs[2] || null])}</div>
             <div>{renderRow([meis[0] || null, meis[1] || null, meis[2] || null])}</div>
@@ -876,19 +873,17 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: nu
           </div>
         </div>
       </div>
-      <div className="w-64">
-        <div className="bg-card rounded-xl overflow-hidden shadow-lg">
-          <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground">
-            Técnico
-          </div>
-          <div className="p-4 flex justify-center">
-            {tecnico ? (
+      <div className="mx-auto w-full max-w-[520px] flex items-center gap-4 pl-1">
+        <span className="inline-block bg-black text-white px-3 py-1.5 rounded-md text-xl font-extrabold tracking-wide">4-3-3</span>
+        {tecnico ? (
+          <div className="bg-card rounded-xl shadow px-3 py-2">
+            <div className="scale-95">
               <PlayerCard atleta={tecnico} clube={tecnico ? (clubes?.[String(tecnico.clube_id)] || clubes?.[tecnico.clube_id]) : null} />
-            ) : (
-              <div className="text-muted-foreground text-sm">Sem técnico</div>
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-muted-foreground text-sm">Sem técnico</div>
+        )}
       </div>
     </div>
   );
