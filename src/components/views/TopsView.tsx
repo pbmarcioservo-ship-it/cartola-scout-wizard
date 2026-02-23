@@ -21,7 +21,7 @@ const POSICAO_ID_MAP: Record<string, number> = {
   goleiro: 1, lateral: 2, zagueiro: 3, meia: 4, atacante: 5, tecnico: 6,
 };
 
-export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' } = {}) {
+export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' | 'time-only' } = {}) {
   const [ultimas, setUltimas] = useState(5);
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
@@ -299,24 +299,40 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-xs text-muted-foreground font-bold">Rodadas:</span>
-        {[3,5,7].map(n => (
-          <button
-            key={n}
-            className={cn('px-2 py-1 rounded text-xs font-bold', ultimas === n ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground')}
-            onClick={() => setUltimas(n)}
-          >
-            {n}
-          </button>
-        ))}
-      </div>
-      {historicoData && historicoData.length > 0 && historicoData.length < 3 && (
-        <div className="text-[11px] text-muted-foreground mb-2">
-          * Baseado em apenas {historicoData.length} jogos
-        </div>
+      {mode !== 'time-only' && (
+        <>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs text-muted-foreground font-bold">Rodadas:</span>
+            {[3,5,7].map(n => (
+              <button
+                key={n}
+                className={cn('px-2 py-1 rounded text-xs font-bold', ultimas === n ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground')}
+                onClick={() => setUltimas(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          {historicoData && historicoData.length > 0 && historicoData.length < 3 && (
+            <div className="text-[11px] text-muted-foreground mb-2">
+              * Baseado em apenas {historicoData.length} jogos
+            </div>
+          )}
+        </>
       )}
-      {mode === 'artilheiros-only' ? (
+      {mode === 'time-only' ? (
+        <div className="w-full">
+          <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground mb-2">
+            🟩 Time da Rodada
+          </div>
+          <TimeDaRodada
+            getTop={(posId, n) => topPlayersForPos(posId, n)}
+            capitao={capitaesTop3?.[0] || null}
+            tecnico={(topPlayersForPos(6,1)[0] || null)}
+            clubes={mercadoData?.clubes || {}}
+          />
+        </div>
+      ) : mode === 'artilheiros-only' ? (
         <div className="w-full">
           <div className="text-xs text-muted-foreground mb-4">
             Legenda: (G) Gol • (ASS) Assistência • (FD) Finalização defendida • (FF) Finalização pra fora • (FS) Faltas sofridas
