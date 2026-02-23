@@ -34,15 +34,15 @@ export function MaisEscaladosView() {
     let capitaes: any[] = [];
 
     if (Array.isArray(raw)) {
-      populares = raw.slice(0, 15);
+      populares = raw.slice(0, 10);
     } else if (raw.atletas_populares) {
-      populares = raw.atletas_populares?.slice(0, 15) || [];
+      populares = raw.atletas_populares?.slice(0, 10) || [];
       capitaes = raw.capitaes?.slice(0, 5) || [];
     } else if (raw.destaques?.atletas_populares || raw.destaques?.capitaes) {
-      populares = raw.destaques.atletas_populares?.slice(0, 15) || [];
+      populares = raw.destaques.atletas_populares?.slice(0, 10) || [];
       capitaes = raw.destaques.capitaes?.slice(0, 5) || [];
     } else if (raw.Pilotos || raw.populares) {
-      populares = (raw.populares || []).slice(0, 15);
+      populares = (raw.populares || []).slice(0, 10);
       capitaes = (raw.capitaes || []).slice(0, 5);
     }
 
@@ -94,7 +94,7 @@ export function MaisEscaladosView() {
         <TabsContent value="populares">
           <div className="bg-card rounded-xl overflow-hidden shadow-lg">
             <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground">
-              🔥 Top 15 Mais Escalados da Rodada
+              🔥 Top 10 Mais Escalados da Rodada
             </div>
             <div>
               {populares.length === 0 ? (
@@ -103,7 +103,7 @@ export function MaisEscaladosView() {
                 </div>
               ) : (
                 populares.map((atleta: any, idx: number) => {
-                  const clube = clubes[atleta.clube_id];
+                  const clube = clubes[String(atleta.clube_id)] || clubes[atleta.clube_id];
                   const posicao = POSICOES[atleta.posicao_id];
 
                   return (
@@ -176,7 +176,7 @@ export function MaisEscaladosView() {
                 </div>
               ) : (
                 capitaes.map((atleta: any, idx: number) => {
-                  const clube = clubes[atleta.clube_id];
+                  const clube = clubes[String(atleta.clube_id)] || clubes[atleta.clube_id];
                   const posicao = POSICOES[atleta.posicao_id];
 
                   return (
