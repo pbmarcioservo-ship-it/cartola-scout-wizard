@@ -20,6 +20,7 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
 const POSICAO_ID_MAP: Record<string, number> = {
   goleiro: 1, lateral: 2, zagueiro: 3, meia: 4, atacante: 5, tecnico: 6,
 };
+const LS_KEY_LINEUP = 'statusfc_lineup_time_rodada';
 
 export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' | 'time-only' } = {}) {
   const [ultimas, setUltimas] = useState(5);
@@ -128,6 +129,64 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   };
 
   const atletasProvaveis = useMemo(() => (mercadoData?.atletas || []).filter(a => a.status_id === 7), [mercadoData]);
+
+  const pickTopByMedia = (posId: number, count: number, used: Set<number>) => {
+    const pool = (mercadoData?.atletas || [])
+      .filter(a => a.posicao_id === posId && a.status_id === 7 && !used.has(a.atleta_id))
+      .sort((a, b) => b.media_num - a.media_num);
+    return pool.slice(0, count);
+  };
+
+  useEffect(() => {
+    if (mode !== 'time-only') return;
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY_LINEUP) : null;
+    const idx: Record<number, any> = {};
+    for (const a of (mercadoData?.atletas || [])) idx[a.atleta_id] = a;
+    if (raw) {
+      try {
+        const saved = JSON.parse(raw) as { gk?: number; lats?: number[]; zags?: number[]; meis?: number[]; atacs?: number[]; tecnico?: number };
+        const next = {
+          gk: saved.gk ? idx[saved.gk] || null : null,
+          lats: (saved.lats || []).map(id => idx[id]).filter(Boolean),
+          zags: (saved.zags || []).map(id => idx[id]).filter(Boolean),
+          meis: (saved.meis || []).map(id => idx[id]).filter(Boolean),
+          atacs: (saved.atacs || []).map(id => idx[id]).filter(Boolean),
+          tecnico: saved.tecnico ? idx[saved.tecnico] || null : null,
+        };
+        const enough = next.gk && next.tecnico && next.lats.length === 2 && next.zags.length === 2 && next.meis.length === 3 && next.atacs.length === 3;
+        if (enough) {
+          setLineup(next);
+          setHighlightIds([]);
+          return;
+        }
+      } catch {}
+    }
+    const used = new Set<number>();
+    const gk = pickTopByMedia(1, 1, used)[0] || null;
+    if (gk) used.add(gk.atleta_id);
+    const lats = pickTopByMedia(2, 2, used); lats.forEach(x => used.add(x.atleta_id));
+    const zags = pickTopByMedia(3, 2, used); zags.forEach(x => used.add(x.atleta_id));
+    const meis = pickTopByMedia(4, 3, used); meis.forEach(x => used.add(x.atleta_id));
+    const atacs = pickTopByMedia(5, 3, used); atacs.forEach(x => used.add(x.atleta_id));
+    const tecnico = pickTopByMedia(6, 1, used)[0] || null;
+    const next = { gk, lats, zags, meis, atacs, tecnico };
+    setLineup(next);
+    setHighlightIds([]);
+  }, [mode, mercadoData]);
+
+  useEffect(() => {
+    if (mode !== 'time-only') return;
+    if (!lineup) return;
+    const payload = {
+      gk: lineup.gk?.atleta_id || null,
+      lats: lineup.lats?.map(a => a.atleta_id) || [],
+      zags: lineup.zags?.map(a => a.atleta_id) || [],
+      meis: lineup.meis?.map(a => a.atleta_id) || [],
+      atacs: lineup.atacs?.map(a => a.atleta_id) || [],
+      tecnico: lineup.tecnico?.atleta_id || null,
+    };
+    try { localStorage.setItem(LS_KEY_LINEUP, JSON.stringify(payload)); } catch {}
+  }, [mode, lineup]);
 
   const acumuladosPorAtleta = useMemo(() => {
     const acc: Record<number, { G: number; A: number; FD: number; FF: number; FT: number; DS: number; SG: number; DE: number }> = {};
@@ -362,22 +421,31 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
               <div className="font-bold uppercase text-center">🟩 Time da Rodada</div>
               <button
                 onClick={() => {
-                  if (!lineup) return;
+                  const empty = !lineup || !lineup.gk || !lineup.tecnico || lineup.lats.length !== 2 || lineup.zags.length !== 2 || lineup.meis.length !== 3 || lineup.atacs.length !== 3;
+                  if (empty) {
+                    const used = new Set<number>();
+                    const gk = pickTopByMedia(1, 1, used)[0] || null; if (gk) used.add(gk.atleta_id);
+                    const lats = pickTopByMedia(2, 2, used); lats.forEach(x => used.add(x.atleta_id));
+                    const zags = pickTopByMedia(3, 2, used); zags.forEach(x => used.add(x.atleta_id));
+                    const meis = pickTopByMedia(4, 3, used); meis.forEach(x => used.add(x.atleta_id));
+                    const atacs = pickTopByMedia(5, 3, used); atacs.forEach(x => used.add(x.atleta_id));
+                    const tecnico = pickTopByMedia(6, 1, used)[0] || null;
+                    setLineup({ gk, lats, zags, meis, atacs, tecnico });
+                    setHighlightIds([]);
+                    return;
+                  }
                   const current = [lineup.gk, ...lineup.lats, ...lineup.zags, ...lineup.meis, ...lineup.atacs].filter(Boolean) as any[];
                   const duvidas = current.filter(a => a.status_id === 2 || a.status_id === 6).map(a => a.atleta_id);
                   setHighlightIds(duvidas);
                   if (timeStatus === 'provavel') {
                     const used = new Set<number>(current.map(a => a.atleta_id));
-                    const pick = (posId: number) => {
-                      const list = (mercadoData?.atletas || [])
-                        .filter(a => a.posicao_id === posId && a.status_id === 7 && !used.has(a.atleta_id))
-                        .sort((a, b) => b.media_num - a.media_num);
-                      return list.length > 0 ? list[0] : null;
-                    };
                     const replaceIfNeeded = (a: any, posId: number) => {
                       if (!a) return a;
                       if (a.status_id === 2 || a.status_id === 6) {
-                        const r = pick(posId);
+                        const pool = (mercadoData?.atletas || [])
+                          .filter(x => x.posicao_id === posId && x.status_id === 7 && !used.has(x.atleta_id))
+                          .sort((x, y) => y.media_num - x.media_num);
+                        const r = pool[0] || null;
                         if (r) {
                           used.add(r.atleta_id);
                           return r;
