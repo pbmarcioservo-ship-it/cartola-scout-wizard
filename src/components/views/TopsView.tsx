@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, POSICOES } from '@/hooks/useCartolaData';
@@ -29,6 +29,15 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   const { data: rodadaData } = useRodada();
   const { data: partidasData, isLoading: loadingPartidas, error: errorPartidas } = usePartidas();
   const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(rodadaData?.rodada_atual, ultimas);
+  const [lineup, setLineup] = useState<{
+    gk: any | null;
+    lats: any[];
+    zags: any[];
+    meis: any[];
+    atacs: any[];
+    tecnico: any | null;
+  } | null>(null);
+  const [highlightIds, setHighlightIds] = useState<number[]>([]);
 
   const isLoading = loadingMercado || loadingPartidas || loadingHistorico;
 
@@ -243,6 +252,19 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     return lista.slice(0, limit);
   };
 
+  useEffect(() => {
+    const next = {
+      gk: (topPlayersForPos(1, 1)[0] || null),
+      lats: (topPlayersForPos(2, 2) || []),
+      zags: (topPlayersForPos(3, 2) || []),
+      meis: (topPlayersForPos(4, 3) || []),
+      atacs: (topPlayersForPos(5, 3) || []),
+      tecnico: (topPlayersForPos(6, 1)[0] || null),
+    };
+    setLineup(next);
+    setHighlightIds([]);
+  }, [refreshKey]);
+
   const capitaesTop3 = useMemo(() => {
     const cand = atletasProvaveis.filter(a => [POSICAO_ID_MAP.meia, POSICAO_ID_MAP.atacante].includes(a.posicao_id));
     const scored = cand.map(a => {
@@ -339,7 +361,44 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
               </div>
               <div className="font-bold uppercase text-center">🟩 Time da Rodada</div>
               <button
-                onClick={() => setRefreshKey((k) => k + 1)}
+                onClick={() => {
+                  if (!lineup) return;
+                  const current = [lineup.gk, ...lineup.lats, ...lineup.zags, ...lineup.meis, ...lineup.atacs].filter(Boolean) as any[];
+                  const duvidas = current.filter(a => a.status_id === 2 || a.status_id === 6).map(a => a.atleta_id);
+                  setHighlightIds(duvidas);
+                  if (timeStatus === 'provavel') {
+                    const used = new Set<number>(current.map(a => a.atleta_id));
+                    const pick = (posId: number) => {
+                      const list = (mercadoData?.atletas || [])
+                        .filter(a => a.posicao_id === posId && a.status_id === 7 && !used.has(a.atleta_id))
+                        .sort((a, b) => b.media_num - a.media_num);
+                      return list.length > 0 ? list[0] : null;
+                    };
+                    const replaceIfNeeded = (a: any, posId: number) => {
+                      if (!a) return a;
+                      if (a.status_id === 2 || a.status_id === 6) {
+                        const r = pick(posId);
+                        if (r) {
+                          used.add(r.atleta_id);
+                          return r;
+                        }
+                      }
+                      return a;
+                    };
+                    const newLineup = {
+                      gk: replaceIfNeeded(lineup.gk, 1),
+                      lats: lineup.lats.map(x => replaceIfNeeded(x, 2)),
+                      zags: lineup.zags.map(x => replaceIfNeeded(x, 3)),
+                      meis: lineup.meis.map(x => replaceIfNeeded(x, 4)),
+                      atacs: lineup.atacs.map(x => replaceIfNeeded(x, 5)),
+                      tecnico: lineup.tecnico,
+                    };
+                    const newCurr = [newLineup.gk, ...newLineup.lats, ...newLineup.zags, ...newLineup.meis, ...newLineup.atacs].filter(Boolean) as any[];
+                    const newDuvidas = newCurr.filter(a => a.status_id === 2 || a.status_id === 6).map(a => a.atleta_id);
+                    setHighlightIds(newDuvidas);
+                    setLineup(newLineup);
+                  }
+                }}
                 className="bg-primary-foreground text-primary font-black px-3 py-1 rounded"
               >
                 Atualizar Time
@@ -350,8 +409,10 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             key={refreshKey}
             getTop={(posId, n) => topPlayersForPos(posId, n)}
             capitao={capitaesTop3?.[0] || null}
-            tecnico={(topPlayersForPos(6,1)[0] || null)}
+            tecnico={(lineup?.tecnico ?? (topPlayersForPos(6,1)[0] || null))}
             clubes={mercadoData?.clubes || {}}
+            lineup={lineup ? { gk: lineup.gk, lats: lineup.lats, zags: lineup.zags, meis: lineup.meis, atacs: lineup.atacs } : undefined}
+            highlightIds={highlightIds}
           />
         </div>
       ) : mode === 'artilheiros-only' ? (
@@ -824,7 +885,7 @@ function ProbBadge({ label, value }: { label: string; value: number }) {
   );
 }
 
-function PlayerCard({ atleta, clube, isCapitao }: { atleta: any; clube: any; isCapitao?: boolean }) {
+function PlayerCard({ atleta, clube, isCapitao, highlighted }: { atleta: any; clube: any; isCapitao?: boolean; highlighted?: boolean }) {
   if (!atleta) return null;
   return (
     <div className="relative flex flex-col items-center">
@@ -832,7 +893,7 @@ function PlayerCard({ atleta, clube, isCapitao }: { atleta: any; clube: any; isC
         <img
           src={atleta.foto?.replace('FORMATO', '80x80')}
           alt={atleta.apelido}
-          className="w-16 h-16 rounded-full object-cover ring-2 ring-white shadow-lg"
+          className={cn('w-16 h-16 rounded-full object-cover shadow-lg', highlighted ? 'ring-4 ring-yellow-400' : 'ring-2 ring-white')}
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/placeholder.svg';
           }}
@@ -856,17 +917,17 @@ function PlayerCard({ atleta, clube, isCapitao }: { atleta: any; clube: any; isC
   );
 }
 
-function TimeDaRodada({ getTop, capitao, tecnico, clubes }: { getTop: (posId: number, n: number) => any[]; capitao: any; tecnico: any; clubes: Record<string, any> }) {
-  const gk = getTop(1,1)[0] || null;
-  const lats = getTop(2,2) || [];
-  const zags = getTop(3,2) || [];
-  const meis = getTop(4,3) || [];
-  const atacs = getTop(5,3) || [];
+function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }: { getTop: (posId: number, n: number) => any[]; capitao: any; tecnico: any; clubes: Record<string, any>; lineup?: { gk: any | null; lats: any[]; zags: any[]; meis: any[]; atacs: any[] }; highlightIds?: number[] }) {
+  const gk = lineup?.gk ?? (getTop(1,1)[0] || null);
+  const lats = lineup?.lats ?? (getTop(2,2) || []);
+  const zags = lineup?.zags ?? (getTop(3,2) || []);
+  const meis = lineup?.meis ?? (getTop(4,3) || []);
+  const atacs = lineup?.atacs ?? (getTop(5,3) || []);
   const isCap = (a: any) => capitao && a && a.atleta_id === capitao.atleta_id;
   const renderRow = (items: any[]) => (
     <div className="flex items-center justify-around py-3">
       {items.map((a, idx) => (
-        <PlayerCard key={a?.atleta_id || idx} atleta={a} clube={a ? (clubes?.[String(a.clube_id)] || clubes?.[a.clube_id]) : null} isCapitao={isCap(a)} />
+        <PlayerCard key={a?.atleta_id || idx} atleta={a} clube={a ? (clubes?.[String(a.clube_id)] || clubes?.[a.clube_id]) : null} isCapitao={isCap(a)} highlighted={!!(a && highlightIds && highlightIds.includes(a.atleta_id))} />
       ))}
     </div>
   );
