@@ -23,6 +23,8 @@ const POSICAO_ID_MAP: Record<string, number> = {
 
 export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' | 'time-only' } = {}) {
   const [ultimas, setUltimas] = useState(5);
+  const [timeStatus, setTimeStatus] = useState<'provavel' | 'duvida'>('provavel');
+  const [refreshKey, setRefreshKey] = useState(0);
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
   const { data: partidasData, isLoading: loadingPartidas, error: errorPartidas } = usePartidas();
@@ -322,10 +324,30 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       )}
       {mode === 'time-only' ? (
         <div className="w-full">
-          <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground mb-2">
-            🟩 Time da Rodada
+          <div className="bg-primary text-primary-foreground px-3 py-2 mb-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold">Status</span>
+                <select
+                  value={timeStatus}
+                  onChange={(e) => setTimeStatus(e.target.value as 'provavel' | 'duvida')}
+                  className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-xs font-bold cursor-pointer"
+                >
+                  <option value="provavel">Provável</option>
+                  <option value="duvida">Dúvida</option>
+                </select>
+              </div>
+              <div className="font-bold uppercase text-center">🟩 Time da Rodada</div>
+              <button
+                onClick={() => setRefreshKey((k) => k + 1)}
+                className="bg-primary-foreground text-primary font-black px-3 py-1 rounded"
+              >
+                Atualizar Time
+              </button>
+            </div>
           </div>
           <TimeDaRodada
+            key={refreshKey}
             getTop={(posId, n) => topPlayersForPos(posId, n)}
             capitao={capitaesTop3?.[0] || null}
             tecnico={(topPlayersForPos(6,1)[0] || null)}
