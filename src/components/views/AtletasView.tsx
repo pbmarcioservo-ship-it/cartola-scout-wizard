@@ -28,6 +28,7 @@ export function AtletasView() {
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
   const [status, setStatus] = useState('todos');
+  const [sortScout, setSortScout] = useState<string>(''); // scout key or empty for default
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
 
   // Compare mode state
@@ -46,7 +47,7 @@ export function AtletasView() {
   const atletasFiltrados = useMemo(() => {
     if (!mercadoData?.atletas) return [];
 
-    return mercadoData.atletas
+    const list = mercadoData.atletas
       .filter(atleta => {
         if (search && !atleta.apelido.toLowerCase().includes(search.toLowerCase())) return false;
         if (time !== 'todos' && atleta.clube_id !== Number(time)) return false;
@@ -57,9 +58,18 @@ export function AtletasView() {
         if (status !== 'todos' && atleta.status_id !== Number(status)) return false;
         return true;
       })
-      .sort((a, b) => b.media_num - a.media_num)
+      .sort((a, b) => {
+        if (!sortScout) {
+          return b.media_num - a.media_num;
+        }
+        const av = (a.scout as any)?.[sortScout] || 0;
+        const bv = (b.scout as any)?.[sortScout] || 0;
+        if (bv !== av) return bv - av;
+        return b.media_num - a.media_num;
+      })
       .slice(0, 50);
-  }, [mercadoData, search, time, posicao, status]);
+    return list;
+  }, [mercadoData, search, time, posicao, status, sortScout]);
 
   const clubes = mercadoData?.clubes || {};
 
@@ -119,11 +129,28 @@ export function AtletasView() {
         onStatusChange={setStatus}
         clubeOptions={clubeOptions}
       >
+        <select
+          value={sortScout}
+          onChange={(e) => setSortScout(e.target.value)}
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[180px] cursor-pointer"
+        >
+          <option value="">Ordenar por Scout</option>
+          <option value="A">Assistências</option>
+          <option value="DS">Desarme</option>
+          <option value="FC">Falta Cometida</option>
+          <option value="FS">Falta Sofrida</option>
+          <option value="FD">Fin. Defendida</option>
+          <option value="FF">Fin. Fora</option>
+          <option value="FT">Fin. na Trave</option>
+          <option value="G">Gols</option>
+          <option value="I">Impedimento</option>
+          <option value="SG">Sem Gol (SG)</option>
+        </select>
         <Button
           variant={compareMode ? 'destructive' : 'outline'}
           size="sm"
           onClick={toggleCompareMode}
-          className="font-bold gap-1.5"
+          className="font-bold gap-1.5 ml-2"
         >
           {compareMode ? <X className="w-4 h-4" /> : <GitCompare className="w-4 h-4" />}
           {compareMode ? 'Cancelar' : 'Comparar'}
