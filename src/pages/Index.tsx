@@ -11,6 +11,7 @@ import { IntocaveisView } from '@/components/views/IntocaveisView';
 import { ViewType } from '@/types/cartola';
 import { TimeRodadaView } from '@/components/views/TimeRodadaView';
 import { TopArtilheirosView } from '@/components/views/TopArtilheirosView';
+import { AcompanhamentoView } from '@/components/views/AcompanhamentoView';
 import { useRodada } from '@/hooks/useCartolaData';
 import { Calendar, Clock, Users } from 'lucide-react';
 
@@ -40,6 +41,8 @@ export default function Index() {
         return <TimeRodadaView />;
       case 'artilheiros':
         return <TopArtilheirosView />;
+      case 'acompanhamento':
+        return <AcompanhamentoView />;
       default:
         return <CruzamentoView />;
     }

@@ -99,4 +99,5 @@ export type ViewType =
   | 'escalados'
   | 'intocaveis'
   | 'time-rodada'
-  | 'artilheiros';
+  | 'artilheiros'
+  | 'acompanhamento';
