@@ -404,8 +404,8 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         </>
       )}
       {mode === 'time-only' ? (
-        <div className="w-full">
-          <div className="bg-primary text-primary-foreground px-3 py-2 mb-2">
+        <div className="w-full min-h-[100vh] flex flex-col items-center justify-center">
+          <div className="bg-primary text-primary-foreground px-3 py-2 mb-4 w-full max-w-[720px]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold">Status</span>
@@ -1006,7 +1006,7 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }
   return (
     <div className="flex justify-center">
       <div className="w-full">
-        <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto max-w-[520px] min-h-[720px]">
+        <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto w-[95vw] max-w-[520px] min-h-[60vh] md:min-h-[640px]">
           {tecnico && (
             <div className="absolute left-3 bottom-8 z-20">
               <div className="scale-95">
