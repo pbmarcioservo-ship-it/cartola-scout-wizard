@@ -16,7 +16,7 @@ export function AcompanhamentoView() {
   return (
     <div className="w-full">
       <div className="bg-primary text-primary-foreground px-3 py-2 mb-3 text-center font-black">
-        TELA DE PARCIAIS OK
+        ACOMPANHAMENTO DE PARCIAIS
       </div>
       <div className="bg-primary text-primary-foreground px-3 py-2 mb-3">
         <div className="flex items-center justify-between">
