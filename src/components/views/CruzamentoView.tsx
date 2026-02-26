@@ -201,11 +201,9 @@ export function CruzamentoView() {
 
               return (
                 <tr key={partida.partida_id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                  <td className="w-[15%] text-right pr-2 font-black text-success text-sm py-3">
-                    {conquistaVal}
-                  </td>
+                  <td className="w-[15%] text-right pr-2 font-black text-success text-sm py-3"></td>
                   <td className="w-[25%]">
-                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" reverse showValue={false} />
+                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" showValue valueInside />
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
                     <div className="flex items-center justify-center gap-2">
@@ -217,11 +215,9 @@ export function CruzamentoView() {
                     </div>
                   </td>
                   <td className="w-[25%]">
-                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" showValue={false} />
+                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" reverse showValue valueInside />
                   </td>
-                  <td className="w-[15%] text-left pl-2 font-black text-destructive text-sm py-3">
-                    {cedeVal}
-                  </td>
+                  <td className="w-[15%] text-left pl-2 font-black text-destructive text-sm py-3"></td>
                 </tr>
               );
             })}
@@ -250,11 +246,9 @@ export function CruzamentoView() {
 
               return (
                 <tr key={partida.partida_id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                  <td className="w-[15%] text-right pr-2 font-black text-destructive text-sm py-3">
-                    {cedeVal}
-                  </td>
+                  <td className="w-[15%] text-right pr-2 font-black text-destructive text-sm py-3"></td>
                   <td className="w-[25%]">
-                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" reverse showValue={false} />
+                    <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" showValue valueInside />
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
                     <div className="flex items-center justify-center gap-2">
@@ -266,11 +260,9 @@ export function CruzamentoView() {
                     </div>
                   </td>
                   <td className="w-[25%]">
-                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" showValue={false} />
+                    <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" reverse showValue valueInside />
                   </td>
-                  <td className="w-[15%] text-left pl-2 font-black text-success text-sm py-3">
-                    {conquistaVal}
-                  </td>
+                  <td className="w-[15%] text-left pl-2 font-black text-success text-sm py-3"></td>
                 </tr>
               );
             })}
