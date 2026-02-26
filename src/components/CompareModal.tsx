@@ -3,8 +3,8 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
-import { CartolaAtleta, CartolaClube, CartolaScout } from '@/lib/cartola-api';
-import { POSICOES } from '@/hooks/useCartolaData';
+import { CartolaAtleta, CartolaClube, CartolaScout, CartolaPartida } from '@/lib/cartola-api';
+import { POSICOES, useRodada, useHistoricoRodadas } from '@/hooks/useCartolaData';
 import { cn } from '@/lib/utils';
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
 function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
@@ -119,13 +119,38 @@ export function CompareModal({ atletas, clubes, open, onOpenChange }: CompareMod
   const clubeA = clubes[a.clube_id];
   const clubeB = clubes[b.clube_id];
 
-  // Build main stats
+  const { data: rodadaData } = useRodada();
+  const { data: historico } = useHistoricoRodadas(rodadaData?.rodada_atual, 10);
+
+  const findMatchForClub = (partidas: CartolaPartida[] | undefined, clubeId: number) =>
+    partidas?.find(p => p.clube_casa_id === clubeId || p.clube_visitante_id === clubeId);
+
+  const computeHomeAwayAvg = (atleta: CartolaAtleta) => {
+    let sumHome = 0, cntHome = 0, sumAway = 0, cntAway = 0;
+    if (historico) {
+      for (const h of historico) {
+        const atletaData = h.data?.atletas?.[String(atleta.atleta_id)];
+        if (!atletaData) continue;
+        const partida = findMatchForClub(h.partidas?.partidas, atletaData.clube_id);
+        if (!partida) continue;
+        const isHome = partida.clube_casa_id === atletaData.clube_id;
+        if (isHome) { sumHome += Number(atletaData.pontuacao || 0); cntHome += 1; }
+        else { sumAway += Number(atletaData.pontuacao || 0); cntAway += 1; }
+      }
+    }
+    const avgHome = cntHome > 0 ? parseFloat((sumHome / cntHome).toFixed(2)) : 0;
+    const avgAway = cntAway > 0 ? parseFloat((sumAway / cntAway).toFixed(2)) : 0;
+    return { avgHome, avgAway };
+  };
+
+  const aAvg = computeHomeAwayAvg(a);
+  const bAvg = computeHomeAwayAvg(b);
+
   const mainStats: StatRow[] = [
     { label: 'Média', valueA: parseFloat(a.media_num.toFixed(2)), valueB: parseFloat(b.media_num.toFixed(2)), higherIsBetter: true },
-    { label: 'Pontos', valueA: parseFloat(a.pontos_num.toFixed(1)), valueB: parseFloat(b.pontos_num.toFixed(1)), higherIsBetter: true },
-    { label: 'Preço', valueA: parseFloat(a.preco_num.toFixed(2)), valueB: parseFloat(b.preco_num.toFixed(2)), higherIsBetter: true },
+    { label: 'Média Casa', valueA: aAvg.avgHome, valueB: bAvg.avgHome, higherIsBetter: true },
+    { label: 'Média Fora', valueA: aAvg.avgAway, valueB: bAvg.avgAway, higherIsBetter: true },
     { label: 'Jogos', valueA: a.jogos_num, valueB: b.jogos_num, higherIsBetter: true },
-    { label: 'Variação', valueA: parseFloat(a.variacao_num.toFixed(2)), valueB: parseFloat(b.variacao_num.toFixed(2)), higherIsBetter: true },
   ];
 
   // Build scout rows - collect all scouts from both players
@@ -160,7 +185,7 @@ export function CompareModal({ atletas, clubes, open, onOpenChange }: CompareMod
             </DialogHeader>
 
             {/* Player Headers */}
-            <div className="grid grid-cols-2 gap-0 mt-4 border-b-2 border-primary">
+            <div className="grid grid-cols-2 gap-0 mt-4 border-b-2 border-primary sticky top-0 z-20 bg-card">
               <PlayerHeader atleta={a} clube={clubeA} />
               <PlayerHeader atleta={b} clube={clubeB} />
             </div>
