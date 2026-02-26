@@ -158,7 +158,7 @@ export function CompareModal({ atletas, clubes, open, onOpenChange }: CompareMod
   if (a.scout) Object.keys(a.scout).forEach(k => allScoutKeys.add(k));
   if (b.scout) Object.keys(b.scout).forEach(k => allScoutKeys.add(k));
 
-  const scoutRows: StatRow[] = Array.from(allScoutKeys)
+  const scoutRowsBase: StatRow[] = Array.from(allScoutKeys)
     .filter(k => SCOUT_LABELS[k])
     .sort((x, y) => {
       const xPos = SCOUT_LABELS[x]?.positive ? 0 : 1;
@@ -172,6 +172,14 @@ export function CompareModal({ atletas, clubes, open, onOpenChange }: CompareMod
       higherIsBetter: SCOUT_LABELS[k].positive,
     }))
     .filter(r => r.valueA > 0 || r.valueB > 0);
+
+  const scoutRows = scoutRowsBase.filter(r => r.label !== SCOUT_LABELS.FD.label);
+  const fdRow: StatRow = {
+    label: SCOUT_LABELS.FD.label,
+    valueA: (a.scout as any)?.FD || 0,
+    valueB: (b.scout as any)?.FD || 0,
+    higherIsBetter: SCOUT_LABELS.FD.positive,
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -199,12 +207,13 @@ export function CompareModal({ atletas, clubes, open, onOpenChange }: CompareMod
             </div>
 
             {/* Scouts */}
-            {scoutRows.length > 0 && (
+            {(scoutRows.length > 0 || fdRow.valueA > 0 || fdRow.valueB > 0) && (
               <div className="mt-4">
                 <p className="text-xs font-bold text-muted-foreground uppercase px-3 py-2">Scouts</p>
                 {scoutRows.map(row => (
                   <CompareRow key={row.label} row={row} />
                 ))}
+                <CompareRow row={fdRow} />
               </div>
             )}
           </div>
