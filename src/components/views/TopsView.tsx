@@ -486,7 +486,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       ) : mode === 'artilheiros-only' ? (
         <div className="w-full">
           <div className="text-xs text-muted-foreground mb-4">
-            Legenda: (G) Gol • (ASS) Assistência • (FD) Finalização defendida • (FF) Finalização pra fora • (FS) Faltas sofridas
+            Legenda: (G) Gol • (ASS) Assistência
           </div>
           <TopArtilheiros
             atletas={atletasProvaveis}
@@ -1040,11 +1040,17 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }
   );
 }
 
-function TopArtilheiros({ atletas, acumulados, clubes, title = '🎯 Top 10 Artilheiros' }: { atletas: any[]; acumulados: Record<number, { G: number }>; clubes: Record<string, any>; title?: string }) {
+function TopArtilheiros({ atletas, acumulados, clubes, title = '🎯 Top 10 Artilheiros' }: { atletas: any[]; acumulados: Record<number, { G: number; A: number }>; clubes: Record<string, any>; title?: string }) {
   const lista = [...(atletas || [])]
-    .map(a => ({ atleta: a, g: acumulados?.[a.atleta_id]?.G || 0 }))
-    .filter(x => x.g > 0)
-    .sort((a, b) => b.g - a.g)
+    .map(a => ({ atleta: a, g: acumulados?.[a.atleta_id]?.G || 0, aS: acumulados?.[a.atleta_id]?.A || 0 }))
+    .filter(x => x.g > 0 || x.aS > 0)
+    .sort((a, b) => {
+      if (b.g !== a.g) return b.g - a.g;
+      if (b.aS !== a.aS) return b.aS - a.aS;
+      const nameA = a.atleta.apelido?.toUpperCase() || '';
+      const nameB = b.atleta.apelido?.toUpperCase() || '';
+      return nameA.localeCompare(nameB);
+    })
     .slice(0, 10);
   return (
     <div className="bg-card rounded-xl overflow-hidden shadow-lg">
@@ -1075,7 +1081,16 @@ function TopArtilheiros({ atletas, acumulados, clubes, title = '🎯 Top 10 Arti
                     {c && <ClubeEscudo clube={c} size="xs" />}
                   </div>
                 </div>
-                <div className="text-sm font-black">G: {x.g}</div>
+                <div className="flex items-center gap-3">
+                  <div className="min-w-[64px] text-center">
+                    <div className="text-[11px] text-muted-foreground font-bold">G</div>
+                    <div className="text-sm font-black">{x.g}</div>
+                  </div>
+                  <div className="min-w-[64px] text-center">
+                    <div className="text-[11px] text-muted-foreground font-bold">ASS</div>
+                    <div className="text-sm font-black">{x.aS}</div>
+                  </div>
+                </div>
               </div>
             );
           })
