@@ -472,6 +472,10 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
                 Atualizar Time
               </button>
             </div>
+            <div className="mt-2 flex flex-col items-center justify-center">
+              <div className="text-sm font-black">PONTOS TOTAIS</div>
+              <div className="mt-1 w-28 h-10 rounded-md border-2 border-primary-foreground"></div>
+            </div>
           </div>
           <TimeDaRodada
             key={refreshKey}
@@ -1004,7 +1008,7 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }
       <div className="w-full">
         <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto max-w-[520px] min-h-[720px]">
           {tecnico && (
-            <div className="absolute left-3 bottom-3">
+            <div className="absolute left-3 bottom-8 z-20">
               <div className="scale-95">
                 <PlayerCard atleta={tecnico} clube={tecnico ? (clubes?.[String(tecnico.clube_id)] || clubes?.[tecnico.clube_id]) : null} />
               </div>
@@ -1025,11 +1029,6 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }
           </svg>
           <div className="pointer-events-none absolute bottom-3 right-3">
             <span className="inline-block bg-black text-white px-3 py-1.5 rounded-md text-xl font-extrabold tracking-wide">4-3-3</span>
-          </div>
-          <div className="absolute top-3 right-3">
-            <div className="bg-primary/20 text-primary-foreground px-3 py-2 rounded-md font-black shadow">
-              PONTOS TOTAIS
-            </div>
           </div>
           <div className="relative flex flex-col justify-between min-h-[640px] py-4">
             <div>{renderRow([atacs[0] || null, atacs[1] || null, atacs[2] || null])}</div>
