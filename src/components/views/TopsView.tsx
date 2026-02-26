@@ -1004,11 +1004,9 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }
       <div className="w-full">
         <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto max-w-[520px] min-h-[720px]">
           {tecnico && (
-            <div className="absolute left-0 bottom-3 -translate-x-full">
-              <div className="bg-card rounded-xl shadow px-3 py-2">
-                <div className="scale-95">
-                  <PlayerCard atleta={tecnico} clube={tecnico ? (clubes?.[String(tecnico.clube_id)] || clubes?.[tecnico.clube_id]) : null} />
-                </div>
+            <div className="absolute left-3 bottom-3">
+              <div className="scale-95">
+                <PlayerCard atleta={tecnico} clube={tecnico ? (clubes?.[String(tecnico.clube_id)] || clubes?.[tecnico.clube_id]) : null} />
               </div>
             </div>
           )}
@@ -1025,8 +1023,13 @@ function TimeDaRodada({ getTop, capitao, tecnico, clubes, lineup, highlightIds }
           <svg className="pointer-events-none absolute right-1 top-10" width="56" height="260" viewBox="0 0 24 260" fill="none">
             <path d="M12 240V20 M4 36 L12 20 L20 36" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <div className="pointer-events-none absolute left-3 bottom-3">
+          <div className="pointer-events-none absolute bottom-3 right-3">
             <span className="inline-block bg-black text-white px-3 py-1.5 rounded-md text-xl font-extrabold tracking-wide">4-3-3</span>
+          </div>
+          <div className="absolute top-3 right-3">
+            <div className="bg-primary/20 text-primary-foreground px-3 py-2 rounded-md font-black shadow">
+              PONTOS TOTAIS
+            </div>
           </div>
           <div className="relative flex flex-col justify-between min-h-[640px] py-4">
             <div>{renderRow([atacs[0] || null, atacs[1] || null, atacs[2] || null])}</div>
