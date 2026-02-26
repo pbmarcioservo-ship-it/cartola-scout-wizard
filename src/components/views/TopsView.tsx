@@ -485,7 +485,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         </div>
       ) : mode === 'artilheiros-only' ? (
         <div className="w-full">
-          <div className="text-xs text-muted-foreground mb-4">
+          <div className="text-xs bg-primary/20 text-primary-foreground mb-4 px-3 py-2 rounded-md text-center font-bold">
             Legenda: (G) Gol • (ASS) Assistência
           </div>
           <TopArtilheiros
