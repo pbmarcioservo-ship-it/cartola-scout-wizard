@@ -979,13 +979,15 @@ function ProbBadge({ label, value }: { label: string; value: number }) {
 
 function PlayerCard({ atleta, clube, isCapitao, highlighted }: { atleta: any; clube: any; isCapitao?: boolean; highlighted?: boolean }) {
   if (!atleta) return null;
+  const isDuvida = atleta.status_id === 2;
   return (
     <div className="relative flex flex-col items-center">
       <div className="relative">
         <img
           src={atleta.foto?.replace('FORMATO', '80x80')}
           alt={atleta.apelido}
-          className={cn('w-16 h-16 rounded-full object-cover shadow-lg', highlighted ? 'ring-4 ring-yellow-400' : 'ring-2 ring-white')}
+          className="w-16 h-16 rounded-full object-cover shadow-lg"
+          style={isDuvida ? { border: '3px solid #FFFF00' } : { border: '2px solid #FFFFFF' }}
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/placeholder.svg';
           }}
