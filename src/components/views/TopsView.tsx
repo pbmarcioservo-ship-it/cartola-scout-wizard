@@ -93,6 +93,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       ? (maps.conquistaCasa[teamId] || 0) + (maps.cedeFora[opponentId] || 0)
       : (maps.conquistaFora[teamId] || 0) + (maps.cedeCasa[opponentId] || 0);
   };
+  const validPartidas = useMemo(() => (partidas || []).filter(p => p.valida), [partidas]);
 
   // TOP 5 SG (times) — SG absoluto com desempate por mando em caso de empate técnico/baixa amostra
   const topSGTimes = useMemo(() => {
@@ -130,7 +131,6 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       .slice(0, 5);
   }, [validPartidas, crossovers, mercadoData]);
 
-  const validPartidas = useMemo(() => (partidas || []).filter(p => p.valida), [partidas]);
   const getOpponentForPlayer = (clubId: number) => {
     const partida = validPartidas.find(p => p.clube_casa_id === clubId || p.clube_visitante_id === clubId);
     if (!partida) return null;
