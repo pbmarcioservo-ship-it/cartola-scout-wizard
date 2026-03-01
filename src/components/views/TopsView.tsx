@@ -278,7 +278,8 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         base = Math.max(sg, vit);
       }
       const oppCedeG = teamScoreForMatch(opp.opponentId, a.clube_id, !opp.isHome, 'G');
-      return { atleta: a, score, guards: { sg, base }, oppCedeG, g, aS, fd, ds, de, sg };
+      const perf = (a.media_num || 0) * 2 + g * 1.0 + aS * 0.7 + fd * 0.3;
+      return { atleta: a, score, guards: { sg, base }, oppCedeG, g, aS, fd, ds, de, sg, perf };
     });
     const filtradosBase = scored.filter(s => isFinite(s.score));
     const filtradosQualidade = filtradosBase.filter(s => {
@@ -297,6 +298,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     let ordenadosPrim = [...filtradosQualidade];
     if (posId === POSICAO_ID_MAP.meia || posId === POSICAO_ID_MAP.atacante) {
       ordenadosPrim.sort((a, b) => {
+        if (b.perf !== a.perf) return b.perf - a.perf;
         if (b.g !== a.g) return b.g - a.g;
         if (b.aS !== a.aS) return b.aS - a.aS;
         if (b.fd !== a.fd) return b.fd - a.fd;
@@ -326,8 +328,10 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     }
     if (lista.length < limit) {
       for (const s of filtradosBase) {
+        if (vistos.has(s.atleta.clube_id)) continue;
         if (lista.find(x => x.atleta_id === s.atleta.atleta_id)) continue;
         lista.push(s.atleta);
+        vistos.add(s.atleta.clube_id);
         if (lista.length >= limit) break;
       }
     }
@@ -366,9 +370,11 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       const estOk = r >= 0.5;
       const acum = acumuladosPorAtleta?.[a.atleta_id];
       const prodOk = (acum?.G || 0) > 0 || (acum?.A || 0) > 0;
-      return { atleta: a, score, oppCedeG, g, aS, fd, estOk, prodOk };
+      const perf = (a.media_num || 0) * 2 + g * 1.0 + aS * 0.7 + fd * 0.3;
+      return { atleta: a, score, oppCedeG, g, aS, fd, estOk, prodOk, perf };
     }).filter(s => isFinite(s.score) && s.estOk && s.prodOk);
     scored.sort((a, b) => {
+      if (b.perf !== a.perf) return b.perf - a.perf;
       if (b.g !== a.g) return b.g - a.g;
       if (b.aS !== a.aS) return b.aS - a.aS;
       if (b.fd !== a.fd) return b.fd - a.fd;
