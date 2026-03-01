@@ -1,14 +1,38 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePartidas, useRodada } from '@/hooks/useCartolaData';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function AcompanhamentoView() {
   const { data: rodadaData } = useRodada();
   const [rodada, setRodada] = useState<number>(rodadaData?.rodada_atual || 1);
   const { data: partidasData, isLoading, isError } = usePartidas(rodada);
   const rodadas = useMemo(() => Array.from({ length: 38 }, (_, i) => i + 1), []);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (rodadaData?.rodada_atual) {
+      setRodada(rodadaData.rodada_atual);
+    }
+  }, [rodadaData]);
+
+  useEffect(() => {
+    const key = `statusfc_partidas_rodada_${rodada}`;
+    if (partidasData?.partidas && partidasData.partidas.length > 0) {
+      try {
+        localStorage.setItem(key, JSON.stringify(partidasData));
+      } catch {}
+    }
+  }, [rodada, partidasData]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['cartola', 'partidas', rodada] });
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [queryClient, rodada]);
 
   const goPrev = () => setRodada(r => Math.max(1, r - 1));
   const goNext = () => setRodada(r => Math.min(38, r + 1));
@@ -52,14 +76,31 @@ export function AcompanhamentoView() {
         </div>
       )}
 
-      {!isLoading && partidasData?.partidas && (
+      {!isLoading && (
         <div className="grid grid-cols-1 gap-3">
-          {partidasData.partidas.map((partida) => {
-            const clubes = partidasData.clubes;
+          {(
+            (partidasData?.partidas && partidasData.partidas.length > 0)
+              ? partidasData.partidas
+              : (() => {
+                  try {
+                    const raw = localStorage.getItem(`statusfc_partidas_rodada_${rodada}`);
+                    const cached = raw ? JSON.parse(raw) : null;
+                    return cached?.partidas || [];
+                  } catch { return []; }
+                })()
+          ).map((partida: any) => {
+            const clubes = (partidasData?.clubes)
+              ? partidasData.clubes
+              : (() => {
+                  try {
+                    const raw = localStorage.getItem(`statusfc_partidas_rodada_${rodada}`);
+                    const cached = raw ? JSON.parse(raw) : null;
+                    return cached?.clubes || {};
+                  } catch { return {}; }
+                })();
             const clubeCasa = clubes[String(partida.clube_casa_id)] || clubes[partida.clube_casa_id];
             const clubeVisitante = clubes[String(partida.clube_visitante_id)] || clubes[partida.clube_visitante_id];
-            const rodadaPassada = rodada <= 3;
-            const hasScore = rodadaPassada && partida.placar_oficial_mandante != null && partida.placar_oficial_visitante != null;
+            const hasScore = partida.placar_oficial_mandante != null && partida.placar_oficial_visitante != null;
             const horario = new Date(partida.partida_data);
             const horarioStr = `${horario.getDate().toString().padStart(2, '0')}/${(horario.getMonth()+1).toString().padStart(2, '0')} ${horario.getHours().toString().padStart(2, '0')}:${horario.getMinutes().toString().padStart(2, '0')}`;
             return (
