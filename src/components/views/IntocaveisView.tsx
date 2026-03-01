@@ -126,10 +126,20 @@ export function IntocaveisView() {
 
     const result = Object.values(grouped).flat();
 
-    // Sort by media descending
+    // Sort by number of games (descending), then by average points (descending) as tiebreaker
     return result.sort((a, b) => {
       const statsA = atletaStats[a.atleta_id];
       const statsB = atletaStats[b.atleta_id];
+
+      const jogosA = statsA && statsA.jogos > 0 ? statsA.jogos : a.jogos_num;
+      const jogosB = statsB && statsB.jogos > 0 ? statsB.jogos : b.jogos_num;
+
+      // Primary criterion: most games played
+      if (jogosB !== jogosA) {
+        return jogosB - jogosA;
+      }
+
+      // Tiebreaker: highest average points
       const mediaA = statsA && statsA.jogos > 0 ? statsA.totalPontos / statsA.jogos : a.media_num;
       const mediaB = statsB && statsB.jogos > 0 ? statsB.totalPontos / statsB.jogos : b.media_num;
       return mediaB - mediaA;
