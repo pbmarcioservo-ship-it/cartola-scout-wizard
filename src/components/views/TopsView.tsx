@@ -98,7 +98,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   const topSGTimes = useMemo(() => {
     const LOW_DATA_THRESHOLD = 2;
     const entries: { timeId: number; score: number; isHome: boolean }[] = [];
-    for (const p of partidas) {
+    for (const p of validPartidas) {
       entries.push({ timeId: p.clube_casa_id, score: teamScoreForMatch(p.clube_casa_id, p.clube_visitante_id, true, 'SG'), isHome: true });
       entries.push({ timeId: p.clube_visitante_id, score: teamScoreForMatch(p.clube_visitante_id, p.clube_casa_id, false, 'SG'), isHome: false });
     }
@@ -114,14 +114,25 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         if (e.isHome && !prev.isHome) bestByTeam[e.timeId] = { score: e.score, isHome: e.isHome };
       }
     }
+    const hasProvavelByTeam: Record<number, boolean> = {};
+    for (const a of (mercadoData?.atletas || [])) {
+      if (a.status_id === 7) hasProvavelByTeam[a.clube_id] = true;
+    }
+    const validTeamSet = new Set<number>();
+    for (const p of validPartidas) {
+      validTeamSet.add(p.clube_casa_id);
+      validTeamSet.add(p.clube_visitante_id);
+    }
     return Object.entries(bestByTeam)
       .map(([timeId, v]) => ({ timeId: Number(timeId), score: v.score }))
+      .filter(t => validTeamSet.has(t.timeId) && !!hasProvavelByTeam[t.timeId])
       .sort((a, b) => b.score - a.score)
       .slice(0, 5);
-  }, [partidas, crossovers]);
+  }, [validPartidas, crossovers, mercadoData]);
 
+  const validPartidas = useMemo(() => (partidas || []).filter(p => p.valida), [partidas]);
   const getOpponentForPlayer = (clubId: number) => {
-    const partida = partidas.find(p => p.clube_casa_id === clubId || p.clube_visitante_id === clubId);
+    const partida = validPartidas.find(p => p.clube_casa_id === clubId || p.clube_visitante_id === clubId);
     if (!partida) return null;
     const isHome = partida.clube_casa_id === clubId;
     const opponentId = isHome ? partida.clube_visitante_id : partida.clube_casa_id;
@@ -537,6 +548,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground">
               🛡️ Top 5 SG (Saldo de Gols) — Times
             </div>
+            <div className="px-4 py-2 text-[11px] text-muted-foreground">Base: SG dos clubes com partidas válidas na rodada</div>
             <div>
               {topSGTimes.length === 0 ? (
                 <div className="p-6 text-center text-muted-foreground">Sem dados disponíveis</div>
@@ -567,14 +579,14 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             atletas={topPlayersForPos(1, 5)}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
-              const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!partida) return null;
               const casa = partidasData?.clubes?.[partida.clube_casa_id];
               const fora = partidasData?.clubes?.[partida.clube_visitante_id];
               return { casa, fora };
             }}
             calcKeyScore={(a, key) => {
-              const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const opp = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!opp) return 0;
               const isHome = opp.clube_casa_id === a.clube_id;
               const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
@@ -602,14 +614,14 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             atletas={topPlayersForPos(3, 5)}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
-              const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!partida) return null;
               const casa = partidasData?.clubes?.[partida.clube_casa_id];
               const fora = partidasData?.clubes?.[partida.clube_visitante_id];
               return { casa, fora };
             }}
             calcKeyScore={(a, key) => {
-              const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const opp = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!opp) return 0;
               const isHome = opp.clube_casa_id === a.clube_id;
               const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
@@ -637,14 +649,14 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             atletas={topPlayersForPos(2, 5)}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
-              const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!partida) return null;
               const casa = partidasData?.clubes?.[partida.clube_casa_id];
               const fora = partidasData?.clubes?.[partida.clube_visitante_id];
               return { casa, fora };
             }}
             calcKeyScore={(a, key) => {
-              const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const opp = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!opp) return 0;
               const isHome = opp.clube_casa_id === a.clube_id;
               const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
@@ -672,14 +684,14 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             atletas={topPlayersForPos(4, 5)}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
-              const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!partida) return null;
               const casa = partidasData?.clubes?.[partida.clube_casa_id];
               const fora = partidasData?.clubes?.[partida.clube_visitante_id];
               return { casa, fora };
             }}
             calcKeyScore={(a, key) => {
-              const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const opp = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!opp) return 0;
               const isHome = opp.clube_casa_id === a.clube_id;
               const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
@@ -709,14 +721,14 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
             atletas={topPlayersForPos(5, 5)}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
-              const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!partida) return null;
               const casa = partidasData?.clubes?.[partida.clube_casa_id];
               const fora = partidasData?.clubes?.[partida.clube_visitante_id];
               return { casa, fora };
             }}
             calcKeyScore={(a, key) => {
-              const opp = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
+              const opp = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
               if (!opp) return 0;
               const isHome = opp.clube_casa_id === a.clube_id;
               const opponentId = isHome ? opp.clube_visitante_id : opp.clube_casa_id;
