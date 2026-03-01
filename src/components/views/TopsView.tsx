@@ -129,10 +129,14 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   };
 
   const atletasProvaveis = useMemo(() => (mercadoData?.atletas || []).filter(a => a.status_id === 7), [mercadoData]);
+  const atletasElegiveis = useMemo(
+    () => (mercadoData?.atletas || []).filter(a => (timeStatus === 'provavel' ? a.status_id === 7 : a.status_id === 7 || a.status_id === 2)),
+    [mercadoData, timeStatus],
+  );
 
   const pickTopByMedia = (posId: number, count: number, used: Set<number>) => {
     const pool = (mercadoData?.atletas || [])
-      .filter(a => a.posicao_id === posId && a.status_id === 7 && !used.has(a.atleta_id))
+      .filter(a => a.posicao_id === posId && (timeStatus === 'provavel' ? a.status_id === 7 : a.status_id === 7 || a.status_id === 2) && !used.has(a.atleta_id))
       .sort((a, b) => b.media_num - a.media_num);
     return pool.slice(0, count);
   };
@@ -171,8 +175,16 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     const tecnico = pickTopByMedia(6, 1, used)[0] || null;
     const next = { gk, lats, zags, meis, atacs, tecnico };
     setLineup(next);
-    setHighlightIds([]);
-  }, [mode, mercadoData]);
+    const duvidas = [
+      next.gk,
+      ...next.lats,
+      ...next.zags,
+      ...next.meis,
+      ...next.atacs,
+      next.tecnico,
+    ].filter(Boolean).filter((a: any) => a.status_id === 2).map((a: any) => a.atleta_id);
+    setHighlightIds(timeStatus === 'duvida' ? duvidas : []);
+  }, [mode, mercadoData, timeStatus]);
 
   useEffect(() => {
     if (mode !== 'time-only') return;
@@ -215,7 +227,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   };
 
   const topPlayersForPos = (posId: number, limit: number) => {
-    const candidatos = atletasProvaveis
+    const candidatos = atletasElegiveis
       .filter(a => a.posicao_id === posId)
       .filter(a => {
         if (posId === POSICAO_ID_MAP.meia || posId === POSICAO_ID_MAP.atacante) {
@@ -321,8 +333,16 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       tecnico: (topPlayersForPos(6, 1)[0] || null),
     };
     setLineup(next);
-    setHighlightIds([]);
-  }, [refreshKey]);
+    const duvidas = [
+      next.gk,
+      ...next.lats,
+      ...next.zags,
+      ...next.meis,
+      ...next.atacs,
+      next.tecnico,
+    ].filter(Boolean).filter((a: any) => a.status_id === 2).map((a: any) => a.atleta_id);
+    setHighlightIds(timeStatus === 'duvida' ? duvidas : []);
+  }, [refreshKey, timeStatus]);
 
   const capitaesTop3 = useMemo(() => {
     const cand = atletasProvaveis.filter(a => [POSICAO_ID_MAP.meia, POSICAO_ID_MAP.atacante].includes(a.posicao_id));
