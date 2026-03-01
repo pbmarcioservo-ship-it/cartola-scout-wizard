@@ -102,7 +102,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error fetching Cartola API:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro ao buscar dados do Cartola' }),
+      JSON.stringify({ error: (error as Error).message || 'Erro ao buscar dados do Cartola' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
