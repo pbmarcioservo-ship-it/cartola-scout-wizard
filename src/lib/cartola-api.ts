@@ -136,14 +136,6 @@ export interface CartolaDestaques {
 }
 
 async function fetchCartolaEndpoint<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-  const queryParams = new URLSearchParams({ endpoint, ...params });
-  
-  const { data, error } = await supabase.functions.invoke('cartola-api', {
-    body: null,
-    method: 'GET',
-  });
-
-  // Workaround: using POST with query params in body
   const response = await supabase.functions.invoke('cartola-api', {
     body: { endpoint, ...params },
   });
