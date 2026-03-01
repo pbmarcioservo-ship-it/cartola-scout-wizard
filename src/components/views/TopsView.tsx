@@ -24,7 +24,7 @@ const LS_KEY_LINEUP = 'statusfc_lineup_time_rodada';
 
 export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' | 'time-only' } = {}) {
   const [ultimas, setUltimas] = useState(5);
-  const [timeStatus, setTimeStatus] = useState<'provavel' | 'duvida'>('provavel');
+  const [timeStatus] = useState<'provavel' | 'duvida'>('provavel');
   const [refreshKey, setRefreshKey] = useState(0);
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
@@ -130,13 +130,13 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
 
   const atletasProvaveis = useMemo(() => (mercadoData?.atletas || []).filter(a => a.status_id === 7), [mercadoData]);
   const atletasElegiveis = useMemo(
-    () => (mercadoData?.atletas || []).filter(a => (timeStatus === 'provavel' ? a.status_id === 7 : a.status_id === 7 || a.status_id === 2)),
-    [mercadoData, timeStatus],
+    () => (mercadoData?.atletas || []).filter(a => a.status_id === 7),
+    [mercadoData],
   );
 
   const pickTopByMedia = (posId: number, count: number, used: Set<number>) => {
     const pool = (mercadoData?.atletas || [])
-      .filter(a => a.posicao_id === posId && (timeStatus === 'provavel' ? a.status_id === 7 : a.status_id === 7 || a.status_id === 2) && !used.has(a.atleta_id))
+      .filter(a => a.posicao_id === posId && a.status_id === 7 && !used.has(a.atleta_id))
       .sort((a, b) => b.media_num - a.media_num);
     return pool.slice(0, count);
   };
@@ -184,7 +184,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       next.tecnico,
     ].filter(Boolean).filter((a: any) => a.status_id === 2).map((a: any) => a.atleta_id);
     setHighlightIds(timeStatus === 'duvida' ? duvidas : []);
-  }, [mode, mercadoData, timeStatus]);
+  }, [mode, mercadoData]);
 
   useEffect(() => {
     if (mode !== 'time-only') return;
@@ -314,7 +314,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       if (lista.length >= limit) break;
     }
     if (lista.length < limit) {
-      for (const s of ordenadosPrim) {
+      for (const s of filtradosBase) {
         if (lista.find(x => x.atleta_id === s.atleta.atleta_id)) continue;
         lista.push(s.atleta);
         if (lista.length >= limit) break;
@@ -333,16 +333,8 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       tecnico: (topPlayersForPos(6, 1)[0] || null),
     };
     setLineup(next);
-    const duvidas = [
-      next.gk,
-      ...next.lats,
-      ...next.zags,
-      ...next.meis,
-      ...next.atacs,
-      next.tecnico,
-    ].filter(Boolean).filter((a: any) => a.status_id === 2).map((a: any) => a.atleta_id);
-    setHighlightIds(timeStatus === 'duvida' ? duvidas : []);
-  }, [refreshKey, timeStatus]);
+    setHighlightIds([]);
+  }, [refreshKey]);
 
   const capitaesTop3 = useMemo(() => {
     const cand = atletasProvaveis.filter(a => [POSICAO_ID_MAP.meia, POSICAO_ID_MAP.atacante].includes(a.posicao_id));
@@ -427,17 +419,6 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         <div className="w-full min-h-[100vh] flex flex-col items-center justify-center">
           <div className="bg-primary text-primary-foreground px-3 py-2 mb-4 w-full max-w-[720px]">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold">Status</span>
-                <select
-                  value={timeStatus}
-                  onChange={(e) => setTimeStatus(e.target.value as 'provavel' | 'duvida')}
-                  className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-xs font-bold cursor-pointer"
-                >
-                  <option value="provavel">Provável</option>
-                  <option value="duvida">Dúvida</option>
-                </select>
-              </div>
               <div className="font-bold uppercase text-center">🟩 Time da Rodada</div>
               <button
                 onClick={() => {
@@ -979,7 +960,6 @@ function ProbBadge({ label, value }: { label: string; value: number }) {
 
 function PlayerCard({ atleta, clube, isCapitao, highlighted }: { atleta: any; clube: any; isCapitao?: boolean; highlighted?: boolean }) {
   if (!atleta) return null;
-  const isDuvida = atleta.status_id === 2;
   return (
     <div className="relative flex flex-col items-center">
       <div className="relative">
@@ -987,7 +967,7 @@ function PlayerCard({ atleta, clube, isCapitao, highlighted }: { atleta: any; cl
           src={atleta.foto?.replace('FORMATO', '80x80')}
           alt={atleta.apelido}
           className="w-16 h-16 rounded-full object-cover shadow-lg"
-          style={isDuvida ? { border: '3px solid #FFFF00' } : { border: '2px solid #FFFFFF' }}
+          style={{ border: '2px solid #FFFFFF' }}
           onError={(e) => {
             (e.target as HTMLImageElement).src = '/placeholder.svg';
           }}

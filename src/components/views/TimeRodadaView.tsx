@@ -401,14 +401,6 @@ export function TimeRodadaView() {
             {estrategiaLabel[estrategia]}
           </div>
           <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-xs font-bold cursor-pointer transition-all duration-300 hover:scale-105 hover:bg-[hsl(259,70%,60%)]"
-            >
-              <option value="provavel">Provável</option>
-              <option value="duvida">Dúvida</option>
-            </select>
             <button
               onClick={() => setSeed(s => s + 1)}
               className="bg-primary-foreground text-primary font-black px-3 py-1 rounded flex items-center gap-1.5 transition-all duration-300 hover:scale-105 hover:bg-[hsl(259,70%,80%)]"
