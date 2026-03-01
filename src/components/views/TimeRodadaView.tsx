@@ -473,7 +473,7 @@ export function TimeRodadaView() {
 
       {/* ── Football Pitch ── */}
       <div className="w-full flex justify-center">
-        <div className="relative bg-green-700 rounded-2xl p-4 shadow-inner mx-auto w-[95vw] max-w-[520px] min-h-[60vh] md:min-h-[640px]">
+        <div className="relative rounded-2xl p-4 shadow-inner mx-auto w-[95vw] max-w-[520px] min-h-[60vh] md:min-h-[640px]" style={{ backgroundColor: 'hsl(145, 63%, 30%)' }}>
           {/* Pitch markings */}
           <div className="absolute inset-2 rounded-2xl border-4 border-white pointer-events-none" />
           <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-0 border-t-4 border-white pointer-events-none" />
