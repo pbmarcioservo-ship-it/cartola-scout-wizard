@@ -22,6 +22,7 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
   }
 }
 import { CartolaAtleta } from '@/lib/cartola-api';
+import { getLateralSideByName } from '@/lib/laterais';
 
 export function AtletasView() {
   const [search, setSearch] = useState('');
@@ -237,7 +238,7 @@ export function AtletasView() {
                         <p className="font-bold text-foreground">
                           {atleta.apelido}
                           {atleta.posicao_id === 2 && (() => {
-                            const side = getLateralSideFromStore(atleta.atleta_id);
+                            const side = getLateralSideFromStore(atleta.atleta_id) ?? getLateralSideByName(atleta.apelido, atleta.nome);
                             return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
                           })()}
                         </p>
