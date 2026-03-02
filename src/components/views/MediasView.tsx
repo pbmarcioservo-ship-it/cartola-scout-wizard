@@ -8,6 +8,7 @@ import { PosicaoFilter } from '@/types/cartola';
 import { AlertCircle, Medal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CartolaAtleta } from '@/lib/cartola-api';
+import { getLateralSideByName } from '@/lib/laterais';
 
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
 function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
@@ -134,7 +135,7 @@ export function MediasView() {
                   <p className="font-bold text-foreground">
                     {atleta.apelido}
                     {atleta.posicao_id === 2 && (() => {
-                      const side = getLateralSideFromStore(atleta.atleta_id);
+                      const side = getLateralSideFromStore(atleta.atleta_id) ?? getLateralSideByName(atleta.apelido, atleta.nome);
                       return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
                     })()}
                   </p>

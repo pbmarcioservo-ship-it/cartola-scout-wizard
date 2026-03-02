@@ -1,86 +1,22 @@
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { cartolaApi, CartolaMercado, CartolaAtletasPontuados, CartolaRodada, CartolaClube, CartolaPartida, CartolaDestaques } from '@/lib/cartola-api';
+import { getLateralSideByName } from '@/lib/laterais';
 
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
-function normName(s?: string) {
-  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim();
-}
 function seedLateralSides(data: CartolaMercado) {
   try {
-    const raw = localStorage.getItem(LS_KEY_LATERAL);
-    const store = raw ? (JSON.parse(raw) as Record<string, 'LD' | 'LE'>) : {};
-    const nameSide: Record<string, 'LD' | 'LE'> = {
-      // BAHIA
-      'ROMAN GOMEZ': 'LD', 'LUCIANO JUBA': 'LE', 'GILBERTO': 'LD', 'IAGO': 'LE',
-      // BOTAFOGO
-      'MARCAL': 'LE', 'VITINHO': 'LD', 'ALEX TELLES': 'LE', 'MATEO PONTE': 'LD',
-      // ATLETICO MINEIRO
-      'RENAN LODI': 'LE', 'PRECIADO': 'LD', 'KAUA PASCINI': 'LE', 'NATANAEL': 'LD',
-      // ATLETICO PARANAENSE
-      'BENAVIDEZ': 'LD', 'LEO DERIK': 'LE', 'ESQUIVEL': 'LE',
-      // CORITIBA
-      'TINGA': 'LD', 'BRUNO MELO': 'LE', 'FELIPE JONATAN': 'LE', 'JP CHERMONT': 'LD',
-      // CHAPECOENSE
-      'WALTER CLAR': 'LE', 'EVERTON': 'LD', 'MARCOS VINICIUS': 'LD', 'BRUNO PACHECO': 'LE',
-      // CORINTHIANS
-      'MATHEUS BIDU': 'LE', 'MATHEUZINHO': 'LD', 'MILANS': 'LD', 'ANGILERI': 'LE', 'HUGO': 'LE',
-      // CRUZEIRO
-      'KAIKI BRUNO': 'LE', 'WILLIAM': 'LD', 'FAGNER': 'LD', 'KAUA MORAES': 'LD',
-      // FLAMENGO
-      'VARELA': 'LE', 'ALEX SANDRO': 'LE', 'EMERSON ROYAL': 'LD', 'AYRTON LUCAS': 'LE',
-      // FLUMINENSE
-      'RENE': 'LE', 'SAMUEL XAVIER': 'LD', 'GUILHERME ARANA': 'LE', 'GUGA': 'LD',
-      // GREMIO
-      'MARLON': 'LE', 'JOAO PEDRO': 'LD', 'MARCOS ROCHA': 'LD', 'CAIO PAULISTA': 'LE',
-      // INTERNACIONAL
-      'BERNABEI': 'LE', 'AGUIRRE': 'LD', 'MATHEUS BAHIA': 'LE', 'ALISSON': 'LE',
-      // MIRASSOL
-      'IGOR FORMIGA': 'LD', 'IGOR CARIUS': 'LD', 'REINALDO': 'LE', 'DANIEL BORGES': 'LD', 'VICTOR LUIS': 'LE',
-      // PALMEIRAS
-      'PIQUEREZ': 'LE', 'KHELLVEN': 'LD', 'GIAY': 'LD', 'JEFTE': 'LE',
-      // RB BRAGANTINO
-      'JUNINHO CAPIXABA': 'LE', 'SANT ANNA': 'LD', 'ANDRES HURTADO': 'LD', 'CAUE': 'LE', 'VANDERLAN': 'LE',
-      // REMO
-      'SAVIO': 'LE', 'JOAO LUCAS': 'LD', 'MARCELINHO': 'LD', 'CUFRE': 'LE',
-      // SANTOS
-      'IGOR VINICIUS': 'LD', 'ESCOBAR': 'LE', 'VINICIUS LIRA': 'LE', 'MAYKE': 'LD', 'SOUZA': 'LE',
-      // SAO PAULO
-      'LUCAS RAMON': 'LD', 'ENZO DIAZ': 'LE', 'WENDELL': 'LE', 'MAIK': 'LD', 'CEDRIC SOARES': 'LD',
-      // VASCO
-      'PUMA RODRIGUEZ': 'LD', 'PAULO HENRIQUE': 'LD', 'CUIABANO': 'LE', 'LUCAS PITON': 'LE',
-      // VITORIA
-      'JAMERSON': 'LE', 'RAMON': 'LE', 'MATEUS SILVA': 'LD', 'NATHAN MENDES': 'LD', 'LUAN CANDIDO': 'LE',
-    };
-    const laterais = data.atletas.filter(a => a.posicao_id === 2);
-    const byClub: Record<number, typeof laterais> = {};
-    for (const a of laterais) {
-      if (!byClub[a.clube_id]) byClub[a.clube_id] = [];
-      byClub[a.clube_id].push(a);
+    const nextStore: Record<string, 'LD' | 'LE'> = {};
+
+    for (const atleta of data.atletas) {
+      if (atleta.posicao_id !== 2) continue;
+
+      const side = getLateralSideByName(atleta.apelido, atleta.nome);
+      if (!side) continue;
+
+      nextStore[String(atleta.atleta_id)] = side;
     }
-    for (const [clubIdStr, arr] of Object.entries(byClub)) {
-      const arrSorted = [...arr].sort((a, b) => b.jogos_num - a.jogos_num);
-      const assigned: Record<number, 'LD' | 'LE'> = {};
-      for (const a of arrSorted) {
-        if (store[String(a.atleta_id)]) continue;
-        const s = nameSide[normName(a.apelido)];
-        if (s) assigned[a.atleta_id] = s;
-      }
-      const needAssign = arrSorted.filter(a => !assigned[a.atleta_id]);
-      if (needAssign.length === 1) {
-        const otherSide = Object.values(assigned).includes('LE') ? 'LD' : Object.values(assigned).includes('LD') ? 'LE' : 'LD';
-        assigned[needAssign[0].atleta_id] = otherSide as 'LD' | 'LE';
-      } else if (needAssign.length >= 2) {
-        let toggle: 'LD' | 'LE' = Object.values(assigned).includes('LD') ? 'LE' : 'LD';
-        for (const a of needAssign) {
-          assigned[a.atleta_id] = toggle;
-          toggle = toggle === 'LD' ? 'LE' : 'LD';
-        }
-      }
-      for (const [aidStr, side] of Object.entries(assigned)) {
-        store[aidStr] = side;
-      }
-    }
-    localStorage.setItem(LS_KEY_LATERAL, JSON.stringify(store));
+
+    localStorage.setItem(LS_KEY_LATERAL, JSON.stringify(nextStore));
   } catch {}
 }
 export function useMercado() {

@@ -20,6 +20,7 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
   }
 }
 import { TrendingUp, Shield, Target, Award, Swords } from 'lucide-react';
+import { getLateralSideByName } from '@/lib/laterais';
 
 interface PlayerDetailModalProps {
   atleta: CartolaAtleta | null;
@@ -279,7 +280,7 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 <h2 className="text-2xl font-black text-foreground">
                   {atleta.apelido}
                   {atleta.posicao_id === 2 && (() => {
-                    const side = getLateralSideFromStore(atleta.atleta_id);
+                    const side = getLateralSideFromStore(atleta.atleta_id) ?? getLateralSideByName(atleta.apelido, atleta.nome);
                     return side ? <span className="ml-1 text-base text-muted-foreground">({side})</span> : null;
                   })()}
                 </h2>
