@@ -207,7 +207,7 @@ export function CruzamentoView() {
                       <div className="flex-1 max-w-[160px]">
                         <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" reverse showValue={false} />
                       </div>
-                      <span className="font-black text-sm text-success">{conquistaVal.toFixed(1)}</span>
+                      <span className="font-black text-sm text-success">{Math.round(conquistaVal)}</span>
                     </div>
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
@@ -221,7 +221,7 @@ export function CruzamentoView() {
                   </td>
                   <td className="w-[25%]">
                     <div className="flex items-center justify-start gap-2 p-2">
-                      <span className="font-black text-sm text-destructive">{cedeVal.toFixed(1)}</span>
+                      <span className="font-black text-sm text-destructive">{Math.round(cedeVal)}</span>
                       <div className="flex-1 max-w-[160px]">
                         <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" showValue={false} />
                       </div>
@@ -262,7 +262,7 @@ export function CruzamentoView() {
                       <div className="flex-1 max-w-[160px]">
                         <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" reverse showValue={false} />
                       </div>
-                      <span className="font-black text-sm text-destructive">{cedeVal.toFixed(1)}</span>
+                      <span className="font-black text-sm text-destructive">{Math.round(cedeVal)}</span>
                     </div>
                   </td>
                   <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
@@ -276,7 +276,7 @@ export function CruzamentoView() {
                   </td>
                   <td className="w-[25%]">
                     <div className="flex items-center justify-start gap-2 p-2">
-                      <span className="font-black text-sm text-success">{conquistaVal.toFixed(1)}</span>
+                      <span className="font-black text-sm text-success">{Math.round(conquistaVal)}</span>
                       <div className="flex-1 max-w-[160px]">
                         <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" showValue={false} />
                       </div>
