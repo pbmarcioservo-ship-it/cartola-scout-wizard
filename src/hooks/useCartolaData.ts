@@ -10,38 +10,46 @@ function seedLateralSides(data: CartolaMercado) {
     const raw = localStorage.getItem(LS_KEY_LATERAL);
     const store = raw ? (JSON.parse(raw) as Record<string, 'LD' | 'LE'>) : {};
     const nameSide: Record<string, 'LD' | 'LE'> = {
-      'MAYKE': 'LD',
-      'PIQUEREZ': 'LE',
-      'VARELA': 'LD',
-      'AYRTON LUCAS': 'LE',
-      'SAMUEL XAVIER': 'LD',
-      'MARCELO': 'LE',
-      'DI PLACIDO': 'LD',
-      'MARCAL': 'LE',
-      'FAGNER': 'LD',
-      'MATHEUS BIDU': 'LE',
-      'FABIO': 'LD',
-      'REINALDO': 'LE',
-      'MARIANO': 'LD',
-      'GUILHERME ARANA': 'LE',
-      'RENAN LODI': 'LE',
-      'WILLIAM': 'LD',
-      'MARLON': 'LE',
-      'ADERLAN': 'LD',
-      'JUNINHO CAPIXABA': 'LE',
-      'IGOR VINICIUS': 'LD',
-      'WELLINGTON': 'LE',
-      'PAULO HENRIQUE': 'LD',
-      'LUCAS PITON': 'LE',
-      'BRUNO PACHECO': 'LE',
-      'TINGA': 'LD',
-      'ROMAN GOMEZ': 'LD',
-      'UENDEL': 'LE',
-      'IGOR FORMIGA': 'LD',
-      'ALAN RUSCHEL': 'LE',
-      'BUSTOS': 'LD',
-      'RENE': 'LE',
-      'MADSON': 'LD',
+      // BAHIA
+      'ROMAN GOMEZ': 'LD', 'LUCIANO JUBA': 'LE', 'GILBERTO': 'LD', 'IAGO': 'LE',
+      // BOTAFOGO
+      'MARCAL': 'LE', 'VITINHO': 'LD', 'ALEX TELLES': 'LE', 'MATEO PONTE': 'LD',
+      // ATLETICO MINEIRO
+      'RENAN LODI': 'LE', 'PRECIADO': 'LD', 'KAUA PASCINI': 'LE', 'NATANAEL': 'LD',
+      // ATLETICO PARANAENSE
+      'BENAVIDEZ': 'LD', 'LEO DERIK': 'LE', 'ESQUIVEL': 'LE',
+      // CORITIBA
+      'TINGA': 'LD', 'BRUNO MELO': 'LE', 'FELIPE JONATAN': 'LE', 'JP CHERMONT': 'LD',
+      // CHAPECOENSE
+      'WALTER CLAR': 'LE', 'EVERTON': 'LD', 'MARCOS VINICIUS': 'LD', 'BRUNO PACHECO': 'LE',
+      // CORINTHIANS
+      'MATHEUS BIDU': 'LE', 'MATHEUZINHO': 'LD', 'MILANS': 'LD', 'ANGILERI': 'LE', 'HUGO': 'LE',
+      // CRUZEIRO
+      'KAIKI BRUNO': 'LE', 'WILLIAM': 'LD', 'FAGNER': 'LD', 'KAUA MORAES': 'LD',
+      // FLAMENGO
+      'VARELA': 'LE', 'ALEX SANDRO': 'LE', 'EMERSON ROYAL': 'LD', 'AYRTON LUCAS': 'LE',
+      // FLUMINENSE
+      'RENE': 'LE', 'SAMUEL XAVIER': 'LD', 'GUILHERME ARANA': 'LE', 'GUGA': 'LD',
+      // GREMIO
+      'MARLON': 'LE', 'JOAO PEDRO': 'LD', 'MARCOS ROCHA': 'LD', 'CAIO PAULISTA': 'LE',
+      // INTERNACIONAL
+      'BERNABEI': 'LE', 'AGUIRRE': 'LD', 'MATHEUS BAHIA': 'LE', 'ALISSON': 'LE',
+      // MIRASSOL
+      'IGOR FORMIGA': 'LD', 'IGOR CARIUS': 'LD', 'REINALDO': 'LE', 'DANIEL BORGES': 'LD', 'VICTOR LUIS': 'LE',
+      // PALMEIRAS
+      'PIQUEREZ': 'LE', 'KHELLVEN': 'LD', 'GIAY': 'LD', 'JEFTE': 'LE',
+      // RB BRAGANTINO
+      'JUNINHO CAPIXABA': 'LE', 'SANT ANNA': 'LD', 'ANDRES HURTADO': 'LD', 'CAUE': 'LE', 'VANDERLAN': 'LE',
+      // REMO
+      'SAVIO': 'LE', 'JOAO LUCAS': 'LD', 'MARCELINHO': 'LD', 'CUFRE': 'LE',
+      // SANTOS
+      'IGOR VINICIUS': 'LD', 'ESCOBAR': 'LE', 'VINICIUS LIRA': 'LE', 'MAYKE': 'LD', 'SOUZA': 'LE',
+      // SAO PAULO
+      'LUCAS RAMON': 'LD', 'ENZO DIAZ': 'LE', 'WENDELL': 'LE', 'MAIK': 'LD', 'CEDRIC SOARES': 'LD',
+      // VASCO
+      'PUMA RODRIGUEZ': 'LD', 'PAULO HENRIQUE': 'LD', 'CUIABANO': 'LE', 'LUCAS PITON': 'LE',
+      // VITORIA
+      'JAMERSON': 'LE', 'RAMON': 'LE', 'MATEUS SILVA': 'LD', 'NATHAN MENDES': 'LD', 'LUAN CANDIDO': 'LE',
     };
     const laterais = data.atletas.filter(a => a.posicao_id === 2);
     const byClub: Record<number, typeof laterais> = {};
