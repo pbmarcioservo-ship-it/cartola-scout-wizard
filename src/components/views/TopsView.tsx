@@ -30,7 +30,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   const [refreshKey, setRefreshKey] = useState(0);
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
-  const { data: partidasData, isLoading: loadingPartidas, error: errorPartidas } = usePartidas();
+  const { data: partidasData, isLoading: loadingPartidas, error: errorPartidas } = usePartidas(selectedRound ?? undefined);
   const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(selectedRound !== null ? selectedRound : rodadaData?.rodada_atual, ultimas);
   const [lineup, setLineup] = useState<{
     gk: any | null;
