@@ -242,97 +242,108 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     return nome || '';
   };
 
-  const topPlayersForPos = (posId: number, limit: number) => {
-    const candidatos = atletasElegiveis
-      .filter(a => a.posicao_id === posId)
-      .filter(a => {
-        if (posId === POSICAO_ID_MAP.meia || posId === POSICAO_ID_MAP.atacante) {
-          const acum = acumuladosPorAtleta?.[a.atleta_id];
-          return (acum?.G || 0) > 0 || (acum?.A || 0) > 0;
-        }
-        return true;
+  const topPlayersForPos = (posId: number, limit: number, excludeTeams?: Set<number>) => {
+    const isDefensive = [1, 2, 3, 6].includes(posId);
+
+    let candidatos = atletasElegiveis.filter(a => a.posicao_id === posId);
+
+    // CONCORDÂNCIA DEFENSIVA: GOL, LAT, ZAG, TEC somente dos Top 5 SG
+    if (isDefensive && topSGTeamIds.size > 0) {
+      candidatos = candidatos.filter(a => topSGTeamIds.has(a.clube_id));
+    }
+
+    // Excluir times já usados (para dedup cross-posição)
+    if (excludeTeams && excludeTeams.size > 0) {
+      candidatos = candidatos.filter(a => !excludeTeams.has(a.clube_id));
+    }
+
+    // Filtro de qualidade por acumulados
+    if (posId === POSICAO_ID_MAP.meia || posId === POSICAO_ID_MAP.atacante) {
+      candidatos = candidatos.filter(a => {
+        const acum = acumuladosPorAtleta?.[a.atleta_id];
+        return (acum?.G || 0) > 0 || (acum?.A || 0) > 0;
       });
+    }
+
     const scored = candidatos.map(a => {
       const opp = getOpponentForPlayer(a.clube_id);
-      if (!opp) return { atleta: a, score: -Infinity, guards: { sg: 0, base: 0 }, oppCedeG: 0, g: 0, aS: 0, fd: 0, ds: 0, de: 0, sg: 0 };
+      if (!opp) return { atleta: a, score: -Infinity, perf: 0, g: 0, aS: 0, fd: 0, ds: 0, de: 0, sg: 0, oppCedeG: 0 };
+
       const g = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
       const aS = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A');
       const fd = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'FD');
       const ds = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'DS');
       const de = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'DE');
       const sg = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'SG');
-      let score = -Infinity;
-      let base = 0;
-      if (posId === POSICAO_ID_MAP.goleiro) {
-        score = 1.0 * sg + 0.7 * de;
-        base = Math.max(sg, de);
-      } else if (posId === POSICAO_ID_MAP.zagueiro) {
-        score = 1.0 * sg + 0.6 * ds;
-        base = Math.max(sg, ds);
-      } else if (posId === POSICAO_ID_MAP.lateral) {
-        score = 1.0 * sg + 0.6 * ds;
-        base = Math.max(sg, ds);
-      } else if (posId === POSICAO_ID_MAP.meia || posId === POSICAO_ID_MAP.atacante) {
-        score = 1.0 * g + 0.7 * aS + 0.3 * fd;
-        base = Math.max(g, aS, fd);
-      } else if (posId === POSICAO_ID_MAP.tecnico) {
-        const oppIsHome = !opp.isHome;
-        const theirs = teamScoreForMatch(opp.opponentId, a.clube_id, oppIsHome, 'G');
-        const vit = Math.max(g - theirs, 0);
-        score = (sg + vit) / 2;
-        base = Math.max(sg, vit);
-      }
       const oppCedeG = teamScoreForMatch(opp.opponentId, a.clube_id, !opp.isHome, 'G');
-      const perf = (a.media_num || 0) * 2 + g * 1.0 + aS * 0.7 + fd * 0.3;
-      return { atleta: a, score, guards: { sg, base }, oppCedeG, g, aS, fd, ds, de, sg, perf };
+
+      // Bônus de 15% para mandante
+      const homeBonus = opp.isHome ? 1.15 : 1.0;
+
+      let score = -Infinity;
+      if (isDefensive) {
+        // Defensivos: crossing score (SG + scouts defensivos) + média como peso
+        if (posId === POSICAO_ID_MAP.goleiro) {
+          score = (1.0 * sg + 0.7 * de) * homeBonus;
+        } else if (posId === POSICAO_ID_MAP.zagueiro || posId === POSICAO_ID_MAP.lateral) {
+          score = (1.0 * sg + 0.6 * ds) * homeBonus;
+        } else if (posId === POSICAO_ID_MAP.tecnico) {
+          const oppIsHome = !opp.isHome;
+          const theirs = teamScoreForMatch(opp.opponentId, a.clube_id, oppIsHome, 'G');
+          const vit = Math.max(g - theirs, 0);
+          score = ((sg + vit) / 2) * homeBonus;
+        }
+        // Peso da média geral como fator de desempate
+        score += (a.media_num || 0) * 0.5;
+      } else {
+        // Ofensivos: gols/assistências do cruzamento + média geral
+        score = (1.0 * g + 0.7 * aS + 0.3 * fd) * homeBonus;
+      }
+
+      const perf = (a.media_num || 0) * 2 + (1.0 * g + 0.7 * aS + 0.3 * fd) * homeBonus;
+      return { atleta: a, score, perf, g, aS, fd, ds, de, sg, oppCedeG };
     });
-    const filtradosBase = scored.filter(s => isFinite(s.score));
-    const filtradosQualidade = filtradosBase.filter(s => {
+
+    // Filtro de qualidade por scouts acumulados
+    const filtrados = scored.filter(s => {
+      if (!isFinite(s.score)) return false;
       const acum = acumuladosPorAtleta?.[s.atleta.atleta_id] || { G: 0, A: 0, FD: 0, FF: 0, FT: 0, DS: 0, SG: 0, DE: 0 };
-      if (s.atleta.posicao_id === POSICAO_ID_MAP.goleiro) {
-        return (acum.SG || 0) > 0 || (acum.DE || 0) > 0;
-      }
-      if (s.atleta.posicao_id === POSICAO_ID_MAP.tecnico) {
-        return s.score > 0;
-      }
-      if (s.atleta.posicao_id === POSICAO_ID_MAP.meia || s.atleta.posicao_id === POSICAO_ID_MAP.atacante) {
-        return (acum.G || 0) > 0 || (acum.A || 0) > 0;
-      }
+      if (s.atleta.posicao_id === POSICAO_ID_MAP.goleiro) return (acum.SG || 0) > 0 || (acum.DE || 0) > 0;
+      if (s.atleta.posicao_id === POSICAO_ID_MAP.tecnico) return s.score > 0;
+      if (s.atleta.posicao_id === POSICAO_ID_MAP.meia || s.atleta.posicao_id === POSICAO_ID_MAP.atacante) return (acum.G || 0) > 0 || (acum.A || 0) > 0;
       return (acum.DS || 0) > 0 || (acum.SG || 0) > 0;
     });
-    let ordenadosPrim = [...filtradosQualidade];
-    if (posId === POSICAO_ID_MAP.meia || posId === POSICAO_ID_MAP.atacante) {
-      ordenadosPrim.sort((a, b) => {
+
+    // Ordenação
+    if (isDefensive) {
+      // Defensivos: crossing score com média como desempate
+      filtrados.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return (b.atleta.media_num || 0) - (a.atleta.media_num || 0);
+      });
+    } else {
+      // Ofensivos: perf (média + cruzamento)
+      filtrados.sort((a, b) => {
         if (b.perf !== a.perf) return b.perf - a.perf;
         if (b.g !== a.g) return b.g - a.g;
         if (b.aS !== a.aS) return b.aS - a.aS;
-        if (b.fd !== a.fd) return b.fd - a.fd;
-        return b.oppCedeG - a.oppCedeG;
-      });
-    } else if (posId === POSICAO_ID_MAP.lateral || posId === POSICAO_ID_MAP.zagueiro || posId === POSICAO_ID_MAP.goleiro) {
-      ordenadosPrim.sort((a, b) => {
-        if (b.sg !== a.sg) return b.sg - a.sg;
-        const secA = posId === POSICAO_ID_MAP.goleiro ? a.de : a.ds;
-        const secB = posId === POSICAO_ID_MAP.goleiro ? b.de : b.ds;
-        if (secB !== secA) return secB - secA;
-        return b.score - a.score;
-      });
-    } else {
-      ordenadosPrim.sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
         return b.oppCedeG - a.oppCedeG;
       });
     }
+
+    // Um jogador por time
     const vistos = new Set<number>();
     const lista: any[] = [];
-    for (const s of ordenadosPrim) {
+    for (const s of filtrados) {
       if (vistos.has(s.atleta.clube_id)) continue;
       lista.push(s.atleta);
       vistos.add(s.atleta.clube_id);
       if (lista.length >= limit) break;
     }
+
+    // Fallback se não atingiu o limite
     if (lista.length < limit) {
-      for (const s of filtradosBase) {
+      for (const s of scored.filter(x => isFinite(x.score))) {
         if (vistos.has(s.atleta.clube_id)) continue;
         if (lista.find(x => x.atleta_id === s.atleta.atleta_id)) continue;
         lista.push(s.atleta);
@@ -343,59 +354,117 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     return lista.slice(0, limit);
   };
 
+  // PICKS OFENSIVOS UNIFICADOS — time não repete entre MEI, ATA e Capitães
+  const unifiedOffensive = useMemo(() => {
+    const usedTeams = new Set<number>();
+
+    const meias = topPlayersForPos(4, 5, usedTeams);
+    meias.forEach(a => usedTeams.add(a.clube_id));
+
+    const atacantes = topPlayersForPos(5, 5, usedTeams);
+    atacantes.forEach(a => usedTeams.add(a.clube_id));
+
+    // Capitães: top 3 de MEI+ATA que não repetem time com os já selecionados
+    const capPool = atletasProvaveis
+      .filter(a => [POSICAO_ID_MAP.meia, POSICAO_ID_MAP.atacante].includes(a.posicao_id))
+      .filter(a => !usedTeams.has(a.clube_id));
+
+    const capScored = capPool.map(a => {
+      const opp = getOpponentForPlayer(a.clube_id);
+      if (!opp) return { atleta: a, perf: -Infinity, estOk: false, prodOk: false };
+      const g = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
+      const aS = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A');
+      const fd = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'FD');
+      const homeBonus = opp.isHome ? 1.15 : 1.0;
+      const crossScore = (1.0 * g + 0.7 * aS + 0.3 * fd) * homeBonus;
+      const perf = (a.media_num || 0) * 2 + crossScore;
+      const maxG = Math.max(1, ...capPool.map(x => {
+        const o = getOpponentForPlayer(x.clube_id);
+        if (!o) return 1;
+        return teamScoreForMatch(x.clube_id, o.opponentId, o.isHome, 'G');
+      }));
+      const estOk = (g / maxG) >= 0.4;
+      const acum = acumuladosPorAtleta?.[a.atleta_id];
+      const prodOk = (acum?.G || 0) > 0 || (acum?.A || 0) > 0;
+      return { atleta: a, perf, estOk, prodOk };
+    }).filter(s => isFinite(s.perf) && s.estOk && s.prodOk);
+
+    capScored.sort((a, b) => b.perf - a.perf);
+    const capVistos = new Set<number>();
+    const capitaes: any[] = [];
+    for (const s of capScored) {
+      if (capVistos.has(s.atleta.clube_id)) continue;
+      capitaes.push(s.atleta);
+      capVistos.add(s.atleta.clube_id);
+      if (capitaes.length >= 3) break;
+    }
+
+    return { meias, atacantes, capitaes };
+  }, [atletasProvaveis, atletasElegiveis, validPartidas, crossovers, acumuladosPorAtleta, topSGTeamIds]);
+
+  useEffect(() => {
+    if (mode !== 'time-only') return;
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY_LINEUP) : null;
+    const idx: Record<number, any> = {};
+    for (const a of (mercadoData?.atletas || [])) idx[a.atleta_id] = a;
+    if (raw) {
+      try {
+        const saved = JSON.parse(raw) as { gk?: number; lats?: number[]; zags?: number[]; meis?: number[]; atacs?: number[]; tecnico?: number };
+        const next = {
+          gk: saved.gk ? idx[saved.gk] || null : null,
+          lats: (saved.lats || []).map(id => idx[id]).filter(Boolean),
+          zags: (saved.zags || []).map(id => idx[id]).filter(Boolean),
+          meis: (saved.meis || []).map(id => idx[id]).filter(Boolean),
+          atacs: (saved.atacs || []).map(id => idx[id]).filter(Boolean),
+          tecnico: saved.tecnico ? idx[saved.tecnico] || null : null,
+        };
+        const enough = next.gk && next.tecnico && next.lats.length === 2 && next.zags.length === 2 && next.meis.length === 3 && next.atacs.length === 3;
+        if (enough) {
+          setLineup(next);
+          setHighlightIds([]);
+          return;
+        }
+      } catch {}
+    }
+    const used = new Set<number>();
+    const gk = pickTopByMedia(1, 1, used)[0] || null;
+    if (gk) used.add(gk.atleta_id);
+    const lats = pickTopByMedia(2, 2, used); lats.forEach(x => used.add(x.atleta_id));
+    const zags = pickTopByMedia(3, 2, used); zags.forEach(x => used.add(x.atleta_id));
+    const meis = pickTopByMedia(4, 3, used); meis.forEach(x => used.add(x.atleta_id));
+    const atacs = pickTopByMedia(5, 3, used); atacs.forEach(x => used.add(x.atleta_id));
+    const tecnico = pickTopByMedia(6, 1, used)[0] || null;
+    const next = { gk, lats, zags, meis, atacs, tecnico };
+    setLineup(next);
+    setHighlightIds([]);
+  }, [mode, mercadoData]);
+
+  useEffect(() => {
+    if (mode !== 'time-only') return;
+    if (!lineup) return;
+    const payload = {
+      gk: lineup.gk?.atleta_id || null,
+      lats: lineup.lats?.map(a => a.atleta_id) || [],
+      zags: lineup.zags?.map(a => a.atleta_id) || [],
+      meis: lineup.meis?.map(a => a.atleta_id) || [],
+      atacs: lineup.atacs?.map(a => a.atleta_id) || [],
+      tecnico: lineup.tecnico?.atleta_id || null,
+    };
+    try { localStorage.setItem(LS_KEY_LINEUP, JSON.stringify(payload)); } catch {}
+  }, [mode, lineup]);
+
   useEffect(() => {
     const next = {
       gk: (topPlayersForPos(1, 1)[0] || null),
       lats: (topPlayersForPos(2, 2) || []),
       zags: (topPlayersForPos(3, 2) || []),
-      meis: (topPlayersForPos(4, 3) || []),
-      atacs: (topPlayersForPos(5, 3) || []),
+      meis: (unifiedOffensive.meias.slice(0, 3) || []),
+      atacs: (unifiedOffensive.atacantes.slice(0, 3) || []),
       tecnico: (topPlayersForPos(6, 1)[0] || null),
     };
     setLineup(next);
     setHighlightIds([]);
-  }, [refreshKey]);
-
-  const capitaesTop3 = useMemo(() => {
-    const cand = atletasProvaveis.filter(a => [POSICAO_ID_MAP.meia, POSICAO_ID_MAP.atacante].includes(a.posicao_id));
-    const scored = cand.map(a => {
-      const opp = getOpponentForPlayer(a.clube_id);
-      if (!opp) return { atleta: a, score: -Infinity, oppCedeG: 0, g: 0, aS: 0, fd: 0, estOk: false, prodOk: false };
-      const g = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
-      const aS = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A');
-      const fd = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'FD');
-      const score = 1.0 * g + 0.7 * aS + 0.3 * fd;
-      const oppCedeG = teamScoreForMatch(opp.opponentId, a.clube_id, !opp.isHome, 'G');
-      const maxG = Math.max(1, ...cand.map(x => {
-        const o = getOpponentForPlayer(x.clube_id);
-        if (!o) return 1;
-        return teamScoreForMatch(x.clube_id, o.opponentId, o.isHome, 'G');
-      }));
-      const r = g / maxG;
-      const estOk = r >= 0.5;
-      const acum = acumuladosPorAtleta?.[a.atleta_id];
-      const prodOk = (acum?.G || 0) > 0 || (acum?.A || 0) > 0;
-      const perf = (a.media_num || 0) * 2 + g * 1.0 + aS * 0.7 + fd * 0.3;
-      return { atleta: a, score, oppCedeG, g, aS, fd, estOk, prodOk, perf };
-    }).filter(s => isFinite(s.score) && s.estOk && s.prodOk);
-    scored.sort((a, b) => {
-      if (b.perf !== a.perf) return b.perf - a.perf;
-      if (b.g !== a.g) return b.g - a.g;
-      if (b.aS !== a.aS) return b.aS - a.aS;
-      if (b.fd !== a.fd) return b.fd - a.fd;
-      return b.oppCedeG - a.oppCedeG;
-    });
-    let ordered = scored;
-    const vistos = new Set<number>();
-    const lista: any[] = [];
-    for (const s of ordered) {
-      if (vistos.has(s.atleta.clube_id)) continue;
-      lista.push(s.atleta);
-      vistos.add(s.atleta.clube_id);
-      if (lista.length >= 3) break;
-    }
-    return lista.slice(0, 3);
-  }, [atletasProvaveis, partidas, crossovers]);
+  }, [refreshKey, unifiedOffensive, topSGTeamIds]);
 
   if (isLoading) {
     return (
