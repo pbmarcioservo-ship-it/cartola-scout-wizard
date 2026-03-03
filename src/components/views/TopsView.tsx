@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, POSICOES } from '@/hooks/useCartolaData';
-import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CircleAlert as AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
