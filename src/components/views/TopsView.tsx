@@ -523,30 +523,30 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         </div>
       ) : (
       <Tabs defaultValue={initialTab ?? 'sg'} className="w-full">
-        <TabsList className="w-full max-w-4xl bg-primary/20 mb-2 flex flex-wrap">
-          <TabsTrigger value="sg" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
-            🛡️ Top 5 SG (Times)
+        <TabsList className="w-full max-w-4xl bg-primary/20 mb-2 flex flex-wrap gap-1">
+          <TabsTrigger value="sg" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
+            🛡️ SG
           </TabsTrigger>
-          <TabsTrigger value="goleiros" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
+          <TabsTrigger value="goleiros" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
             🧤 Goleiros
           </TabsTrigger>
-          <TabsTrigger value="zagueiros" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
+          <TabsTrigger value="zagueiros" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
             🧱 Zagueiros
           </TabsTrigger>
-          <TabsTrigger value="laterais" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
+          <TabsTrigger value="laterais" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
             🏃 Laterais
           </TabsTrigger>
-          <TabsTrigger value="meias" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
+          <TabsTrigger value="meias" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
             💡 Meias
           </TabsTrigger>
-          <TabsTrigger value="atacantes" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
+          <TabsTrigger value="atacantes" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
             🏹 Atacantes
           </TabsTrigger>
-          <TabsTrigger value="tecnicos" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
+          <TabsTrigger value="tecnicos" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
             📋 Técnicos
           </TabsTrigger>
-          <TabsTrigger value="capitaes" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
-            👑 Top 3 Capitães
+          <TabsTrigger value="capitaes" className="flex-1 min-w-fit data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-xs px-2">
+            👑 Capitães
           </TabsTrigger>
         </TabsList>
         <div className="text-xs text-muted-foreground mb-4">
