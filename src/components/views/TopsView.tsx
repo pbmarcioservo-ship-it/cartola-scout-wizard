@@ -574,7 +574,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
           <TimeDaRodada
             key={refreshKey}
             getTop={(posId, n) => topPlayersForPos(posId, n)}
-            capitao={capitaesTop3?.[0] || null}
+            capitao={unifiedOffensive.capitaes?.[0] || null}
             tecnico={(lineup?.tecnico ?? (topPlayersForPos(6,1)[0] || null))}
             clubes={mercadoData?.clubes || {}}
             lineup={lineup ? { gk: lineup.gk, lats: lineup.lats, zags: lineup.zags, meis: lineup.meis, atacs: lineup.atacs } : undefined}
@@ -874,7 +874,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         <TabsContent value="capitaes">
           <ListAtletas
             title="👑 Top 3 Capitães (G/ASS/FIN)"
-            atletas={capitaesTop3}
+            atletas={unifiedOffensive.capitaes}
             clubes={mercadoData?.clubes || {}}
             medals
             getConfronto={(a) => {
