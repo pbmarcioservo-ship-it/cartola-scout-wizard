@@ -415,52 +415,25 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     <div className="animate-fade-in">
       {mode !== 'time-only' && (
         <>
-          <div className="flex items-center gap-2 mb-4 bg-muted/50 p-3 rounded-lg">
-            <span className="text-xs text-muted-foreground font-bold">Selecione a Rodada:</span>
-            <button
-              onClick={() => setSelectedRound(selectedRound !== null && selectedRound > 1 ? selectedRound - 1 : null)}
-              className="p-1 hover:bg-muted rounded"
-              title="Rodada anterior"
+          <div className="flex items-center gap-3 mb-4 bg-muted/50 p-3 rounded-lg">
+            <span className="text-xs text-muted-foreground font-bold whitespace-nowrap">📊 Rodada:</span>
+            <Select
+              value={selectedRound !== null ? String(selectedRound) : 'atual'}
+              onValueChange={(val) => setSelectedRound(val === 'atual' ? null : Number(val))}
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex-1 flex flex-wrap gap-1">
-              {Array.from({ length: 38 }, (_, i) => i + 1).map(round => (
-                <button
-                  key={round}
-                  className={cn(
-                    'px-2.5 py-1 rounded text-xs font-bold transition-colors',
-                    selectedRound === round
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card text-foreground hover:bg-primary/20'
-                  )}
-                  onClick={() => setSelectedRound(round)}
-                >
-                  {round}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setSelectedRound(selectedRound !== null && selectedRound < 38 ? selectedRound + 1 : 1)}
-              className="p-1 hover:bg-muted rounded"
-              title="Próxima rodada"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            {selectedRound !== null && (
-              <button
-                onClick={() => setSelectedRound(null)}
-                className="ml-2 px-2 py-1 text-xs font-bold bg-destructive/20 text-destructive rounded hover:bg-destructive/30"
-              >
-                Limpar
-              </button>
-            )}
+              <SelectTrigger className="w-[180px] bg-primary text-primary-foreground border-none font-bold">
+                <SelectValue placeholder="Rodada Atual" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border max-h-60">
+                <SelectItem value="atual" className="font-bold">Rodada Atual</SelectItem>
+                {Array.from({ length: 38 }, (_, i) => i + 1).map(round => (
+                  <SelectItem key={round} value={String(round)} className="font-bold">
+                    Rodada {round}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          {selectedRound !== null && (
-            <div className="text-[11px] text-muted-foreground mb-2 px-3">
-              📊 Visualizando dados da Rodada {selectedRound}
-            </div>
-          )}
         </>
       )}
       {mode === 'time-only' ? (
