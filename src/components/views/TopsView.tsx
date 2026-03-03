@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, POSICOES } from '@/hooks/useCartolaData';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
@@ -24,12 +24,13 @@ const LS_KEY_LINEUP = 'statusfc_lineup_time_rodada';
 
 export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'full' | 'artilheiros-only' | 'time-only' } = {}) {
   const [ultimas, setUltimas] = useState(5);
+  const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [timeStatus] = useState<'provavel' | 'duvida'>('provavel');
   const [refreshKey, setRefreshKey] = useState(0);
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
   const { data: partidasData, isLoading: loadingPartidas, error: errorPartidas } = usePartidas();
-  const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(rodadaData?.rodada_atual, ultimas);
+  const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(selectedRound !== null ? selectedRound : rodadaData?.rodada_atual, ultimas);
   const [lineup, setLineup] = useState<{
     gk: any | null;
     lats: any[];
@@ -413,21 +414,50 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     <div className="animate-fade-in">
       {mode !== 'time-only' && (
         <>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-muted-foreground font-bold">Rodadas:</span>
-            {[3,5,7].map(n => (
+          <div className="flex items-center gap-2 mb-4 bg-muted/50 p-3 rounded-lg">
+            <span className="text-xs text-muted-foreground font-bold">Selecione a Rodada:</span>
+            <button
+              onClick={() => setSelectedRound(selectedRound !== null && selectedRound > 1 ? selectedRound - 1 : null)}
+              className="p-1 hover:bg-muted rounded"
+              title="Rodada anterior"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex-1 flex flex-wrap gap-1">
+              {Array.from({ length: 38 }, (_, i) => i + 1).map(round => (
+                <button
+                  key={round}
+                  className={cn(
+                    'px-2.5 py-1 rounded text-xs font-bold transition-colors',
+                    selectedRound === round
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-foreground hover:bg-primary/20'
+                  )}
+                  onClick={() => setSelectedRound(round)}
+                >
+                  {round}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setSelectedRound(selectedRound !== null && selectedRound < 38 ? selectedRound + 1 : 1)}
+              className="p-1 hover:bg-muted rounded"
+              title="Próxima rodada"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            {selectedRound !== null && (
               <button
-                key={n}
-                className={cn('px-2 py-1 rounded text-xs font-bold', ultimas === n ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground')}
-                onClick={() => setUltimas(n)}
+                onClick={() => setSelectedRound(null)}
+                className="ml-2 px-2 py-1 text-xs font-bold bg-destructive/20 text-destructive rounded hover:bg-destructive/30"
               >
-                {n}
+                Limpar
               </button>
-            ))}
+            )}
           </div>
-          {historicoData && historicoData.length > 0 && historicoData.length < 3 && (
-            <div className="text-[11px] text-muted-foreground mb-2">
-              * Baseado em apenas {historicoData.length} jogos
+          {selectedRound !== null && (
+            <div className="text-[11px] text-muted-foreground mb-2 px-3">
+              📊 Visualizando dados da Rodada {selectedRound}
             </div>
           )}
         </>
