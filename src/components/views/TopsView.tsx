@@ -763,7 +763,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         <TabsContent value="meias">
           <ListAtletas
             title="💡 Top 5 Meias (G/ASS/FIN)"
-            atletas={topPlayersForPos(4, 5)}
+            atletas={unifiedOffensive.meias}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
               const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
@@ -800,7 +800,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         <TabsContent value="atacantes">
           <ListAtletas
             title="🏹 Top 5 Atacantes (G/ASS/FIN)"
-            atletas={topPlayersForPos(5, 5)}
+            atletas={unifiedOffensive.atacantes}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
               const partida = validPartidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
