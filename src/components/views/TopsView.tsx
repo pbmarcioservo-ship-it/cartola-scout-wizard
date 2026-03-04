@@ -309,7 +309,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       if (!isFinite(s.score)) return false;
       const acum = acumuladosPorAtleta?.[s.atleta.atleta_id] || { G: 0, A: 0, FD: 0, FF: 0, FT: 0, DS: 0, SG: 0, DE: 0 };
       if (s.atleta.posicao_id === POSICAO_ID_MAP.goleiro) return (acum.SG || 0) > 0 || (acum.DE || 0) > 0;
-      if (s.atleta.posicao_id === POSICAO_ID_MAP.tecnico) return s.score > 0;
+      if (s.atleta.posicao_id === POSICAO_ID_MAP.tecnico) return true; // Sempre incluir técnicos dos Top 5 SG
       if (s.atleta.posicao_id === POSICAO_ID_MAP.meia || s.atleta.posicao_id === POSICAO_ID_MAP.atacante) return (acum.G || 0) > 0 || (acum.A || 0) > 0;
       return (acum.DS || 0) > 0 || (acum.SG || 0) > 0;
     });
