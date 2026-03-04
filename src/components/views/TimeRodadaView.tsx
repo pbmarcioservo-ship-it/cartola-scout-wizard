@@ -555,18 +555,7 @@ export function TimeRodadaView() {
         </div>
       </div>
 
-      {/* ── Strategy info ── */}
-      <div className="mt-4 w-full max-w-[720px] bg-card rounded-lg p-4 shadow-md">
-        <h3 className="font-bold text-foreground text-sm mb-2">📋 Regras da Estratégia</h3>
-        <ul className="text-xs text-muted-foreground space-y-1">
-          <li>🛡️ <strong>Filtro Anti-Conflito:</strong> Jogadores de meio/ataque nunca são adversários da defesa escalada.</li>
-          <li>📊 <strong>Máx. 1 jogador por clube</strong> para meias e atacantes. Defesa pode ter até 3 do mesmo clube.</li>
-          <li>✅ <strong>Status:</strong> {statusFilter === 'provavel' ? 'Apenas jogadores prováveis' : 'Prováveis + Dúvida'}</li>
-          {estrategia === 'tiro-curto' && <li>🎯 <strong>Tiro Curto:</strong> Defesa fechada do time com maior probabilidade de SG.</li>}
-          {estrategia === 'bom-e-barato' && <li>💰 <strong>Bom e Barato:</strong> Nenhum jogador acima de C$ 10,00.</li>}
-          {estrategia === 'liga-classica' && <li>🏆 <strong>Liga Clássica:</strong> Foco em regularidade e volume de scouts acumulados.</li>}
-        </ul>
-      </div>
+      {/* Strategy rules card hidden - logic preserved */}
 
       {/* Player Detail Modal */}
       <PlayerDetailModal
