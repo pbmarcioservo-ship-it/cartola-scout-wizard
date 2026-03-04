@@ -364,32 +364,28 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
     const atacantes = topPlayersForPos(5, 5, usedTeams);
     atacantes.forEach(a => usedTeams.add(a.clube_id));
 
-    // Capitães: top 3 de MEI+ATA que não repetem time com os já selecionados
-    const capPool = atletasProvaveis
-      .filter(a => [POSICAO_ID_MAP.meia, POSICAO_ID_MAP.atacante].includes(a.posicao_id))
-      .filter(a => !usedTeams.has(a.clube_id));
+    // Capitães: top 3 escolhidos DENTRO dos 5 meias + 5 atacantes já listados
+    const capPool = [...meias, ...atacantes];
 
     const capScored = capPool.map(a => {
       const opp = getOpponentForPlayer(a.clube_id);
-      if (!opp) return { atleta: a, perf: -Infinity, estOk: false, prodOk: false };
+      if (!opp) return { atleta: a, capScore: -Infinity };
       const g = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
       const aS = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A');
-      const fd = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'FD');
       const homeBonus = opp.isHome ? 1.15 : 1.0;
-      const crossScore = (1.0 * g + 0.7 * aS + 0.3 * fd) * homeBonus;
-      const perf = (a.media_num || 0) * 2 + crossScore;
-      const maxG = Math.max(1, ...capPool.map(x => {
-        const o = getOpponentForPlayer(x.clube_id);
-        if (!o) return 1;
-        return teamScoreForMatch(x.clube_id, o.opponentId, o.isHome, 'G');
-      }));
-      const estOk = (g / maxG) >= 0.4;
-      const acum = acumuladosPorAtleta?.[a.atleta_id];
-      const prodOk = (acum?.G || 0) > 0 || (acum?.A || 0) > 0;
-      return { atleta: a, perf, estOk, prodOk };
-    }).filter(s => isFinite(s.perf) && s.estOk && s.prodOk);
+      // Peso extra de 5% para atacantes na probabilidade de gol
+      const atkBonus = a.posicao_id === POSICAO_ID_MAP.atacante ? 1.05 : 1.0;
+      // Critério: Gol > Assistência > Média Geral (desempate)
+      const capScore = (g * 1.0 * atkBonus + aS * 0.5) * homeBonus;
+      return { atleta: a, capScore, g, aS, media: a.media_num || 0 };
+    }).filter(s => isFinite(s.capScore));
 
-    capScored.sort((a, b) => b.perf - a.perf);
+    capScored.sort((a, b) => {
+      if (b.capScore !== a.capScore) return b.capScore - a.capScore;
+      if ((b.g || 0) !== (a.g || 0)) return (b.g || 0) - (a.g || 0);
+      if ((b.aS || 0) !== (a.aS || 0)) return (b.aS || 0) - (a.aS || 0);
+      return (b.media || 0) - (a.media || 0);
+    });
     const capVistos = new Set<number>();
     const capitaes: any[] = [];
     for (const s of capScored) {
