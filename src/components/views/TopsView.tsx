@@ -136,6 +136,16 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   // IDs dos times Top 5 SG — usado para restringir posições defensivas
   const topSGTeamIds = useMemo(() => new Set(topSGTimes.map(t => t.timeId)), [topSGTimes]);
 
+  // ESPELHAMENTO TOTAL: Técnicos mapeados diretamente dos Top 5 SG (mesma ordem, sem filtros)
+  const topTecnicos = useMemo(() => {
+    const allAtletas = mercadoData?.atletas || [];
+    return topSGTimes.map(sg => {
+      // Busca qualquer técnico do time, sem filtro de média/scout/status
+      const tecnico = allAtletas.find(a => a.posicao_id === 6 && a.clube_id === sg.timeId);
+      return tecnico || null;
+    }).filter(Boolean);
+  }, [topSGTimes, mercadoData]);
+
   const getOpponentForPlayer = (clubId: number) => {
     const partida = validPartidas.find(p => p.clube_casa_id === clubId || p.clube_visitante_id === clubId);
     if (!partida) return null;
