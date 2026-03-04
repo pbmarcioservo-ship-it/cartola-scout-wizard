@@ -337,11 +337,13 @@ export function TimeRodadaView() {
   }, [eligibleAtletas, topSGTeams, getOpponent, teamScoreForMatch, acumulados]);
 
   // Generate lineup on mount + when strategy/status/seed changes
+  const eligibleCount = eligibleAtletas.length;
   useEffect(() => {
-    if (eligibleAtletas.length === 0) return;
+    if (eligibleCount === 0) return;
     const newLineup = generateLineup(estrategia, seed);
     setLineup(newLineup);
-  }, [estrategia, statusFilter, seed, generateLineup, eligibleAtletas]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estrategia, statusFilter, seed, eligibleCount]);
 
   // ── Calculate total cost / live points ──
   const allLineupPlayers = useMemo(() => {
