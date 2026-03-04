@@ -139,11 +139,37 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
   // ESPELHAMENTO TOTAL: Técnicos mapeados diretamente dos Top 5 SG (mesma ordem, sem filtros)
   const topTecnicos = useMemo(() => {
     const allAtletas = mercadoData?.atletas || [];
-    return topSGTimes.map(sg => {
-      // Busca qualquer técnico do time, sem filtro de média/scout/status
-      const tecnico = allAtletas.find(a => a.posicao_id === 6 && a.clube_id === sg.timeId);
-      return tecnico || null;
-    }).filter(Boolean);
+    const clubesMap = mercadoData?.clubes || {};
+    const tecnicosByClube = new Map<number, any>();
+
+    for (const atleta of allAtletas) {
+      if (atleta.posicao_id !== 6) continue;
+      const clubeId = Number(atleta.clube_id);
+      if (!tecnicosByClube.has(clubeId)) {
+        tecnicosByClube.set(clubeId, atleta);
+      }
+    }
+
+    return topSGTimes.slice(0, 5).map((sg, idx) => {
+      const clubeId = Number(sg.timeId);
+      const tecnico = tecnicosByClube.get(clubeId);
+      if (tecnico) return tecnico;
+
+      const clube = clubesMap[String(clubeId)] || clubesMap[clubeId];
+      return {
+        atleta_id: -1000 - idx,
+        apelido: `Téc. ${clube?.abreviacao || clube?.nome || 'N/D'}`,
+        nome: `Técnico ${clube?.nome || 'N/D'}`,
+        foto: '/placeholder.svg',
+        clube_id: clubeId,
+        posicao_id: 6,
+        status_id: 7,
+        media_num: 0,
+        preco_num: 0,
+        variacao_num: 0,
+        jogos_num: 0,
+      };
+    });
   }, [topSGTimes, mercadoData]);
 
   const getOpponentForPlayer = (clubId: number) => {
