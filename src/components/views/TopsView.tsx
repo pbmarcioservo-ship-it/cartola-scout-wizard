@@ -341,13 +341,17 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       if (lista.length >= limit) break;
     }
 
-    // Fallback se não atingiu o limite
+    // Fallback: preencher com atletas por média se não atingiu o limite
     if (lista.length < limit) {
-      for (const s of scored.filter(x => isFinite(x.score))) {
-        if (vistos.has(s.atleta.clube_id)) continue;
-        if (lista.find(x => x.atleta_id === s.atleta.atleta_id)) continue;
-        lista.push(s.atleta);
-        vistos.add(s.atleta.clube_id);
+      const fallbackPool = isDefensive && topSGTeamIds.size > 0
+        ? candidatos.filter(a => !vistos.has(a.clube_id))
+        : scored.filter(x => isFinite(x.score)).map(x => x.atleta).filter(a => !vistos.has(a.clube_id));
+      const sorted = (isDefensive ? fallbackPool : fallbackPool).sort((a, b) => (b.media_num || 0) - (a.media_num || 0));
+      for (const a of sorted) {
+        if (vistos.has(a.clube_id)) continue;
+        if (lista.find(x => x.atleta_id === a.atleta_id)) continue;
+        lista.push(a);
+        vistos.add(a.clube_id);
         if (lista.length >= limit) break;
       }
     }
