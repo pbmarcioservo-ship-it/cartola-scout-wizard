@@ -470,7 +470,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
       zags: (topPlayersForPos(3, 2) || []),
       meis: (unifiedOffensive.meias.slice(0, 3) || []),
       atacs: (unifiedOffensive.atacantes.slice(0, 3) || []),
-      tecnico: (topPlayersForPos(6, 1)[0] || null),
+      tecnico: (topTecnicos[0] || null),
     };
     setLineup(next);
     setHighlightIds([]);
@@ -847,7 +847,7 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
         <TabsContent value="tecnicos">
           <ListAtletas
             title="📋 Top 5 Técnicos (SG/VIT)"
-            atletas={topPlayersForPos(6, 5)}
+            atletas={topTecnicos}
             clubes={mercadoData?.clubes || {}}
             getConfronto={(a) => {
               const partida = partidas.find(p => p.clube_casa_id === a.clube_id || p.clube_visitante_id === a.clube_id);
