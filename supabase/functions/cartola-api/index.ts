@@ -85,13 +85,46 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error(`Cartola API error: ${response.status}`);
+      const errText = await response.text().catch(() => '');
       return new Response(
-        JSON.stringify({ error: `Cartola API retornou ${response.status}` }),
+        JSON.stringify({ error: `Cartola API retornou ${response.status}`, detail: errText.substring(0, 200) }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = await response.json();
+    const rawText = await response.text();
+    if (!rawText || rawText.trim().length === 0) {
+      console.error(`Empty response from Cartola API for ${endpoint}`);
+      return new Response(
+        JSON.stringify({ error: `Resposta vazia da API do Cartola para ${endpoint}` }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    let data: unknown;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      // Try to recover truncated JSON
+      const lastBrace = rawText.lastIndexOf('}');
+      if (lastBrace > 0) {
+        try {
+          data = JSON.parse(rawText.substring(0, lastBrace + 1) + (rawText.trimStart().startsWith('[') ? ']' : ''));
+          console.warn(`Recovered truncated JSON for ${endpoint}`);
+        } catch {
+          console.error(`Cannot parse response for ${endpoint}: ${rawText.substring(0, 100)}`);
+          return new Response(
+            JSON.stringify({ error: 'Resposta inválida da API do Cartola' }),
+            { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ error: 'Resposta inválida da API do Cartola' }),
+          { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
     console.log(`Successfully fetched ${endpoint} data`);
 
     return new Response(
