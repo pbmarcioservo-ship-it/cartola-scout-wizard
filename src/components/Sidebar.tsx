@@ -26,6 +26,7 @@ const menuItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
   { id: 'provaveis', label: 'Prováveis', icon: <Users className="w-5 h-5" /> },
   { id: 'intocaveis', label: 'Top Intocáveis', icon: <Shield className="w-5 h-5" /> },
   { id: 'acompanhamento', label: 'Acompanhamento', icon: <Activity className="w-5 h-5" /> },
+  { id: 'agente-tecnico', label: 'Agente Técnico', icon: <Zap className="w-5 h-5" /> },
 ];
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
