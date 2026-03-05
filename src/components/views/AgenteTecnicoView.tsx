@@ -324,13 +324,25 @@ export function AgenteTecnicoView() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Pergunte ao Agente Técnico..."
-            className="flex-1"
+            placeholder={isListening ? "🎙️ Ouvindo..." : "Pergunte ao Agente Técnico..."}
+            className={`flex-1 ${isListening ? 'border-primary ring-2 ring-primary/30' : ''}`}
             disabled={isLoading || !dataReady}
           />
-          <Button size="icon" onClick={handleSend} disabled={isLoading || !input.trim() || !dataReady}>
-            <Send className="w-4 h-4" />
-          </Button>
+          {input.trim() ? (
+            <Button size="icon" onClick={handleSend} disabled={isLoading || !dataReady}>
+              <Send className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              size="icon"
+              variant={isListening ? 'default' : 'outline'}
+              onClick={toggleListening}
+              disabled={isLoading || !dataReady}
+              className={isListening ? 'animate-pulse' : ''}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </Button>
+          )}
         </div>
       </div>
 
