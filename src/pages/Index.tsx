@@ -12,6 +12,7 @@ import { ViewType } from '@/types/cartola';
 import { TimeRodadaView } from '@/components/views/TimeRodadaView';
 import { TopArtilheirosView } from '@/components/views/TopArtilheirosView';
 import { AcompanhamentoView } from '@/components/views/AcompanhamentoView';
+import { AgenteTecnicoView } from '@/components/views/AgenteTecnicoView';
 import { useRodada } from '@/hooks/useCartolaData';
 import { Calendar, Clock, Users } from 'lucide-react';
 
@@ -43,6 +44,8 @@ export default function Index() {
         return <TopArtilheirosView />;
       case 'acompanhamento':
         return <AcompanhamentoView />;
+      case 'agente-tecnico':
+        return <AgenteTecnicoView />;
       default:
         return <CruzamentoView />;
     }

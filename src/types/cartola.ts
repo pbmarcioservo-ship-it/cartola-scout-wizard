@@ -100,4 +100,5 @@ export type ViewType =
   | 'intocaveis'
   | 'time-rodada'
   | 'artilheiros'
-  | 'acompanhamento';
+  | 'acompanhamento'
+  | 'agente-tecnico';
