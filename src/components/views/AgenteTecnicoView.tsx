@@ -118,6 +118,8 @@ export function AgenteTecnicoView() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: mercadoData } = useMercado();
