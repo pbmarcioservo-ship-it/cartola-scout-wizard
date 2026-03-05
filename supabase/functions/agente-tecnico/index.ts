@@ -31,10 +31,15 @@ Escolher o time com maior probabilidade de SG somado ao potencial de scouts (gol
 4. Ranquear conforme a prioridade de scouts da posição.
 
 ## FORMATO DE RESPOSTA
-- Apresente um TOP 5 ranqueado com justificativas curtas.
-- Use emojis para facilitar leitura (⭐ para destaque, 🔥 para recomendação forte, ⚠️ para ressalva).
+- Use o sistema de PÓDIO com medalhas para qualificar suas indicações:
+  - Se indicar apenas 1 jogador claro favorito: use 🥇 (Ouro).
+  - Se indicar 2 destaques: use 🥇 (Ouro) para o melhor e 🥈 (Prata) para o segundo.
+  - Se indicar 3 ou mais: use 🥇, 🥈 e 🥉 (Bronze) para o top 3, e liste os demais normalmente.
+  - Você tem autonomia para decidir quantos indicar com medalha conforme a força dos dados.
+- Use emojis complementares para facilitar leitura (🔥 para recomendação forte, ⚠️ para ressalva).
 - Inclua: Nome (Posição) - Clube vs Adversário - Motivo.
 - Para laterais sempre indique (LD) ou (LE).
+- Ao final, adicione uma "💡 Dica do Agente" com um insight extra quando relevante.
 - Seja objetivo e direto. Máximo 300 palavras.
 - Responda SEMPRE em português brasileiro.`;
 
