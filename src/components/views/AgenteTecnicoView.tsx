@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Send, Bot, User, Loader2, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { useMercado, usePartidas, useRodada, useHistoricoRodadas } from '@/hooks/useCartolaData';
 import { buildContextData } from '@/lib/agente-tecnico-context';
 import { toast } from 'sonner';
@@ -118,6 +118,8 @@ export function AgenteTecnicoView() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: mercadoData } = useMercado();
@@ -135,8 +137,47 @@ export function AgenteTecnicoView() {
 
   // Cleanup speech on unmount
   useEffect(() => {
-    return () => { window.speechSynthesis?.cancel(); };
+    return () => {
+      window.speechSynthesis?.cancel();
+      recognitionRef.current?.abort();
+    };
   }, []);
+
+  const toggleListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Seu navegador não suporta reconhecimento de voz.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join('');
+      setInput(transcript);
+    };
+
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = (e: any) => {
+      if (e.error !== 'aborted') toast.error('Erro no reconhecimento de voz.');
+      setIsListening(false);
+    };
+
+    setIsListening(true);
+    recognition.start();
+  }, [isListening]);
 
   const cleanTextForSpeech = (text: string): string => {
     return text
@@ -283,13 +324,25 @@ export function AgenteTecnicoView() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Pergunte ao Agente Técnico..."
-            className="flex-1"
+            placeholder={isListening ? "🎙️ Ouvindo..." : "Pergunte ao Agente Técnico..."}
+            className={`flex-1 ${isListening ? 'border-primary ring-2 ring-primary/30' : ''}`}
             disabled={isLoading || !dataReady}
           />
-          <Button size="icon" onClick={handleSend} disabled={isLoading || !input.trim() || !dataReady}>
-            <Send className="w-4 h-4" />
-          </Button>
+          {input.trim() ? (
+            <Button size="icon" onClick={handleSend} disabled={isLoading || !dataReady}>
+              <Send className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              size="icon"
+              variant={isListening ? 'default' : 'outline'}
+              onClick={toggleListening}
+              disabled={isLoading || !dataReady}
+              className={isListening ? 'animate-pulse' : ''}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </Button>
+          )}
         </div>
       </div>
 
