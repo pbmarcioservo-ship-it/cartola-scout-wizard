@@ -311,9 +311,13 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                   const mediaCasa = jogosCasa > 0 ? (totalCasa / jogosCasa) : 0;
                   const mediaFora = jogosFora > 0 ? (totalFora / jogosFora) : 0;
 
+                  // Mínimo para Valorizar: (Preço * 0.55) + (Última Pontuação * 0.30)
+                  const minValorizar = (atleta.preco_num * 0.55) + (atleta.pontos_num * 0.30);
+
                   return [
                     { label: 'Preço', value: `C$ ${atleta.preco_num.toFixed(2)}` },
                     { label: 'Média', value: atleta.media_num.toFixed(2) },
+                    { label: 'Min. Valorizar', value: `C$ ${minValorizar.toFixed(2)}` },
                     { label: 'Jogos', value: String(atleta.jogos_num) },
                     { label: 'Méd. Casa', value: mediaCasa.toFixed(2), color: 'text-success' },
                     { label: 'Méd. Fora', value: mediaFora.toFixed(2), color: 'text-amber-500' },
