@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User, Loader2, Volume2, VolumeX } from 'lucide-react';
+import { Send, Bot, User, Loader2, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import { useMercado, usePartidas, useRodada, useHistoricoRodadas } from '@/hooks/useCartolaData';
 import { buildContextData } from '@/lib/agente-tecnico-context';
 import { toast } from 'sonner';
