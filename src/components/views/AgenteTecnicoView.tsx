@@ -8,7 +8,7 @@ import { useMercado, usePartidas, useRodada, useHistoricoRodadas } from '@/hooks
 import { buildContextData } from '@/lib/agente-tecnico-context';
 import { toast } from 'sonner';
 
-type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao-tecnico' | null;
+type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao' | 'tecnico' | null;
 
 const BOTOES_POSICAO: { id: PosicaoRapida; label: string }[] = [
   { id: 'goleiros', label: 'Melhores Goleiros' },
@@ -16,7 +16,8 @@ const BOTOES_POSICAO: { id: PosicaoRapida; label: string }[] = [
   { id: 'zagueiros', label: 'Zagueiros' },
   { id: 'meias', label: 'Meias' },
   { id: 'atacantes', label: 'Atacantes' },
-  { id: 'capitao-tecnico', label: 'Capitão e Técnico' },
+  { id: 'capitao', label: 'Capitão' },
+  { id: 'tecnico', label: 'Técnico' },
 ];
 
 interface ChatMessage {
