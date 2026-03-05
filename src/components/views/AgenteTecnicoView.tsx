@@ -138,6 +138,24 @@ export function AgenteTecnicoView() {
     return () => { window.speechSynthesis?.cancel(); };
   }, []);
 
+  const cleanTextForSpeech = (text: string): string => {
+    return text
+      .replace(/#{1,6}\s?/g, '')        // remove markdown headings
+      .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1') // remove bold/italic markers
+      .replace(/_{1,3}([^_]+)_{1,3}/g, '$1')
+      .replace(/~~([^~]+)~~/g, '$1')    // remove strikethrough
+      .replace(/`([^`]+)`/g, '$1')       // remove inline code
+      .replace(/```[\s\S]*?```/g, '')    // remove code blocks
+      .replace(/^[-*+]\s/gm, '')         // remove list markers
+      .replace(/^\d+\.\s/gm, '')         // remove numbered list markers
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links → text only
+      .replace(/[*#_~`>|]/g, '')         // remove remaining symbols
+      .replace(/\n{2,}/g, '. ')          // double newlines → pause
+      .replace(/\n/g, ' ')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  };
+
   const toggleSpeak = useCallback((text: string, idx: number) => {
     const synth = window.speechSynthesis;
     if (!synth) { toast.error('Seu navegador não suporta leitura em voz alta.'); return; }
@@ -149,7 +167,8 @@ export function AgenteTecnicoView() {
     }
 
     synth.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleanText = cleanTextForSpeech(text);
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'pt-BR';
     utterance.rate = 1;
     utterance.onend = () => setSpeakingIdx(null);
