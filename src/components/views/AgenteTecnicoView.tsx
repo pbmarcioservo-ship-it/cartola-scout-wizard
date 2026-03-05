@@ -175,7 +175,12 @@ export function AgenteTecnicoView() {
     if (isLoading) return;
     setSelectedPos(pos);
     const label = BOTOES_POSICAO.find(b => b.id === pos)?.label ?? pos;
-    sendMessage(`Analise e me recomende os melhores ${label} para escalar nesta rodada, seguindo os critérios de prioridade da posição.`, pos);
+    const prompt = pos === 'capitao'
+      ? 'Analise e me recomende o melhor Capitão para escalar nesta rodada, focando nos critérios de meias e atacantes com maior potencial de pontuação.'
+      : pos === 'tecnico'
+      ? 'Analise e me recomende o melhor Técnico para escalar nesta rodada, focando no time com maior probabilidade de SG somado ao potencial de scouts dos jogadores.'
+      : `Analise e me recomende os melhores ${label} para escalar nesta rodada, seguindo os critérios de prioridade da posição.`;
+    sendMessage(prompt, pos);
   };
 
   const handleSend = () => {
