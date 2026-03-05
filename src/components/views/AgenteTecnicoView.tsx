@@ -137,8 +137,47 @@ export function AgenteTecnicoView() {
 
   // Cleanup speech on unmount
   useEffect(() => {
-    return () => { window.speechSynthesis?.cancel(); };
+    return () => {
+      window.speechSynthesis?.cancel();
+      recognitionRef.current?.abort();
+    };
   }, []);
+
+  const toggleListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Seu navegador não suporta reconhecimento de voz.');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join('');
+      setInput(transcript);
+    };
+
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = (e: any) => {
+      if (e.error !== 'aborted') toast.error('Erro no reconhecimento de voz.');
+      setIsListening(false);
+    };
+
+    setIsListening(true);
+    recognition.start();
+  }, [isListening]);
 
   const cleanTextForSpeech = (text: string): string => {
     return text
