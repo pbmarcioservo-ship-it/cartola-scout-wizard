@@ -8,7 +8,7 @@ import { useMercado, usePartidas, useRodada, useHistoricoRodadas } from '@/hooks
 import { buildContextData } from '@/lib/agente-tecnico-context';
 import { toast } from 'sonner';
 
-type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao-tecnico' | null;
+type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao' | 'tecnico' | null;
 
 const BOTOES_POSICAO: { id: PosicaoRapida; label: string }[] = [
   { id: 'goleiros', label: 'Melhores Goleiros' },
@@ -16,7 +16,8 @@ const BOTOES_POSICAO: { id: PosicaoRapida; label: string }[] = [
   { id: 'zagueiros', label: 'Zagueiros' },
   { id: 'meias', label: 'Meias' },
   { id: 'atacantes', label: 'Atacantes' },
-  { id: 'capitao-tecnico', label: 'Capitão e Técnico' },
+  { id: 'capitao', label: 'Capitão' },
+  { id: 'tecnico', label: 'Técnico' },
 ];
 
 interface ChatMessage {
@@ -174,7 +175,12 @@ export function AgenteTecnicoView() {
     if (isLoading) return;
     setSelectedPos(pos);
     const label = BOTOES_POSICAO.find(b => b.id === pos)?.label ?? pos;
-    sendMessage(`Analise e me recomende os melhores ${label} para escalar nesta rodada, seguindo os critérios de prioridade da posição.`, pos);
+    const prompt = pos === 'capitao'
+      ? 'Analise e me recomende o melhor Capitão para escalar nesta rodada, focando nos critérios de meias e atacantes com maior potencial de pontuação.'
+      : pos === 'tecnico'
+      ? 'Analise e me recomende o melhor Técnico para escalar nesta rodada, focando no time com maior probabilidade de SG somado ao potencial de scouts dos jogadores.'
+      : `Analise e me recomende os melhores ${label} para escalar nesta rodada, seguindo os critérios de prioridade da posição.`;
+    sendMessage(prompt, pos);
   };
 
   const handleSend = () => {

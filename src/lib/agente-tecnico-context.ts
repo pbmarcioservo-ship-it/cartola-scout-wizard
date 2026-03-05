@@ -13,7 +13,7 @@ function getLateralSides(): Record<string, string> {
   } catch { return {}; }
 }
 
-type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao-tecnico';
+type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao' | 'tecnico';
 
 const POSICAO_IDS: Record<PosicaoRapida, number[]> = {
   goleiros: [1],
@@ -21,7 +21,8 @@ const POSICAO_IDS: Record<PosicaoRapida, number[]> = {
   zagueiros: [3],
   meias: [4],
   atacantes: [5],
-  'capitao-tecnico': [4, 5, 6], // meias, atacantes, técnicos
+  capitao: [4, 5], // meias e atacantes para capitão
+  tecnico: [6], // técnicos
 };
 
 export function buildContextData(
