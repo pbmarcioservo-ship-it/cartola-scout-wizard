@@ -442,7 +442,13 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                       <div key={player.id} className="bg-muted/20 rounded-md px-2.5 py-1.5 border border-border">
                         <div className="flex items-center gap-2">
                           {playerClube && <ClubeEscudo clube={playerClube} size="xs" />}
-                          <span className="font-bold text-xs text-foreground min-w-[80px]">{player.apelido}</span>
+                          <span className="font-bold text-xs text-foreground min-w-[80px]">
+                            {player.apelido}
+                            {atleta.posicao_id === 2 && (() => {
+                              const side = getLateralSideFromStore(Number(player.id)) ?? getLateralSideByName(player.apelido);
+                              return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                            })()}
+                          </span>
                           <div className="flex-1 flex flex-wrap gap-0.5">
                             <ScoutSummary scout={latestRound?.scout} />
                           </div>
