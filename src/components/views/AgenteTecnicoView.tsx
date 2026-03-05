@@ -117,6 +117,7 @@ export function AgenteTecnicoView() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: mercadoData } = useMercado();
@@ -131,6 +132,31 @@ export function AgenteTecnicoView() {
       if (el) el.scrollTop = el.scrollHeight;
     }
   }, [messages]);
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => { window.speechSynthesis?.cancel(); };
+  }, []);
+
+  const toggleSpeak = useCallback((text: string, idx: number) => {
+    const synth = window.speechSynthesis;
+    if (!synth) { toast.error('Seu navegador não suporta leitura em voz alta.'); return; }
+
+    if (speakingIdx === idx) {
+      synth.cancel();
+      setSpeakingIdx(null);
+      return;
+    }
+
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 1;
+    utterance.onend = () => setSpeakingIdx(null);
+    utterance.onerror = () => setSpeakingIdx(null);
+    setSpeakingIdx(idx);
+    synth.speak(utterance);
+  }, [speakingIdx]);
 
   const sendMessage = async (userContent: string, pos: PosicaoRapida) => {
     const userMsg: ChatMessage = { role: 'user', content: userContent };
@@ -215,7 +241,7 @@ export function AgenteTecnicoView() {
         </div>
 
         {/* Botões de acesso rápido */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-3">
           {BOTOES_POSICAO.map((btn) => (
             <Button
               key={btn.id}
@@ -228,6 +254,21 @@ export function AgenteTecnicoView() {
               {btn.label}
             </Button>
           ))}
+        </div>
+
+        {/* Input no topo, abaixo dos botões */}
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Pergunte ao Agente Técnico..."
+            className="flex-1"
+            disabled={isLoading || !dataReady}
+          />
+          <Button size="icon" onClick={handleSend} disabled={isLoading || !input.trim() || !dataReady}>
+            <Send className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
@@ -254,16 +295,33 @@ export function AgenteTecnicoView() {
                       <Bot className="w-4 h-4 text-primary" />
                     </div>
                   )}
-                  <div
-                    className={`max-w-[80%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
-                    }`}
-                  >
-                    {msg.content}
-                    {msg.role === 'assistant' && i === messages.length - 1 && isLoading && (
-                      <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-0.5 rounded-sm" />
+                  <div className="flex flex-col max-w-[80%]">
+                    <div
+                      className={`rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
+                        msg.role === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-foreground'
+                      }`}
+                    >
+                      {msg.content}
+                      {msg.role === 'assistant' && i === messages.length - 1 && isLoading && (
+                        <span className="inline-block w-2 h-4 bg-primary/60 animate-pulse ml-0.5 rounded-sm" />
+                      )}
+                    </div>
+                    {/* Botão de ouvir resposta */}
+                    {msg.role === 'assistant' && msg.content && !isLoading && (
+                      <button
+                        onClick={() => toggleSpeak(msg.content, i)}
+                        className="flex items-center gap-1 mt-1 text-xs text-muted-foreground hover:text-primary transition-colors self-start"
+                        title={speakingIdx === i ? 'Parar leitura' : 'Ouvir resposta'}
+                        aria-label={speakingIdx === i ? 'Parar leitura em voz alta' : 'Ouvir resposta em voz alta'}
+                      >
+                        {speakingIdx === i ? (
+                          <><VolumeX className="w-3.5 h-3.5" /> Parar</>
+                        ) : (
+                          <><Volume2 className="w-3.5 h-3.5" /> Ouvir</>
+                        )}
+                      </button>
                     )}
                   </div>
                   {msg.role === 'user' && (
@@ -286,23 +344,6 @@ export function AgenteTecnicoView() {
             </div>
           )}
         </ScrollArea>
-
-        {/* Input */}
-        <CardContent className="p-3 border-t border-border">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Pergunte ao Agente Técnico..."
-              className="flex-1"
-              disabled={isLoading || !dataReady}
-            />
-            <Button size="icon" onClick={handleSend} disabled={isLoading || !input.trim() || !dataReady}>
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardContent>
       </Card>
     </div>
   );
