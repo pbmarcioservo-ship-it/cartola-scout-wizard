@@ -312,7 +312,11 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                   const mediaFora = jogosFora > 0 ? (totalFora / jogosFora) : 0;
 
                   // Mínimo para Valorizar: (Preço * 0.55) + (Última Pontuação * 0.30)
-                  const minValorizar = (atleta.preco_num * 0.55) + (atleta.pontos_num * 0.30);
+                  const minValorizar = atleta.jogos_num === 0
+                    ? atleta.preco_num * 0.29
+                    : atleta.jogos_num === 1
+                      ? atleta.preco_num * 0.50
+                      : (atleta.preco_num * 0.55) + (atleta.pontos_num * 0.30);
 
                   return [
                     { label: 'Preço', value: `C$ ${atleta.preco_num.toFixed(2)}` },
