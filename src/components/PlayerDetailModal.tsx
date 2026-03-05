@@ -325,6 +325,9 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                     <div key={stat.label} className="bg-muted/50 rounded-lg p-3 text-center border border-border">
                       <p className="text-xs text-muted-foreground font-bold uppercase">{stat.label}</p>
                       <p className={cn('text-lg font-black', stat.color || 'text-primary')}>{stat.value}</p>
+                      {stat.label === 'Min. Valorizar' && (
+                        <p className="text-[9px] text-muted-foreground/70 mt-0.5 leading-tight">*Valores aproximados baseados em tendências.</p>
+                      )}
                     </div>
                   ));
                 })()}
