@@ -55,14 +55,14 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       <div className="h-2" />
 
       {/* Menu */}
-      <nav className="flex-1 py-0.5 overflow-y-auto">
+      <nav className="flex-1 flex flex-col justify-between py-1">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
             className={cn(
-              'w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium transition-colors duration-200',
-              'text-sidebar-foreground/60 hover:text-primary',
+              'w-full flex items-center gap-3 px-5 py-3.5 text-[15px] font-semibold transition-colors duration-200',
+              'text-sidebar-foreground/65 hover:text-primary',
               activeView === item.id && 'text-primary font-bold'
             )}
           >
