@@ -33,18 +33,18 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
     <aside className="w-60 bg-sidebar flex flex-col flex-shrink-0 h-screen">
       {/* Header - Branding */}
-      <div className="px-4 py-5 border-b border-sidebar-border bg-black/20">
-        <div className="flex flex-col items-center gap-2">
+      <div className="px-3 py-2.5 border-b border-sidebar-border bg-black/20">
+        <div className="flex items-center gap-2.5">
           <img 
             src="/logo.png" 
             alt="STATUS FC Logo" 
-            className="w-16 h-16 object-contain drop-shadow-[0_0_12px_hsl(259,70%,48%,0.4)]"
+            className="w-9 h-9 object-contain drop-shadow-[0_0_8px_hsl(259,70%,48%,0.4)]"
           />
-          <div className="text-center">
-            <h1 className="text-lg font-extrabold tracking-widest text-primary leading-none">
+          <div>
+            <h1 className="text-sm font-extrabold tracking-widest text-primary leading-none">
               STATUS FC
             </h1>
-            <p className="text-[8px] font-medium tracking-[0.25em] text-sidebar-foreground/50 mt-1 uppercase">
+            <p className="text-[7px] font-medium tracking-[0.2em] text-sidebar-foreground/50 mt-0.5 uppercase">
               Estatísticas & Probabilidades
             </p>
           </div>
@@ -52,16 +52,16 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 py-2 overflow-y-auto">
+      <nav className="flex-1 py-1 overflow-y-auto">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
             className={cn(
-              'w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all duration-200',
-              'border-b border-sidebar-border/50 text-sidebar-foreground',
-              'hover:bg-primary/10 hover:text-primary',
-              activeView === item.id && 'bg-primary/15 text-primary font-bold border-l-2 border-l-primary'
+              'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium transition-all duration-200',
+              'border-b border-sidebar-border/30 text-sidebar-foreground',
+              'hover:bg-primary/8 hover:text-primary',
+              activeView === item.id && 'bg-primary/10 text-primary font-bold border-l-2 border-l-primary'
             )}
           >
             {item.icon}
@@ -71,9 +71,8 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 text-center text-[10px] text-sidebar-foreground/40 border-t border-sidebar-border">
-        <p>Dados: Cartola FC API</p>
-        <p className="mt-0.5">© 2026 STATUS FC</p>
+      <div className="px-3 py-1.5 text-center text-[9px] text-sidebar-foreground/40 border-t border-sidebar-border">
+        <p>Dados: Cartola FC API · © 2026 STATUS FC</p>
       </div>
     </aside>
   );
