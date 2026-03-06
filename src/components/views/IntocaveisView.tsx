@@ -19,7 +19,6 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
 }
 
 export function IntocaveisView() {
-  const [mando, setMando] = useState('casa_fora');
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
@@ -204,15 +203,6 @@ export function IntocaveisView() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
-        <select
-          value={mando}
-          onChange={(e) => setMando(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
-        >
-          <option value="casa_fora">Casa x Fora</option>
-          <option value="todos">Todos</option>
-        </select>
-
         <select
           value={time}
           onChange={(e) => setTime(e.target.value)}

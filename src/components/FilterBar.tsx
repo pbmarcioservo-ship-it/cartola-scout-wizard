@@ -62,7 +62,7 @@ export function FilterBar({
   clubeOptions,
   children,
 }: FilterBarProps) {
-  const clubeList = clubeOptions || [];
+  const clubeList = [...(clubeOptions || [])].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   return (
     <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
