@@ -101,4 +101,5 @@ export type ViewType =
   | 'time-rodada'
   | 'artilheiros'
   | 'acompanhamento'
-  | 'agente-tecnico';
+  | 'agente-tecnico'
+  | 'minha-conta';
