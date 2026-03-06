@@ -61,12 +61,9 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
             key={item.id}
             onClick={() => onViewChange(item.id)}
             className={cn(
-              'w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium transition-all duration-200',
-              'border-b border-sidebar-border/30 text-sidebar-foreground',
-              'hover:bg-primary/15 hover:text-primary',
-              activeView === item.id
-                ? 'bg-primary/20 text-primary font-bold border-l-2 border-l-primary'
-                : ''
+              'w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium transition-colors duration-200',
+              'text-sidebar-foreground/60 hover:text-primary',
+              activeView === item.id && 'text-primary font-bold'
             )}
           >
             {item.icon}
