@@ -19,7 +19,6 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
 }
 
 export function IntocaveisView() {
-  const [mando, setMando] = useState('casa_fora');
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
   const [time, setTime] = useState('todos');
   const [posicao, setPosicao] = useState<PosicaoFilter>('todos');
@@ -34,7 +33,7 @@ export function IntocaveisView() {
   // Fetch historical data
   const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(rodadaAtual, rodadaAtual ? rodadaAtual - 1 : 0);
 
-  const clubes = useMemo(() => Object.values(mercadoData?.clubes || {}), [mercadoData]);
+  const clubes = useMemo(() => Object.values(mercadoData?.clubes || {}).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')), [mercadoData]);
 
   // Build per-athlete stats from historical rounds
   const atletaStats = useMemo(() => {
@@ -144,7 +143,7 @@ export function IntocaveisView() {
       const mediaB = statsB && statsB.jogos > 0 ? statsB.totalPontos / statsB.jogos : b.media_num;
       return mediaB - mediaA;
     });
-  }, [mercadoData, time, posicao, search, atletaStats, mando]);
+  }, [mercadoData, time, posicao, search, atletaStats]);
 
   const getAtletaDisplayStats = (atleta: CartolaAtleta) => {
     const stats = atletaStats[atleta.atleta_id];
@@ -157,15 +156,6 @@ export function IntocaveisView() {
       };
     }
 
-    if (mando === 'casa_fora') {
-      return {
-        jogos: stats.jogos,
-        media: stats.totalPontos / stats.jogos,
-        total: stats.totalPontos,
-        minutos: atleta.gato_mestre?.minutos_jogados || 0,
-      };
-    }
-    // If we had separate casa/fora stats we could filter here
     return {
       jogos: stats.jogos,
       media: stats.totalPontos / stats.jogos,
@@ -204,15 +194,6 @@ export function IntocaveisView() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
-        <select
-          value={mando}
-          onChange={(e) => setMando(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
-        >
-          <option value="casa_fora">Casa x Fora</option>
-          <option value="todos">Todos</option>
-        </select>
-
         <select
           value={time}
           onChange={(e) => setTime(e.target.value)}
