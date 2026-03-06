@@ -143,7 +143,7 @@ export function IntocaveisView() {
       const mediaB = statsB && statsB.jogos > 0 ? statsB.totalPontos / statsB.jogos : b.media_num;
       return mediaB - mediaA;
     });
-  }, [mercadoData, time, posicao, search, atletaStats, mando]);
+  }, [mercadoData, time, posicao, search, atletaStats]);
 
   const getAtletaDisplayStats = (atleta: CartolaAtleta) => {
     const stats = atletaStats[atleta.atleta_id];
@@ -156,15 +156,6 @@ export function IntocaveisView() {
       };
     }
 
-    if (mando === 'casa_fora') {
-      return {
-        jogos: stats.jogos,
-        media: stats.totalPontos / stats.jogos,
-        total: stats.totalPontos,
-        minutos: atleta.gato_mestre?.minutos_jogados || 0,
-      };
-    }
-    // If we had separate casa/fora stats we could filter here
     return {
       jogos: stats.jogos,
       media: stats.totalPontos / stats.jogos,
