@@ -33,7 +33,7 @@ export function IntocaveisView() {
   // Fetch historical data
   const { data: historicoData, isLoading: loadingHistorico } = useHistoricoRodadas(rodadaAtual, rodadaAtual ? rodadaAtual - 1 : 0);
 
-  const clubes = useMemo(() => Object.values(mercadoData?.clubes || {}), [mercadoData]);
+  const clubes = useMemo(() => Object.values(mercadoData?.clubes || {}).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')), [mercadoData]);
 
   // Build per-athlete stats from historical rounds
   const atletaStats = useMemo(() => {
