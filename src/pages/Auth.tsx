@@ -90,7 +90,7 @@ export default function Auth() {
         </div>
 
         {/* Card */}
-        <div className="bg-card/10 backdrop-blur-sm border border-sidebar-border rounded-lg p-6 space-y-5">
+        <div className="bg-card/10 backdrop-blur-sm border border-primary/30 rounded-lg p-6 space-y-5 shadow-[0_0_30px_hsl(259,70%,48%,0.15)]">
           <h2 className="text-lg font-bold text-sidebar-foreground text-center">{titles[mode]}</h2>
 
           {/* Google */}
@@ -167,24 +167,27 @@ export default function Auth() {
           </form>
 
           {/* Links */}
-          <div className="flex flex-col items-center gap-2 text-xs">
+          <div className="flex flex-col items-center gap-3 text-xs">
             {mode === 'login' && (
               <>
-                <button onClick={() => setMode('reset')} className="text-primary/70 hover:text-primary transition-colors">
+                <button onClick={() => setMode('reset')} className="text-primary hover:text-primary/80 font-medium transition-colors">
                   Esqueceu a senha?
                 </button>
-                <button onClick={() => setMode('signup')} className="text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors">
-                  Não tem conta? <span className="text-primary/70">Criar conta</span>
+                <button
+                  onClick={() => setMode('signup')}
+                  className="w-full border border-primary/60 text-primary font-semibold rounded-md py-2 hover:bg-primary/10 transition-colors"
+                >
+                  Criar conta
                 </button>
               </>
             )}
             {mode === 'signup' && (
-              <button onClick={() => setMode('login')} className="text-sidebar-foreground/50 hover:text-sidebar-foreground/80 transition-colors">
-                Já tem conta? <span className="text-primary/70">Entrar</span>
+              <button onClick={() => setMode('login')} className="text-white hover:text-primary font-medium transition-colors">
+                Já tem conta? <span className="text-primary font-semibold">Entrar</span>
               </button>
             )}
             {mode === 'reset' && (
-              <button onClick={() => setMode('login')} className="text-primary/70 hover:text-primary transition-colors">
+              <button onClick={() => setMode('login')} className="text-primary hover:text-primary/80 font-medium transition-colors">
                 Voltar ao login
               </button>
             )}
