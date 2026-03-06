@@ -64,29 +64,29 @@ export default function Index() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header com informações da rodada */}
         {rodadaData && (
-          <header className="bg-card border-b border-border px-5 py-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-6">
+          <header className="bg-card/80 backdrop-blur-sm border-b border-border px-5 py-2.5 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-5">
               <div className="flex items-center gap-2 text-foreground">
-                <Calendar className="w-4 h-4 text-primary" />
-                <span className="font-bold">Rodada {rodadaData.rodada_atual}</span>
+                <Calendar className="w-4 h-4 text-primary/70" />
+                <span className="font-bold text-sm">Rodada {rodadaData.rodada_atual}</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <Clock className="w-3.5 h-3.5" />
                 <span>Fecha: {formatFechamento()}</span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold ${
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold ${
                 rodadaData.status_mercado === 1 
-                  ? 'bg-success/20 text-success' 
-                  : 'bg-destructive/20 text-destructive'
+                  ? 'bg-success/10 text-success' 
+                  : 'bg-destructive/10 text-destructive'
               }`}>
-                <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
-                {rodadaData.status_mercado === 1 ? 'Mercado Aberto' : 'Mercado Fechado'}
+                <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                {rodadaData.status_mercado === 1 ? 'Aberto' : 'Fechado'}
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Users className="w-4 h-4" />
-                <span>{rodadaData.times_escalados?.toLocaleString()} times escalados</span>
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <Users className="w-3.5 h-3.5" />
+                <span>{rodadaData.times_escalados?.toLocaleString()}</span>
               </div>
             </div>
           </header>

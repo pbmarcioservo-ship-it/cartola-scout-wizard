@@ -32,25 +32,36 @@ const menuItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
     <aside className="w-60 bg-sidebar flex flex-col flex-shrink-0 h-screen">
-      {/* Header */}
-      <div className="p-6 bg-black/30 border-b-2 border-primary">
-        <div className="flex items-center gap-3 justify-center">
-          <Zap className="w-8 h-8 text-primary" />
-          <h1 className="text-xl font-bold text-primary tracking-wide">STATUS FC</h1>
+      {/* Header - Branding */}
+      <div className="px-4 py-5 border-b border-sidebar-border bg-black/20">
+        <div className="flex flex-col items-center gap-2">
+          <img 
+            src="/logo.png" 
+            alt="STATUS FC Logo" 
+            className="w-12 h-12 object-contain drop-shadow-lg"
+          />
+          <div className="text-center">
+            <h1 className="text-lg font-extrabold tracking-widest text-primary leading-none">
+              STATUS FC
+            </h1>
+            <p className="text-[8px] font-medium tracking-[0.25em] text-sidebar-foreground/50 mt-1 uppercase">
+              Estatísticas & Probabilidades
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 py-4">
+      <nav className="flex-1 py-2 overflow-y-auto">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
             className={cn(
-              'w-full flex items-center gap-3 px-5 py-4 text-sm font-medium transition-all duration-200',
-              'border-b border-sidebar-border text-sidebar-foreground',
-              'hover:bg-primary hover:text-primary-foreground',
-              activeView === item.id && 'bg-primary text-primary-foreground font-bold'
+              'w-full flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-all duration-200',
+              'border-b border-sidebar-border/50 text-sidebar-foreground',
+              'hover:bg-primary/10 hover:text-primary',
+              activeView === item.id && 'bg-primary/15 text-primary font-bold border-l-2 border-l-primary'
             )}
           >
             {item.icon}
@@ -60,9 +71,9 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 text-center text-xs text-sidebar-foreground/60 border-t border-sidebar-border">
+      <div className="p-3 text-center text-[10px] text-sidebar-foreground/40 border-t border-sidebar-border">
         <p>Dados: Cartola FC API</p>
-        <p className="mt-1">© 2026 STATUS FC</p>
+        <p className="mt-0.5">© 2026 STATUS FC</p>
       </div>
     </aside>
   );
