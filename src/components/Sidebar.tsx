@@ -51,17 +51,22 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         </div>
       </div>
 
+      {/* Spacer between brand and menu */}
+      <div className="h-2" />
+
       {/* Menu */}
-      <nav className="flex-1 py-1 overflow-y-auto">
+      <nav className="flex-1 py-0.5 overflow-y-auto">
         {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => onViewChange(item.id)}
             className={cn(
-              'w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium transition-all duration-200',
+              'w-full flex items-center gap-2.5 px-4 py-3 text-[13px] font-medium transition-all duration-200',
               'border-b border-sidebar-border/30 text-sidebar-foreground',
-              'hover:bg-primary/8 hover:text-primary',
-              activeView === item.id && 'bg-primary/10 text-primary font-bold border-l-2 border-l-primary'
+              'hover:bg-primary/15 hover:text-primary',
+              activeView === item.id
+                ? 'bg-primary/20 text-primary font-bold border-l-2 border-l-primary'
+                : ''
             )}
           >
             {item.icon}
