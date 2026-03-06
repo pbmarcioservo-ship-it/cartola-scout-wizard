@@ -38,7 +38,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           <img 
             src="/logo.png" 
             alt="STATUS FC Logo" 
-            className="w-12 h-12 object-contain drop-shadow-lg"
+            className="w-16 h-16 object-contain drop-shadow-[0_0_12px_hsl(259,70%,48%,0.4)]"
           />
           <div className="text-center">
             <h1 className="text-lg font-extrabold tracking-widest text-primary leading-none">
