@@ -59,29 +59,25 @@ serve(async (req) => {
       );
     }
 
-    // Add rodada param if provided
+    // Add rodada param if provided (sanitized to positive integer)
     if (rodada && (endpoint === 'partidas' || endpoint === 'pontuados-rodada')) {
-      apiPath = `${apiPath}/${rodada}`;
+      const rodadaNum = parseInt(rodada, 10);
+      if (!Number.isInteger(rodadaNum) || rodadaNum < 1 || rodadaNum > 100) {
+        return new Response(
+          JSON.stringify({ error: 'Parâmetro rodada inválido. Deve ser um número inteiro positivo.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      apiPath = `${apiPath}/${rodadaNum}`;
     }
 
     const targetUrl = `${CARTOLA_API_BASE}${apiPath}`;
-    const tryFetch = async (url: string) => {
-      return await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json',
-        },
-      });
-    };
-    let response = await tryFetch(targetUrl);
-    if (!response.ok) {
-      const allOrigins = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-      response = await tryFetch(allOrigins);
-    }
-    if (!response.ok) {
-      const corsAnywhere = `https://cors-anywhere.herokuapp.com/${targetUrl}`;
-      response = await tryFetch(corsAnywhere);
-    }
+    const response = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json',
+      },
+    });
 
     if (!response.ok) {
       console.error(`Cartola API error: ${response.status}`);
