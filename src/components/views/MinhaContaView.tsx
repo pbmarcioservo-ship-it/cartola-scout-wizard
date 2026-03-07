@@ -1,12 +1,26 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, Crown, Calendar, LogOut, KeyRound, ArrowUpCircle } from 'lucide-react';
-import { useState } from 'react';
+import { User, Mail, Crown, Calendar, LogOut, KeyRound, ArrowUpCircle, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+const PLAN_LABELS: Record<string, string> = {
+  free: 'Plano Gratuito',
+  mensal_avulso: 'Plano Mensal Avulso',
+  mensal_recorrente: 'Assinatura Mensal (Recorrente)',
+  anual_vip: 'Plano Anual (VIP)',
+};
+
+const planColors: Record<string, string> = {
+  free: 'bg-muted text-muted-foreground',
+  mensal_avulso: 'bg-primary/20 text-primary',
+  mensal_recorrente: 'bg-green-500/20 text-green-400',
+  anual_vip: 'bg-amber-500/20 text-amber-400',
+};
 
 export function MinhaContaView() {
   const { user, signOut } = useAuth();
@@ -14,6 +28,33 @@ export function MinhaContaView() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [subscription, setSubscription] = useState<{ plan: string; validUntil: string | null } | null>(null);
+  const [subLoading, setSubLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchSub = async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('plan, valid_until')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching subscription:', error);
+        setSubscription({ plan: 'free', validUntil: null });
+      } else if (data) {
+        const validDate = data.valid_until
+          ? new Date(data.valid_until).toLocaleDateString('pt-BR')
+          : null;
+        setSubscription({ plan: data.plan, validUntil: validDate });
+      } else {
+        setSubscription({ plan: 'free', validUntil: null });
+      }
+      setSubLoading(false);
+    };
+    fetchSub();
+  }, [user]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,18 +68,6 @@ export function MinhaContaView() {
       setShowChangePassword(false);
     }
     setLoading(false);
-  };
-
-  // Placeholder subscription data
-  const subscription = {
-    plan: 'Plano Mensal Avulso' as string,
-    validUntil: '31/12/2026',
-  };
-
-  const planColors: Record<string, string> = {
-    'Plano Mensal Avulso': 'bg-primary/20 text-primary',
-    'Assinatura Mensal (Recorrente)': 'bg-success/20 text-success',
-    'Plano Anual (VIP)': 'bg-amber-500/20 text-amber-400',
   };
 
   return (
@@ -69,22 +98,30 @@ export function MinhaContaView() {
       {/* Subscription */}
       <div className="bg-card border border-border rounded-lg p-5 space-y-4">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Assinatura</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Crown className="w-4 h-4" /> Status
-            </span>
-            <Badge className={planColors[subscription.plan] || 'bg-muted text-muted-foreground'}>
-              {subscription.plan}
-            </Badge>
+        {subLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" /> Válido até
-            </span>
-            <span className="text-sm font-medium text-foreground">{subscription.validUntil}</span>
+        ) : subscription ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Crown className="w-4 h-4" /> Status
+              </span>
+              <Badge className={planColors[subscription.plan] || 'bg-muted text-muted-foreground'}>
+                {PLAN_LABELS[subscription.plan] || subscription.plan}
+              </Badge>
+            </div>
+            {subscription.validUntil && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" /> Válido até
+                </span>
+                <span className="text-sm font-medium text-foreground">{subscription.validUntil}</span>
+              </div>
+            )}
           </div>
-        </div>
+        ) : null}
       </div>
 
       {/* Change Password */}
