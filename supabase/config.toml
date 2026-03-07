@@ -1,1 +1,4 @@
 project_id = "hmqxtixhrjfsubwewuzj"
+
+[functions.agente-tecnico]
+verify_jwt = false
