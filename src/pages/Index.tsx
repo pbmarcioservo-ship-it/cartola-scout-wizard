@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { CruzamentoView } from '@/components/views/CruzamentoView';
 import { AtletasView } from '@/components/views/AtletasView';
@@ -15,11 +15,45 @@ import { AcompanhamentoView } from '@/components/views/AcompanhamentoView';
 import { AgenteTecnicoView } from '@/components/views/AgenteTecnicoView';
 import { MinhaContaView } from '@/components/views/MinhaContaView';
 import { useRodada } from '@/hooks/useCartolaData';
-import { Calendar, Clock, Users } from 'lucide-react';
+import { Calendar, Clock, Crown, Users } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+
+const OWNER_EMAIL = 'pb.marcioservo@gmail.com';
 
 export default function Index() {
   const [activeView, setActiveView] = useState<ViewType>('cruzamento');
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [hasProAccess, setHasProAccess] = useState(false);
   const { data: rodadaData } = useRodada();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) {
+      setHasProAccess(false);
+      setCheckingAccess(false);
+      return;
+    }
+
+    const checkAccess = async () => {
+      const email = user.email?.toLowerCase();
+      if (email === OWNER_EMAIL) {
+        setHasProAccess(true);
+        setCheckingAccess(false);
+        return;
+      }
+
+      const { data, error } = await supabase.rpc('has_active_subscription', {
+        _user_id: user.id,
+      });
+
+      setHasProAccess(!error && Boolean(data));
+      setCheckingAccess(false);
+    };
+
+    void checkAccess();
+  }, [user]);
 
   const renderView = () => {
     switch (activeView) {
@@ -46,10 +80,37 @@ export default function Index() {
     return `${dia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')} às ${hora.toString().padStart(2, '0')}:${minuto.toString().padStart(2, '0')}`;
   };
 
+  if (checkingAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-sidebar">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!hasProAccess) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-background p-6">
+        <section className="w-full max-w-lg rounded-lg border border-border bg-card p-6 text-center space-y-4">
+          <div className="mx-auto w-14 h-14 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+            <Crown className="w-7 h-7" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Acesso bloqueado</h1>
+          <p className="text-sm text-muted-foreground">
+            Seu usuário está no Plano Gratuito. Para usar o app, ative um plano VIP/PRO.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Se você já assinou, faça logout e login novamente para atualizar seu acesso.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
-      
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {rodadaData && (
           <header className="bg-card/80 backdrop-blur-sm border-b border-border px-5 py-2.5 flex items-center justify-between flex-shrink-0">
@@ -65,8 +126,8 @@ export default function Index() {
             </div>
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold ${
-                rodadaData.status_mercado === 1 
-                  ? 'bg-success/10 text-success' 
+                rodadaData.status_mercado === 1
+                  ? 'bg-success/10 text-success'
                   : 'bg-destructive/10 text-destructive'
               }`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
@@ -79,7 +140,7 @@ export default function Index() {
             </div>
           </header>
         )}
-        
+
         <main className="flex-1 overflow-y-auto p-5 bg-background">
           {renderView()}
         </main>
