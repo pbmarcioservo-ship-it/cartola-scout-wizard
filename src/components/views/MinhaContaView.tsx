@@ -8,7 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+const OWNER_EMAIL = 'pb.marcioservo@gmail.com';
+
 const PLAN_LABELS: Record<string, string> = {
+  owner: 'Plano Pro/Dono',
   free: 'Plano Gratuito',
   mensal_avulso: 'Plano Mensal Avulso',
   mensal_recorrente: 'Assinatura Mensal (Recorrente)',
@@ -16,6 +19,7 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 const planColors: Record<string, string> = {
+  owner: 'bg-primary/20 text-primary',
   free: 'bg-muted text-muted-foreground',
   mensal_avulso: 'bg-primary/20 text-primary',
   mensal_recorrente: 'bg-green-500/20 text-green-400',
@@ -33,6 +37,14 @@ export function MinhaContaView() {
 
   useEffect(() => {
     if (!user) return;
+
+    const userEmail = user.email?.toLowerCase();
+    if (userEmail === OWNER_EMAIL) {
+      setSubscription({ plan: 'owner', validUntil: null });
+      setSubLoading(false);
+      return;
+    }
+
     const fetchSub = async () => {
       const { data, error } = await supabase
         .from('subscriptions')
