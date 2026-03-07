@@ -59,6 +59,7 @@ async function streamChat({
   if (!resp.ok) {
     if (resp.status === 429) { onError("Limite de requisições excedido. Tente novamente em instantes."); return; }
     if (resp.status === 402) { onError("Créditos de IA esgotados."); return; }
+    if (resp.status === 403) { onError("Acesso negado. Você precisa de uma assinatura ativa para usar o Agente Técnico."); return; }
     const body = await resp.text().catch(() => "");
     onError(`Erro ${resp.status}: ${body.slice(0, 100)}`);
     return;

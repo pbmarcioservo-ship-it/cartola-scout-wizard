@@ -98,22 +98,30 @@ export function MinhaContaView() {
       {/* Subscription */}
       <div className="bg-card border border-border rounded-lg p-5 space-y-4">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Assinatura</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Crown className="w-4 h-4" /> Status
-            </span>
-            <Badge className={planColors[subscription.plan] || 'bg-muted text-muted-foreground'}>
-              {subscription.plan}
-            </Badge>
+        {subLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm">
+            <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Calendar className="w-4 h-4" /> Válido até
-            </span>
-            <span className="text-sm font-medium text-foreground">{subscription.validUntil}</span>
+        ) : subscription ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                <Crown className="w-4 h-4" /> Status
+              </span>
+              <Badge className={planColors[subscription.plan] || 'bg-muted text-muted-foreground'}>
+                {PLAN_LABELS[subscription.plan] || subscription.plan}
+              </Badge>
+            </div>
+            {subscription.validUntil && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" /> Válido até
+                </span>
+                <span className="text-sm font-medium text-foreground">{subscription.validUntil}</span>
+              </div>
+            )}
           </div>
-        </div>
+        ) : null}
       </div>
 
       {/* Change Password */}
