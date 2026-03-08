@@ -28,8 +28,8 @@ export default function Auth() {
       if (isCustomDomain) {
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
-          options: {
-            redirectTo: window.location.origin,
+        options: {
+            redirectTo: 'https://statusfcpro.com',
             skipBrowserRedirect: true,
           },
         });
