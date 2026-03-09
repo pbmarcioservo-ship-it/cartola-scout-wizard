@@ -90,18 +90,39 @@ export default function Index() {
 
   if (!hasProAccess) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-background p-6">
-        <section className="w-full max-w-lg rounded-lg border border-border bg-card p-6 text-center space-y-4">
-          <div className="mx-auto w-14 h-14 rounded-full bg-primary/15 text-primary flex items-center justify-center">
-            <Crown className="w-7 h-7" />
+      <main className="min-h-screen flex items-center justify-center bg-sidebar p-6">
+        <section className="w-full max-w-md rounded-lg border border-primary/30 bg-card/10 backdrop-blur-sm p-8 text-center space-y-5 shadow-[0_0_40px_hsl(259,70%,48%,0.15)]">
+          <div className="mx-auto w-16 h-16 rounded-full bg-primary/20 border border-primary/30 text-primary flex items-center justify-center shadow-[0_0_20px_hsl(259,70%,48%,0.3)]">
+            <Crown className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Acesso bloqueado</h1>
-          <p className="text-sm text-muted-foreground">
-            Seu usuário está no Plano Gratuito. Para usar o app, ative um plano VIP/PRO.
+          <h1 className="text-2xl font-extrabold text-sidebar-foreground tracking-wide">Acesso Exclusivo</h1>
+          <p className="text-sm text-sidebar-foreground/70 leading-relaxed">
+            O <span className="text-primary font-bold">STATUS FC PRO</span> é uma plataforma exclusiva para assinantes.
+            Tenha acesso a todas as ferramentas, estatísticas avançadas e o Agente Técnico com IA.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Se você já assinou, faça logout e login novamente para atualizar seu acesso.
+          <div className="space-y-2 text-left text-xs text-sidebar-foreground/60">
+            <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> Cruzamento de dados em tempo real</div>
+            <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> Agente Técnico com Inteligência Artificial</div>
+            <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> Prováveis escalações e top artilheiros</div>
+            <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> Acompanhamento e análises exclusivas</div>
+          </div>
+          <a
+            href="https://wa.me/5581999999999?text=Olá! Quero assinar o STATUS FC PRO."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block w-full py-3 rounded-md bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors shadow-[0_0_15px_hsl(259,70%,48%,0.3)]"
+          >
+            Quero ser PRO →
+          </a>
+          <p className="text-[10px] text-sidebar-foreground/40">
+            Já assinou? Faça logout e login novamente para atualizar seu acesso.
           </p>
+          <button
+            onClick={() => { void supabase.auth.signOut(); }}
+            className="text-xs text-primary/70 hover:text-primary transition-colors"
+          >
+            Sair e trocar de conta
+          </button>
         </section>
       </main>
     );
