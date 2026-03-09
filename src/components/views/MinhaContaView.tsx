@@ -248,6 +248,13 @@ export function MinhaContaView() {
       >
         <LogOut className="w-4 h-4" /> Sair da conta
       </Button>
+
+      {/* Disclaimer jurídico */}
+      <div className="mt-6 rounded-lg border border-border bg-muted/50 p-3">
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          O STATUS FC PRO utiliza APIs oficiais e IA de terceiros. O serviço pode apresentar oscilações momentâneas de estabilidade em períodos de alta demanda ou manutenção dos sistemas integrados (Cartola FC/Google Cloud).
+        </p>
+      </div>
     </div>
   );
 }

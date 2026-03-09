@@ -427,6 +427,11 @@ export function AgenteTecnicoView() {
           )}
         </ScrollArea>
       </Card>
+
+      {/* Disclaimer jurídico */}
+      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground text-center px-2">
+        O STATUS FC PRO utiliza APIs oficiais e IA de terceiros. O serviço pode apresentar oscilações momentâneas de estabilidade em períodos de alta demanda ou manutenção dos sistemas integrados (Cartola FC/Google Cloud).
+      </p>
     </div>
   );
 }
