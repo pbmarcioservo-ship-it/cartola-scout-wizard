@@ -96,7 +96,7 @@ export function MinhaContaView() {
   };
 
   const handleSupport = () => {
-    window.open('https://wa.me/5511945407310?text=Olá! Quero saber mais sobre o plano Pro do Status FC.', '_blank');
+    window.open('https://wa.me/5511963268954?text=Olá,%20quero%20saber%20mais%20sobre%20o%20plano%20pro%20do%20Status%20FC.', '_blank');
   };
 
   return (
