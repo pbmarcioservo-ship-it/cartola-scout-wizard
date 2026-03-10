@@ -107,7 +107,7 @@ export default function Index() {
             <div className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-primary" /> Acompanhamento e análises exclusivas</div>
           </div>
           <a
-            href="https://wa.me/5581999999999?text=Olá! Quero assinar o STATUS FC PRO."
+            href="https://wa.me/5511945407310?text=Olá! Quero assinar o STATUS FC PRO."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block w-full py-3 rounded-md bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors shadow-[0_0_15px_hsl(259,70%,48%,0.3)]"
