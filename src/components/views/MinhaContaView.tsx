@@ -96,7 +96,7 @@ export function MinhaContaView() {
   };
 
   const handleSupport = () => {
-    window.open('https://wa.me/5511945407310?text=Olá! Quero saber mais sobre o plano Pro do Status FC.', '_blank');
+    window.open('https://wa.me/5511963268954?text=Olá,%20quero%20saber%20mais%20sobre%20o%20plano%20pro%20do%20Status%20FC.', '_blank');
   };
 
   return (
@@ -233,7 +233,7 @@ export function MinhaContaView() {
           <KeyRound className="w-4 h-4" /> Alterar Senha
         </Button>
         <a
-          href="https://wa.me/5511945407310?text=Olá! Quero saber mais sobre o plano Pro do Status FC."
+          href="https://wa.me/5511963268954?text=Olá,%20quero%20saber%20mais%20sobre%20o%20plano%20pro%20do%20Status%20FC."
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-start gap-2 border border-success/30 text-success hover:bg-success/10 text-sm rounded-md px-4 py-2 font-medium transition-colors"
