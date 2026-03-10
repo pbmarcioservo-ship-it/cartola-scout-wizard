@@ -232,13 +232,14 @@ export function MinhaContaView() {
         >
           <KeyRound className="w-4 h-4" /> Alterar Senha
         </Button>
-        <Button
-          variant="outline"
-          className="justify-start gap-2 border-success/30 text-success hover:bg-success/10 text-sm"
-          onClick={handleSupport}
+        <a
+          href="https://wa.me/5511945407310?text=Olá! Quero saber mais sobre o plano Pro do Status FC."
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-start gap-2 border border-success/30 text-success hover:bg-success/10 text-sm rounded-md px-4 py-2 font-medium transition-colors"
         >
           <MessageCircle className="w-4 h-4" /> Suporte
-        </Button>
+        </a>
       </div>
 
       <Button
