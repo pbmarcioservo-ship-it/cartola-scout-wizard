@@ -96,7 +96,7 @@ export function MinhaContaView() {
   };
 
   const handleSupport = () => {
-    window.open('https://wa.me/5581999999999?text=Olá! Preciso de suporte com minha conta STATUS FC.', '_blank');
+    window.open('https://wa.me/5511945407310?text=Olá! Quero saber mais sobre o plano Pro do Status FC.', '_blank');
   };
 
   return (
