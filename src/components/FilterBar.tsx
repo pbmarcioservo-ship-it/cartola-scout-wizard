@@ -119,7 +119,7 @@ export function FilterBar({
         <select
           value={scout}
           onChange={(e) => onScoutChange?.(e.target.value as ScoutFilter)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="gols">⚽ Gols (G)</option>
           <option value="assistencias">🅰️ Assist (A)</option>
