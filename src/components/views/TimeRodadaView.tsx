@@ -144,11 +144,13 @@ export function TimeRodadaView() {
   // ── STRATEGY ENGINE ──
   const generateLineup = useCallback((strat: Estrategia, seedVal: number): Lineup => {
     const used = new Set<number>();
-    const usedClubes: Record<string, number> = {}; // track clubs used for mid/atk
+    const usedClubes: Record<string, number> = {};
     let defenseTeamId: number | null = null;
     let defenseOpponentId: number | null = null;
 
     const pool = [...eligibleAtletas];
+    // Fallback pool: ALL athletes (including Dúvida) for filling empty slots
+    const allAtletas = mercadoData?.atletas || [];
 
     const getForPos = (posId: number, count: number, opts?: {
       maxPrice?: number;
@@ -156,21 +158,21 @@ export function TimeRodadaView() {
       allowSameClubDefense?: boolean;
       forceClub?: number;
       maxPerClub?: number;
+      useFullPool?: boolean;
     }) => {
       const maxPerClub = opts?.maxPerClub ?? (posId === 4 || posId === 5 ? 1 : 3);
-      let candidates = pool.filter(a => {
+      const sourcePool = opts?.useFullPool ? allAtletas : pool;
+      let candidates = sourcePool.filter(a => {
         if (a.posicao_id !== posId) return false;
         if (used.has(a.atleta_id)) return false;
         if (opts?.maxPrice && a.preco_num > opts.maxPrice) return false;
         if (opts?.forceClub && a.clube_id !== opts.forceClub) return false;
-        // Anti-conflict: don't pick mid/atk players from the defense's opponent
         if ((posId === 4 || posId === 5 || posId === 2 || posId === 3) && !opts?.allowSameClubDefense) {
           if (defenseOpponentId && a.clube_id === defenseOpponentId) return false;
         }
         return true;
       });
 
-      // Score function
       const scoreFn = opts?.scoreFn || ((a: CartolaAtleta) => {
         const opp = getOpponent(a.clube_id);
         if (!opp) return a.media_num;
@@ -186,19 +188,15 @@ export function TimeRodadaView() {
         return a.media_num;
       });
 
-      // Sort with randomization within top tier
       const scored = candidates.map(a => ({ a, s: scoreFn(a) }));
       scored.sort((x, y) => y.s - x.s);
 
-      // Add slight randomness using seed to shuffle among top candidates
       const topN = Math.min(scored.length, count * 3);
       const topSlice = scored.slice(0, topN);
-      // Shuffle top slice with seeded pseudo-random
       for (let i = topSlice.length - 1; i > 0; i--) {
         const j = Math.abs(((seedVal * 9301 + 49297 + i * 233) % 233280)) % (i + 1);
         [topSlice[i], topSlice[j]] = [topSlice[j], topSlice[i]];
       }
-      // Re-sort but with a weighted random factor
       topSlice.sort((x, y) => {
         const diff = y.s - x.s;
         const noise = ((seedVal * 7 + x.a.atleta_id * 3) % 10) - 5;
@@ -211,7 +209,6 @@ export function TimeRodadaView() {
         if (result.length >= count) break;
         const cc = clubCount[a.clube_id] || 0;
         if (cc >= maxPerClub) continue;
-        // For mid/atk enforce max 1 per club across both positions
         if (posId === 4 || posId === 5) {
           const globalClubCount = (usedClubes[String(a.clube_id)] || 0);
           if (globalClubCount >= 1) continue;
@@ -226,8 +223,50 @@ export function TimeRodadaView() {
       return result;
     };
 
+    // ── Fallback: fill missing slots by relaxing constraints ──
+    const fillGap = (posId: number, needed: number, existing: CartolaAtleta[]): CartolaAtleta[] => {
+      if (existing.length >= needed) return existing;
+      const missing = needed - existing.length;
+      // Try from eligible pool first (relaxed club constraints)
+      let extras = getForPos(posId, missing, { allowSameClubDefense: true, maxPerClub: 99 });
+      if (extras.length < missing) {
+        // Last resort: use full athlete pool (any status with a match)
+        const stillNeeded = missing - extras.length;
+        const fallback = getForPos(posId, stillNeeded, { allowSameClubDefense: true, maxPerClub: 99, useFullPool: true });
+        extras = [...extras, ...fallback];
+      }
+      return [...existing, ...extras];
+    };
+
+    const fillSingle = (posId: number, current: CartolaAtleta | null): CartolaAtleta | null => {
+      if (current) return current;
+      const arr = fillGap(posId, 1, []);
+      return arr[0] || null;
+    };
+
+    // ── Captain selection ──
+    const pickCaptain = (lineup: Omit<Lineup, 'capitaoId'>): number | null => {
+      const candidates = [...lineup.meis, ...lineup.atacs].filter(Boolean);
+      if (candidates.length === 0) return null;
+      
+      const scored = candidates.map(a => {
+        const opp = getOpponent(a.clube_id);
+        let goalProb = 0;
+        if (opp) {
+          goalProb = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
+        }
+        // Base: media, tiebreak: goal probability, +10% bonus for attackers
+        let score = a.media_num * 2 + goalProb;
+        if (a.posicao_id === 5) score *= 1.10;
+        return { a, score };
+      });
+      scored.sort((x, y) => y.score - x.score);
+      return scored[0]?.a.atleta_id || null;
+    };
+
+    let raw: Omit<Lineup, 'capitaoId'>;
+
     if (strat === 'tiro-curto') {
-      // TIRO CURTO: full defense from best SG team
       const sgTeam = topSGTeams[0];
       if (sgTeam) {
         defenseTeamId = sgTeam.teamId;
@@ -236,32 +275,29 @@ export function TimeRodadaView() {
       }
       const forceClub = defenseTeamId || undefined;
       const gkArr = getForPos(1, 1, { forceClub, allowSameClubDefense: true, maxPerClub: 1 });
-      const gk = gkArr[0] || null;
-      // If no GK from that team, pick best available
-      const finalGk = gk || getForPos(1, 1, { allowSameClubDefense: true })[0] || null;
-      if (finalGk && !gk) used.add(finalGk.atleta_id);
+      let gk = gkArr[0] || null;
+      if (!gk) { gk = getForPos(1, 1, { allowSameClubDefense: true })[0] || null; if (gk) used.add(gk.atleta_id); }
 
-      const lats = getForPos(2, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
-      // Fill remaining laterals from other teams if needed
-      if (lats.length < 2) {
-        const extra = getForPos(2, 2 - lats.length, {});
-        lats.push(...extra);
-      }
-      const zags = getForPos(3, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
-      if (zags.length < 2) {
-        const extra = getForPos(3, 2 - zags.length, {});
-        zags.push(...extra);
-      }
-      const tecnico = getForPos(6, 1, { forceClub, allowSameClubDefense: true })[0]
+      let lats = getForPos(2, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
+      if (lats.length < 2) lats.push(...getForPos(2, 2 - lats.length, {}));
+      let zags = getForPos(3, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
+      if (zags.length < 2) zags.push(...getForPos(3, 2 - zags.length, {}));
+      let tecnico = getForPos(6, 1, { forceClub, allowSameClubDefense: true })[0]
         || getForPos(6, 1, {})[0] || null;
+      let meis = getForPos(4, 3, {});
+      let atacs = getForPos(5, 3, {});
 
-      // Mid/Atk: based on finalization/assists, no conflict
-      const meis = getForPos(4, 3, {});
-      const atacs = getForPos(5, 3, {});
-      return { gk: finalGk || gkArr[0] || null, lats, zags, meis, atacs, tecnico };
+      // Guarantee all slots filled
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
+      meis = fillGap(4, 3, meis);
+      atacs = fillGap(5, 3, atacs);
+      tecnico = fillSingle(6, tecnico);
+
+      raw = { gk, lats, zags, meis, atacs, tecnico };
 
     } else if (strat === 'bom-e-barato') {
-      // BOM E BARATO: max C$ 10 per player, best media/price ratio
       const costBenefitScore = (a: CartolaAtleta) => {
         const price = Math.max(a.preco_num, 0.1);
         const opp = getOpponent(a.clube_id);
@@ -276,30 +312,25 @@ export function TimeRodadaView() {
       };
       const maxPrice = 10;
 
-      // Pick defense first for anti-conflict
-      const gk = getForPos(1, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
-      // Determine defense team for anti-conflict
-      if (gk) {
-        const opp = getOpponent(gk.clube_id);
-        defenseOpponentId = opp?.opponentId || null;
-      }
-      const zags = getForPos(3, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
-      const lats = getForPos(2, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
-      // Update anti-conflict: include all defense clubs' opponents
-      const defClubes = [gk, ...zags, ...lats].filter(Boolean).map(a => a!.clube_id);
-      const defOpponents = new Set<number>();
-      for (const c of defClubes) {
-        const o = getOpponent(c);
-        if (o) defOpponents.add(o.opponentId);
-      }
-      // Override defenseOpponentId isn't enough, we handle via club filtering in getForPos
-      const meis = getForPos(4, 3, { maxPrice, scoreFn: costBenefitScore });
-      const atacs = getForPos(5, 3, { maxPrice, scoreFn: costBenefitScore });
-      const tecnico = getForPos(6, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
-      return { gk, lats, zags, meis, atacs, tecnico };
+      let gk = getForPos(1, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
+      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
+      let zags = getForPos(3, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
+      let lats = getForPos(2, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
+      let meis = getForPos(4, 3, { maxPrice, scoreFn: costBenefitScore });
+      let atacs = getForPos(5, 3, { maxPrice, scoreFn: costBenefitScore });
+      let tecnico = getForPos(6, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
+
+      // Guarantee all slots filled (relax price if needed)
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
+      meis = fillGap(4, 3, meis);
+      atacs = fillGap(5, 3, atacs);
+      tecnico = fillSingle(6, tecnico);
+
+      raw = { gk, lats, zags, meis, atacs, tecnico };
 
     } else {
-      // LIGA CLÁSSICA: unanimities, scout volume, regularity
       const volumeScore = (a: CartolaAtleta) => {
         const ac = acumulados[a.atleta_id] || {};
         const opp = getOpponent(a.clube_id);
@@ -315,27 +346,27 @@ export function TimeRodadaView() {
         return a.media_num * 2 + crossScore * 0.5 + totalScouts * 0.1;
       };
 
-      // Pick defense first
-      const gk = getForPos(1, 1, { scoreFn: volumeScore })[0] || null;
-      if (gk) {
-        const opp = getOpponent(gk.clube_id);
-        defenseOpponentId = opp?.opponentId || null;
-      }
-      const zags = getForPos(3, 2, { scoreFn: volumeScore, maxPerClub: 2 });
-      const lats = getForPos(2, 2, { scoreFn: volumeScore, maxPerClub: 2 });
-      // Update defense opponent blacklist
-      const defClubes = [gk, ...zags, ...lats].filter(Boolean).map(a => a!.clube_id);
-      const allDefOpps = new Set<number>();
-      for (const c of defClubes) {
-        const o = getOpponent(c);
-        if (o) allDefOpps.add(o.opponentId);
-      }
-      const meis = getForPos(4, 3, { scoreFn: volumeScore });
-      const atacs = getForPos(5, 3, { scoreFn: volumeScore });
-      const tecnico = getForPos(6, 1, { scoreFn: volumeScore })[0] || null;
-      return { gk, lats, zags, meis, atacs, tecnico };
+      let gk = getForPos(1, 1, { scoreFn: volumeScore })[0] || null;
+      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
+      let zags = getForPos(3, 2, { scoreFn: volumeScore, maxPerClub: 2 });
+      let lats = getForPos(2, 2, { scoreFn: volumeScore, maxPerClub: 2 });
+      let meis = getForPos(4, 3, { scoreFn: volumeScore });
+      let atacs = getForPos(5, 3, { scoreFn: volumeScore });
+      let tecnico = getForPos(6, 1, { scoreFn: volumeScore })[0] || null;
+
+      // Guarantee all slots filled
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
+      meis = fillGap(4, 3, meis);
+      atacs = fillGap(5, 3, atacs);
+      tecnico = fillSingle(6, tecnico);
+
+      raw = { gk, lats, zags, meis, atacs, tecnico };
     }
-  }, [eligibleAtletas, topSGTeams, getOpponent, teamScoreForMatch, acumulados]);
+
+    return { ...raw, capitaoId: pickCaptain(raw) };
+  }, [eligibleAtletas, mercadoData?.atletas, topSGTeams, getOpponent, teamScoreForMatch, acumulados]);
 
   // Generate lineup on mount + when strategy/status/seed changes
   const eligibleCount = eligibleAtletas.length;
