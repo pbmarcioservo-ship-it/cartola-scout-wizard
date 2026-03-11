@@ -57,7 +57,7 @@ function MatchRow({
     <div className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-3 md:py-3.5 hover:bg-muted/30 transition-colors">
       {/* Left bar + value */}
       <div className="flex-1 flex items-center justify-end gap-1.5 md:gap-2 min-w-0">
-        <div className="flex-1 h-5 md:h-4 bg-muted rounded-full overflow-hidden">
+        <div className="flex-1 h-5 md:h-5 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ml-auto ${leftColor === 'success' ? 'bg-success' : 'bg-destructive'}`}
             style={{ width: `${Math.min((leftVal / maxVal) * 100, 100)}%` }}
