@@ -391,11 +391,14 @@ export function TimeRodadaView() {
   useEffect(() => {
     if (mercadoAberto) return;
     const calcPoints = () => {
-      if (!pontuadosData?.atletas) return 0;
+      if (!pontuadosData?.atletas || !lineup) return 0;
       let total = 0;
       for (const a of allLineupPlayers) {
         const p = pontuadosData.atletas[String(a.atleta_id)];
-        if (p) total += p.pontuacao;
+        if (p) {
+          const mult = lineup.capitaoId === a.atleta_id ? 1.5 : 1;
+          total += p.pontuacao * mult;
+        }
       }
       return total;
     };
