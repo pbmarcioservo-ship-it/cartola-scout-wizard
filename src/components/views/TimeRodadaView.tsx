@@ -473,6 +473,7 @@ export function TimeRodadaView() {
     'tiro-curto': '🛡️ TIRO CURTO',
     'bom-e-barato': '💰 BOM E BARATO',
     'liga-classica': '🏆 LIGA CLÁSSICA',
+    'valorizacao': '📈 VALORIZAÇÃO',
   };
 
   return (
