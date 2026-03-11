@@ -340,10 +340,7 @@ export function TimeRodadaView() {
       let atacs = getForPos(5, 3, { maxPrice, scoreFn: costBenefitScore });
       let tecnico = getForPos(6, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
 
-      // Guarantee all slots filled (relax price if needed)
-      gk = fillSingle(1, gk);
-      lats = fillGap(2, 2, lats);
-      zags = fillGap(3, 2, zags);
+      // Guarantee remaining slots filled (relax price if needed)
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
