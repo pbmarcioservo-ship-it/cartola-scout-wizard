@@ -446,20 +446,20 @@ export function TimeRodadaView() {
 
       {/* ── Football Pitch ── */}
       <div className="w-full flex justify-center">
-        <div className="relative rounded-2xl p-4 shadow-inner mx-auto w-[95vw] max-w-[520px] min-h-[60vh] md:min-h-[640px]" style={{ backgroundColor: 'hsl(145, 63%, 30%)' }}>
+        <div className="relative rounded-2xl p-2 md:p-4 shadow-inner mx-auto w-[95vw] max-w-[520px] min-h-[420px] md:min-h-[640px]" style={{ backgroundColor: 'hsl(145, 63%, 30%)' }}>
           {/* Pitch markings */}
-          <div className="absolute inset-2 rounded-2xl border-4 border-white pointer-events-none" />
-          <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 h-0 border-t-4 border-white pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-4 border-white pointer-events-none" />
-          <div className="absolute top-6 left-12 right-12 h-44 border-4 border-white pointer-events-none" />
-          <div className="absolute bottom-6 left-12 right-12 h-44 border-4 border-white pointer-events-none" />
-          <div className="absolute top-6 left-28 right-28 h-24 border-4 border-white pointer-events-none" />
-          <div className="absolute bottom-6 left-28 right-28 h-24 border-4 border-white pointer-events-none" />
+          <div className="absolute inset-1.5 md:inset-2 rounded-2xl border-2 md:border-4 border-white/70 pointer-events-none" />
+          <div className="absolute top-1/2 left-4 right-4 md:left-6 md:right-6 -translate-y-1/2 h-0 border-t-2 md:border-t-4 border-white/70 pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 md:w-32 md:h-32 rounded-full border-2 md:border-4 border-white/70 pointer-events-none" />
+          <div className="absolute top-4 md:top-6 left-8 right-8 md:left-12 md:right-12 h-28 md:h-44 border-2 md:border-4 border-white/70 pointer-events-none" />
+          <div className="absolute bottom-4 md:bottom-6 left-8 right-8 md:left-12 md:right-12 h-28 md:h-44 border-2 md:border-4 border-white/70 pointer-events-none" />
+          <div className="absolute top-4 md:top-6 left-20 right-20 md:left-28 md:right-28 h-14 md:h-24 border-2 md:border-4 border-white/70 pointer-events-none" />
+          <div className="absolute bottom-4 md:bottom-6 left-20 right-20 md:left-28 md:right-28 h-14 md:h-24 border-2 md:border-4 border-white/70 pointer-events-none" />
 
           {/* Técnico */}
           {lineup?.tecnico && (
-            <div className="absolute left-3 bottom-8 z-20">
-              <div className="scale-90">
+            <div className="absolute left-1.5 md:left-3 bottom-5 md:bottom-8 z-20">
+              <div className="scale-[0.65] md:scale-90 origin-bottom-left">
                 <PlayerCardPitch
                   atleta={lineup.tecnico}
                   clube={clubes[String(lineup.tecnico.clube_id)]}
@@ -472,14 +472,14 @@ export function TimeRodadaView() {
           )}
 
           {/* Formation badge */}
-          <div className="pointer-events-none absolute bottom-3 right-3">
-            <span className="inline-block bg-black text-white px-3 py-1.5 rounded-md text-xl font-extrabold tracking-wide">4-3-3</span>
+          <div className="pointer-events-none absolute bottom-2 right-2 md:bottom-3 md:right-3">
+            <span className="inline-block bg-black text-white px-2 py-1 md:px-3 md:py-1.5 rounded-md text-sm md:text-xl font-extrabold tracking-wide">4-3-3</span>
           </div>
 
           {/* Players */}
-          <div className="relative flex flex-col justify-between min-h-[640px] py-4">
+          <div className="relative flex flex-col justify-between min-h-[400px] md:min-h-[640px] py-2 md:py-4">
             {/* Atacantes */}
-            <div className="flex items-center justify-around py-3">
+            <div className="flex items-center justify-around py-1 md:py-3">
               {(lineup?.atacs || [null, null, null]).map((a, i) => (
                 <PlayerCardPitch
                   key={a?.atleta_id || `atk-${i}`}
@@ -492,7 +492,7 @@ export function TimeRodadaView() {
               ))}
             </div>
             {/* Meias */}
-            <div className="flex items-center justify-around py-3">
+            <div className="flex items-center justify-around py-1 md:py-3">
               {(lineup?.meis || [null, null, null]).map((a, i) => (
                 <PlayerCardPitch
                   key={a?.atleta_id || `mei-${i}`}
@@ -505,7 +505,7 @@ export function TimeRodadaView() {
               ))}
             </div>
             {/* Defesa */}
-            <div className="flex items-center justify-around py-3">
+            <div className="flex items-center justify-around py-1 md:py-3">
               {[
                 lineup?.lats?.[0] || null,
                 lineup?.zags?.[0] || null,
@@ -523,7 +523,7 @@ export function TimeRodadaView() {
               ))}
             </div>
             {/* Goleiro */}
-            <div className="flex items-center justify-around py-3">
+            <div className="flex items-center justify-around py-1 md:py-3">
               <PlayerCardPitch
                 atleta={lineup?.gk || null}
                 clube={lineup?.gk ? clubes[String(lineup.gk.clube_id)] : undefined}
@@ -564,7 +564,7 @@ function PlayerCardPitch({
   pontuacao?: number;
   onClick?: () => void;
 }) {
-  if (!atleta) return <div className="w-16 h-16" />;
+  if (!atleta) return <div className="w-10 h-10 md:w-16 md:h-16" />;
   return (
     <div
       className="relative flex flex-col items-center cursor-pointer transition-transform duration-300 hover:scale-110"
@@ -573,23 +573,23 @@ function PlayerCardPitch({
       <img
         src={atleta.foto?.replace('FORMATO', '80x80')}
         alt={atleta.apelido}
-        className="w-16 h-16 rounded-full object-cover shadow-lg ring-2 ring-white"
+        className="w-10 h-10 md:w-16 md:h-16 rounded-full object-cover shadow-lg ring-1 md:ring-2 ring-white"
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
-      <div className="mt-1 px-2 py-0.5 bg-white/80 rounded">
-        <div className="flex items-center gap-1">
-          <span className="text-[11px] font-bold text-foreground">{atleta.apelido}</span>
+      <div className="mt-0.5 md:mt-1 px-1 md:px-2 py-px md:py-0.5 bg-white/85 rounded">
+        <div className="flex items-center gap-0.5 md:gap-1">
+          <span className="text-[8px] md:text-[11px] font-bold text-foreground truncate max-w-[60px] md:max-w-none">{atleta.apelido}</span>
           {clube && <ClubeEscudo clube={clube} size="xs" />}
         </div>
       </div>
       {showPrice && (
-        <div className="mt-0.5 px-2 py-0.5 bg-black rounded text-white">
-          <span className="text-[10px] font-black">C$ {atleta.preco_num.toFixed(2)}</span>
+        <div className="mt-px md:mt-0.5 px-1 md:px-2 py-px md:py-0.5 bg-black rounded text-white">
+          <span className="text-[7px] md:text-[10px] font-black">C$ {atleta.preco_num.toFixed(2)}</span>
         </div>
       )}
       {!showPrice && pontuacao !== undefined && (
-        <div className="mt-0.5 px-2 py-0.5 bg-black rounded text-white">
-          <span className="text-[10px] font-black">{pontuacao.toFixed(1)} pts</span>
+        <div className="mt-px md:mt-0.5 px-1 md:px-2 py-px md:py-0.5 bg-black rounded text-white">
+          <span className="text-[7px] md:text-[10px] font-black">{pontuacao.toFixed(1)} pts</span>
         </div>
       )}
     </div>
