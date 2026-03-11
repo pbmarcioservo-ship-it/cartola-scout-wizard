@@ -327,9 +327,15 @@ export function TimeRodadaView() {
       const maxPrice = 10;
 
       let gk = getForPos(1, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
-      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
       let lats = getForPos(2, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
+
+      // Fill defense first, then collect blocked opponents
+      gk = fillSingle(1, gk);
+      zags = fillGap(3, 2, zags);
+      lats = fillGap(2, 2, lats);
+      collectBlockedOpponents([gk, ...zags, ...lats]);
+
       let meis = getForPos(4, 3, { maxPrice, scoreFn: costBenefitScore });
       let atacs = getForPos(5, 3, { maxPrice, scoreFn: costBenefitScore });
       let tecnico = getForPos(6, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
