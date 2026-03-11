@@ -54,7 +54,7 @@ function MatchRow({
   maxVal: number;
 }) {
   return (
-    <div className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-3 md:py-3.5 hover:bg-muted/30 transition-colors">
+    <div className="flex items-center gap-1 md:gap-1.5 px-2 md:px-3 py-3 md:py-3.5 hover:bg-muted/30 transition-colors">
       {/* Left bar + value */}
       <div className="flex-1 flex items-center justify-end gap-1.5 md:gap-2 min-w-0">
         <div className="flex-1 h-5 md:h-4 bg-muted rounded-full overflow-hidden">
