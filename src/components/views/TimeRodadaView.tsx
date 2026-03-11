@@ -4,7 +4,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, usePontuados, POSICOES } from '@/hooks/useCartolaData';
 import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, ArrowUp, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
@@ -20,6 +20,12 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
 type Estrategia = 'tiro-curto' | 'bom-e-barato' | 'liga-classica' | 'valorizacao';
 type StatusFilter = 'provavel' | 'duvida';
 
+interface BenchSlot {
+  atleta: CartolaAtleta;
+  posicaoId: number;
+  isLuxo: boolean; // Reserva de Luxo (atacante)
+}
+
 interface Lineup {
   gk: CartolaAtleta | null;
   lats: CartolaAtleta[];
@@ -28,6 +34,13 @@ interface Lineup {
   atacs: CartolaAtleta[];
   tecnico: CartolaAtleta | null;
   capitaoId: number | null;
+  bench: BenchSlot[];
+}
+
+interface SubstitutionInfo {
+  outId: number;
+  inId: number;
+  reason: 'ausencia' | 'luxo';
 }
 
 const POSICAO_ID_MAP: Record<string, number> = {
@@ -40,8 +53,9 @@ export function TimeRodadaView() {
   const [lineup, setLineup] = useState<Lineup | null>(null);
   const [seed, setSeed] = useState(0);
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
-  const [viewRodada, setViewRodada] = useState<number | null>(null); // null = current
+  const [viewRodada, setViewRodada] = useState<number | null>(null);
   const [livePontos, setLivePontos] = useState(0);
+  const [substitutions, setSubstitutions] = useState<SubstitutionInfo[]>([]);
 
   const { data: mercadoData, isLoading: loadingMercado } = useMercado();
   const { data: rodadaData } = useRodada();
@@ -55,7 +69,7 @@ export function TimeRodadaView() {
   const partidas = partidasData?.partidas || [];
   const clubes = mercadoData?.clubes || {};
 
-  // ── Crossover data (scouts aggregated per club) ──
+  // ── Crossover data ──
   const crossovers = useMemo(() => {
     const keys = ['SG', 'DE', 'DS', 'G', 'A', 'FD', 'FF', 'FT', 'FS', 'RB'] as const;
     type RecordType = { conquistaCasa: Record<number, number>; conquistaFora: Record<number, number>; cedeCasa: Record<number, number>; cedeFora: Record<number, number> };
@@ -95,7 +109,6 @@ export function TimeRodadaView() {
       : (maps.conquistaFora[teamId] || 0) + (maps.cedeCasa[opponentId] || 0);
   }, [crossovers]);
 
-  // ── Accumulated scouts per athlete ──
   const acumulados = useMemo(() => {
     const acc: Record<number, Record<string, number>> = {};
     if (!historicoData) return acc;
@@ -112,7 +125,6 @@ export function TimeRodadaView() {
     return acc;
   }, [historicoData]);
 
-  // ── Helper: get opponent for a club ──
   const getOpponent = useCallback((clubId: number) => {
     const p = partidas.find(p => p.clube_casa_id === clubId || p.clube_visitante_id === clubId);
     if (!p) return null;
@@ -120,7 +132,6 @@ export function TimeRodadaView() {
     return { opponentId: isHome ? p.clube_visitante_id : p.clube_casa_id, isHome };
   }, [partidas]);
 
-  // ── TOP SG Teams ──
   const topSGTeams = useMemo(() => {
     const entries: { teamId: number; score: number }[] = [];
     for (const p of partidas) {
@@ -134,7 +145,6 @@ export function TimeRodadaView() {
     return Object.entries(best).map(([id, s]) => ({ teamId: Number(id), score: s })).sort((a, b) => b.score - a.score);
   }, [partidas, teamScoreForMatch]);
 
-  // ── Filter athletes by status ──
   const eligibleAtletas = useMemo(() => {
     if (!mercadoData?.atletas) return [];
     if (statusFilter === 'provavel') return mercadoData.atletas.filter(a => a.status_id === 7);
@@ -149,7 +159,6 @@ export function TimeRodadaView() {
     let defenseOpponentId: number | null = null;
 
     const pool = [...eligibleAtletas];
-    // Fallback pool: ALL athletes (including Dúvida) for filling empty slots
     const allAtletas = mercadoData?.atletas || [];
 
     const getForPos = (posId: number, count: number, opts?: {
@@ -223,14 +232,11 @@ export function TimeRodadaView() {
       return result;
     };
 
-    // ── Fallback: fill missing slots by relaxing constraints ──
     const fillGap = (posId: number, needed: number, existing: CartolaAtleta[]): CartolaAtleta[] => {
       if (existing.length >= needed) return existing;
       const missing = needed - existing.length;
-      // Try from eligible pool first (relaxed club constraints)
       let extras = getForPos(posId, missing, { allowSameClubDefense: true, maxPerClub: 99 });
       if (extras.length < missing) {
-        // Last resort: use full athlete pool (any status with a match)
         const stillNeeded = missing - extras.length;
         const fallback = getForPos(posId, stillNeeded, { allowSameClubDefense: true, maxPerClub: 99, useFullPool: true });
         extras = [...extras, ...fallback];
@@ -244,18 +250,13 @@ export function TimeRodadaView() {
       return arr[0] || null;
     };
 
-    // ── Captain selection ──
-    const pickCaptain = (lineup: Omit<Lineup, 'capitaoId'>): number | null => {
+    const pickCaptain = (lineup: Omit<Lineup, 'capitaoId' | 'bench'>): number | null => {
       const candidates = [...lineup.meis, ...lineup.atacs].filter(Boolean);
       if (candidates.length === 0) return null;
-      
       const scored = candidates.map(a => {
         const opp = getOpponent(a.clube_id);
         let goalProb = 0;
-        if (opp) {
-          goalProb = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
-        }
-        // Base: media, tiebreak: goal probability, +10% bonus for attackers
+        if (opp) goalProb = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
         let score = a.media_num * 2 + goalProb;
         if (a.posicao_id === 5) score *= 1.10;
         return { a, score };
@@ -264,7 +265,41 @@ export function TimeRodadaView() {
       return scored[0]?.a.atleta_id || null;
     };
 
-    let raw: Omit<Lineup, 'capitaoId'>;
+    // ── Pick bench reserve for a position (must be cheaper than cheapest starter) ──
+    const pickBenchForPos = (posId: number, starters: CartolaAtleta[], scoreFn?: (a: CartolaAtleta) => number): CartolaAtleta | null => {
+      const cheapestStarter = starters.length > 0
+        ? Math.min(...starters.map(a => a.preco_num))
+        : Infinity;
+
+      const sourcePool = pool.length > 0 ? pool : allAtletas;
+      let candidates = sourcePool.filter(a => {
+        if (a.posicao_id !== posId) return false;
+        if (used.has(a.atleta_id)) return false;
+        if (a.preco_num >= cheapestStarter) return false;
+        return true;
+      });
+
+      // If no cheaper option, relax price constraint
+      if (candidates.length === 0) {
+        candidates = sourcePool.filter(a => {
+          if (a.posicao_id !== posId) return false;
+          if (used.has(a.atleta_id)) return false;
+          return true;
+        });
+      }
+
+      if (candidates.length === 0) return null;
+
+      const defaultScore = (a: CartolaAtleta) => a.media_num;
+      const fn = scoreFn || defaultScore;
+      candidates.sort((a, b) => fn(b) - fn(a));
+      const pick = candidates[0];
+      used.add(pick.atleta_id);
+      return pick;
+    };
+
+    let raw: Omit<Lineup, 'capitaoId' | 'bench'>;
+    let stratScoreFn: ((a: CartolaAtleta) => number) | undefined;
 
     if (strat === 'tiro-curto') {
       const sgTeam = topSGTeams[0];
@@ -277,7 +312,6 @@ export function TimeRodadaView() {
       const gkArr = getForPos(1, 1, { forceClub, allowSameClubDefense: true, maxPerClub: 1 });
       let gk = gkArr[0] || null;
       if (!gk) { gk = getForPos(1, 1, { allowSameClubDefense: true })[0] || null; if (gk) used.add(gk.atleta_id); }
-
       let lats = getForPos(2, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
       if (lats.length < 2) lats.push(...getForPos(2, 2 - lats.length, {}));
       let zags = getForPos(3, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
@@ -286,15 +320,12 @@ export function TimeRodadaView() {
         || getForPos(6, 1, {})[0] || null;
       let meis = getForPos(4, 3, {});
       let atacs = getForPos(5, 3, {});
-
-      // Guarantee all slots filled
       gk = fillSingle(1, gk);
       lats = fillGap(2, 2, lats);
       zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
-
       raw = { gk, lats, zags, meis, atacs, tecnico };
 
     } else if (strat === 'bom-e-barato') {
@@ -310,8 +341,8 @@ export function TimeRodadaView() {
         }
         return (a.media_num + scoutBonus) / price;
       };
+      stratScoreFn = costBenefitScore;
       const maxPrice = 10;
-
       let gk = getForPos(1, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
       if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
@@ -319,27 +350,20 @@ export function TimeRodadaView() {
       let meis = getForPos(4, 3, { maxPrice, scoreFn: costBenefitScore });
       let atacs = getForPos(5, 3, { maxPrice, scoreFn: costBenefitScore });
       let tecnico = getForPos(6, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
-
-      // Guarantee all slots filled (relax price if needed)
       gk = fillSingle(1, gk);
       lats = fillGap(2, 2, lats);
       zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
-
       raw = { gk, lats, zags, meis, atacs, tecnico };
 
     } else if (strat === 'valorizacao') {
-      // ── TIME VALORIZAÇÃO ──
-      // "Mínimo para Valorizar" formula:
-      // 0 jogos: preco * 0.29 | 1 jogo: preco * 0.50 | 2+ jogos: (preco * 0.55) + (últimaPont * 0.30)
       const calcMinValorizar = (a: CartolaAtleta) => {
         if (a.jogos_num === 0) return a.preco_num * 0.29;
         if (a.jogos_num === 1) return a.preco_num * 0.50;
         return (a.preco_num * 0.55) + (a.pontos_num * 0.30);
       };
-
       const valorizacaoScore = (a: CartolaAtleta) => {
         const minVal = Math.max(calcMinValorizar(a), 0.1);
         const opp = getOpponent(a.clube_id);
@@ -366,12 +390,9 @@ export function TimeRodadaView() {
             crossScore = (sg + g) / 2;
           }
         }
-        // Lower minVal = easier to appreciate → higher score
-        // Higher media = more consistent → higher score
-        // crossScore = chance of mitar
         return (a.media_num * 3 + crossScore * 0.8) / minVal;
       };
-
+      stratScoreFn = valorizacaoScore;
       let gk = getForPos(1, 1, { scoreFn: valorizacaoScore })[0] || null;
       if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { scoreFn: valorizacaoScore, maxPerClub: 2 });
@@ -379,17 +400,16 @@ export function TimeRodadaView() {
       let meis = getForPos(4, 3, { scoreFn: valorizacaoScore });
       let atacs = getForPos(5, 3, { scoreFn: valorizacaoScore });
       let tecnico = getForPos(6, 1, { scoreFn: valorizacaoScore })[0] || null;
-
       gk = fillSingle(1, gk);
       lats = fillGap(2, 2, lats);
       zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
-
       raw = { gk, lats, zags, meis, atacs, tecnico };
 
     } else {
+      // Liga Clássica
       const volumeScore = (a: CartolaAtleta) => {
         const ac = acumulados[a.atleta_id] || {};
         const opp = getOpponent(a.clube_id);
@@ -404,7 +424,7 @@ export function TimeRodadaView() {
         const totalScouts = Object.values(ac).reduce((s, v) => s + Math.abs(v), 0);
         return a.media_num * 2 + crossScore * 0.5 + totalScouts * 0.1;
       };
-
+      stratScoreFn = volumeScore;
       let gk = getForPos(1, 1, { scoreFn: volumeScore })[0] || null;
       if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { scoreFn: volumeScore, maxPerClub: 2 });
@@ -412,49 +432,143 @@ export function TimeRodadaView() {
       let meis = getForPos(4, 3, { scoreFn: volumeScore });
       let atacs = getForPos(5, 3, { scoreFn: volumeScore });
       let tecnico = getForPos(6, 1, { scoreFn: volumeScore })[0] || null;
-
       gk = fillSingle(1, gk);
       lats = fillGap(2, 2, lats);
       zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
-
       raw = { gk, lats, zags, meis, atacs, tecnico };
     }
 
-    return { ...raw, capitaoId: pickCaptain(raw) };
+    // ── Pick 5 bench reserves ──
+    const bench: BenchSlot[] = [];
+    const benchPositions: { posId: number; starters: CartolaAtleta[] }[] = [
+      { posId: 1, starters: raw.gk ? [raw.gk] : [] },
+      { posId: 2, starters: raw.lats },
+      { posId: 3, starters: raw.zags },
+      { posId: 4, starters: raw.meis },
+      { posId: 5, starters: raw.atacs },
+    ];
+    for (const { posId, starters } of benchPositions) {
+      const reserve = pickBenchForPos(posId, starters, stratScoreFn);
+      if (reserve) {
+        bench.push({ atleta: reserve, posicaoId: posId, isLuxo: posId === 5 });
+      }
+    }
+
+    return { ...raw, capitaoId: pickCaptain(raw), bench };
   }, [eligibleAtletas, mercadoData?.atletas, topSGTeams, getOpponent, teamScoreForMatch, acumulados]);
 
-  // Generate lineup on mount + when strategy/status/seed changes
+  // Generate lineup
   const eligibleCount = eligibleAtletas.length;
   useEffect(() => {
     if (eligibleCount === 0) return;
     const newLineup = generateLineup(estrategia, seed);
     setLineup(newLineup);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setSubstitutions([]);
   }, [estrategia, statusFilter, seed, eligibleCount]);
+
+  // ── Live substitution logic ──
+  const activeLineup = useMemo(() => {
+    if (!lineup || mercadoAberto || !pontuadosData?.atletas) return lineup;
+
+    const pont = pontuadosData.atletas;
+    const subs: SubstitutionInfo[] = [];
+
+    // Clone lineup
+    let gk = lineup.gk;
+    let lats = [...lineup.lats];
+    let zags = [...lineup.zags];
+    let meis = [...lineup.meis];
+    let atacs = [...lineup.atacs];
+    let capitaoId = lineup.capitaoId;
+    const benchLeft = [...lineup.bench];
+
+    const getPos = (posId: number) => {
+      if (posId === 1) return { arr: gk ? [gk] : [], setArr: (a: CartolaAtleta[]) => { gk = a[0] || null; } };
+      if (posId === 2) return { arr: lats, setArr: (a: CartolaAtleta[]) => { lats = a; } };
+      if (posId === 3) return { arr: zags, setArr: (a: CartolaAtleta[]) => { zags = a; } };
+      if (posId === 4) return { arr: meis, setArr: (a: CartolaAtleta[]) => { meis = a; } };
+      if (posId === 5) return { arr: atacs, setArr: (a: CartolaAtleta[]) => { atacs = a; } };
+      return null;
+    };
+
+    // 1. Absence substitutions: if starter has no pontuacao entry, reserve enters
+    for (let bi = benchLeft.length - 1; bi >= 0; bi--) {
+      const benchSlot = benchLeft[bi];
+      const pos = getPos(benchSlot.posicaoId);
+      if (!pos) continue;
+
+      // Check if any starter at this position didn't play
+      const absentIdx = pos.arr.findIndex(a => !pont[String(a.atleta_id)]);
+      if (absentIdx !== -1) {
+        const absentPlayer = pos.arr[absentIdx];
+        subs.push({ outId: absentPlayer.atleta_id, inId: benchSlot.atleta.atleta_id, reason: 'ausencia' });
+        // If absent was captain, transfer to reserve
+        if (capitaoId === absentPlayer.atleta_id) capitaoId = benchSlot.atleta.atleta_id;
+        const newArr = [...pos.arr];
+        newArr[absentIdx] = benchSlot.atleta;
+        pos.setArr(newArr);
+        benchLeft.splice(bi, 1);
+      }
+    }
+
+    // 2. Reserva de Luxo: if all attackers played, replace worst-scoring attacker if reserve scored more
+    const luxoIdx = benchLeft.findIndex(b => b.isLuxo);
+    if (luxoIdx !== -1) {
+      const luxo = benchLeft[luxoIdx];
+      const luxoPont = pont[String(luxo.atleta.atleta_id)];
+      if (luxoPont) {
+        const allAtacsPlayed = atacs.every(a => !!pont[String(a.atleta_id)]);
+        if (allAtacsPlayed && atacs.length > 0) {
+          // Find worst scoring attacker
+          let worstIdx = 0;
+          let worstScore = Infinity;
+          for (let i = 0; i < atacs.length; i++) {
+            const p = pont[String(atacs[i].atleta_id)];
+            const score = p ? p.pontuacao : 0;
+            if (score < worstScore) { worstScore = score; worstIdx = i; }
+          }
+          if (luxoPont.pontuacao > worstScore) {
+            subs.push({ outId: atacs[worstIdx].atleta_id, inId: luxo.atleta.atleta_id, reason: 'luxo' });
+            if (capitaoId === atacs[worstIdx].atleta_id) capitaoId = luxo.atleta.atleta_id;
+            atacs[worstIdx] = luxo.atleta;
+            benchLeft.splice(luxoIdx, 1);
+          }
+        }
+      }
+    }
+
+    setSubstitutions(subs);
+    return { gk, lats, zags, meis, atacs, tecnico: lineup.tecnico, capitaoId, bench: benchLeft };
+  }, [lineup, mercadoAberto, pontuadosData]);
+
+  const displayLineup = activeLineup || lineup;
 
   // ── Calculate total cost / live points ──
   const allLineupPlayers = useMemo(() => {
-    if (!lineup) return [];
-    return [lineup.gk, ...lineup.lats, ...lineup.zags, ...lineup.meis, ...lineup.atacs, lineup.tecnico].filter(Boolean) as CartolaAtleta[];
-  }, [lineup]);
+    if (!displayLineup) return [];
+    return [displayLineup.gk, ...displayLineup.lats, ...displayLineup.zags, ...displayLineup.meis, ...displayLineup.atacs, displayLineup.tecnico].filter(Boolean) as CartolaAtleta[];
+  }, [displayLineup]);
 
   const totalCost = useMemo(() => {
-    return allLineupPlayers.reduce((s, a) => s + a.preco_num, 0);
-  }, [allLineupPlayers]);
+    if (!lineup) return 0;
+    const starters = [lineup.gk, ...lineup.lats, ...lineup.zags, ...lineup.meis, ...lineup.atacs, lineup.tecnico].filter(Boolean) as CartolaAtleta[];
+    const benchCost = (lineup.bench || []).reduce((s, b) => s + b.atleta.preco_num, 0);
+    return starters.reduce((s, a) => s + a.preco_num, 0) + benchCost;
+  }, [lineup]);
 
-  // Live points from pontuados (when market closed)
+  // Live points
   useEffect(() => {
     if (mercadoAberto) return;
     const calcPoints = () => {
-      if (!pontuadosData?.atletas || !lineup) return 0;
+      if (!pontuadosData?.atletas || !displayLineup) return 0;
       let total = 0;
       for (const a of allLineupPlayers) {
         const p = pontuadosData.atletas[String(a.atleta_id)];
         if (p) {
-          const mult = lineup.capitaoId === a.atleta_id ? 1.5 : 1;
+          const mult = displayLineup.capitaoId === a.atleta_id ? 1.5 : 1;
           total += p.pontuacao * mult;
         }
       }
@@ -463,7 +577,7 @@ export function TimeRodadaView() {
     setLivePontos(calcPoints());
     const interval = setInterval(() => setLivePontos(calcPoints()), 60000);
     return () => clearInterval(interval);
-  }, [mercadoAberto, pontuadosData, allLineupPlayers]);
+  }, [mercadoAberto, pontuadosData, allLineupPlayers, displayLineup]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-64"><LoadingSpinner size="lg" text="Carregando Time da Rodada..." /></div>;
@@ -476,11 +590,14 @@ export function TimeRodadaView() {
     'valorizacao': '📈 VALORIZAÇÃO',
   };
 
+  // Check if a player was substituted in
+  const subInIds = new Set(substitutions.map(s => s.inId));
+  const subOutIds = new Set(substitutions.map(s => s.outId));
+
   return (
     <div className="animate-fade-in w-full flex flex-col items-center">
       {/* ── Compact Controls Bar ── */}
-      <div className="bg-primary text-primary-foreground px-3 py-2 md:px-4 md:py-2.5 mb-2 w-full max-w-[720px] rounded-lg">
-        {/* Row 1: Strategy select + Cost/Points + Refresh */}
+      <div className="bg-primary text-primary-foreground px-3 py-1.5 md:px-4 md:py-2 mb-1 w-full max-w-[720px] rounded-lg">
         <div className="flex items-center justify-between gap-2">
           <select
             value={estrategia}
@@ -512,8 +629,7 @@ export function TimeRodadaView() {
           </button>
         </div>
 
-        {/* Row 2: Rodada selector inline */}
-        <div className="flex items-center gap-1 mt-1.5 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1 mt-1 overflow-x-auto scrollbar-none">
           <span className="text-[9px] md:text-[10px] font-bold opacity-70 shrink-0">Rodada:</span>
           <button
             onClick={() => setViewRodada(null)}
@@ -545,75 +661,77 @@ export function TimeRodadaView() {
           className="relative rounded-2xl p-1.5 md:p-2 lg:p-3 shadow-inner mx-auto w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px]"
           style={{
             backgroundColor: 'hsl(145, 63%, 30%)',
-            height: 'clamp(400px, calc(100vh - 140px), 720px)',
+            height: 'clamp(340px, calc(100vh - 240px), 580px)',
           }}
         >
           {/* Pitch markings */}
           <div className="absolute inset-1 md:inset-1.5 rounded-2xl border-2 border-white/60 pointer-events-none" />
           <div className="absolute top-1/2 left-3 right-3 md:left-4 md:right-4 -translate-y-1/2 h-0 border-t-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-24 md:h-24 rounded-full border-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-3 md:top-4 left-6 right-6 md:left-10 md:right-10 h-[18%] border-2 border-white/60 pointer-events-none" />
-          <div className="absolute bottom-3 md:bottom-4 left-6 right-6 md:left-10 md:right-10 h-[18%] border-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-3 md:top-4 left-16 right-16 md:left-24 md:right-24 h-[10%] border-2 border-white/60 pointer-events-none" />
-          <div className="absolute bottom-3 md:bottom-4 left-16 right-16 md:left-24 md:right-24 h-[10%] border-2 border-white/60 pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-20 md:h-20 rounded-full border-2 border-white/60 pointer-events-none" />
+          <div className="absolute top-2 md:top-3 left-6 right-6 md:left-10 md:right-10 h-[16%] border-2 border-white/60 pointer-events-none" />
+          <div className="absolute bottom-2 md:bottom-3 left-6 right-6 md:left-10 md:right-10 h-[16%] border-2 border-white/60 pointer-events-none" />
+          <div className="absolute top-2 md:top-3 left-14 right-14 md:left-20 md:right-20 h-[9%] border-2 border-white/60 pointer-events-none" />
+          <div className="absolute bottom-2 md:bottom-3 left-14 right-14 md:left-20 md:right-20 h-[9%] border-2 border-white/60 pointer-events-none" />
 
           {/* Técnico */}
-          {lineup?.tecnico && (
-            <div className="absolute left-1 md:left-2 bottom-3 md:bottom-5 z-20">
-              <div className="scale-[0.6] md:scale-[0.7] origin-bottom-left">
+          {displayLineup?.tecnico && (
+            <div className="absolute left-1 md:left-2 bottom-2 md:bottom-4 z-20">
+              <div className="scale-[0.55] md:scale-[0.65] origin-bottom-left">
                 <PlayerCardPitch
-                  atleta={lineup.tecnico}
-                  clube={clubes[String(lineup.tecnico.clube_id)]}
+                  atleta={displayLineup.tecnico}
+                  clube={clubes[String(displayLineup.tecnico.clube_id)]}
                   showPrice={mercadoAberto}
-                  pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(lineup.tecnico.atleta_id)]?.pontuacao : undefined}
-                  onClick={() => setSelectedAtleta(lineup.tecnico)}
+                  pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(displayLineup.tecnico.atleta_id)]?.pontuacao : undefined}
+                  onClick={() => setSelectedAtleta(displayLineup.tecnico)}
                 />
               </div>
             </div>
           )}
 
           {/* Formation badge */}
-          <div className="pointer-events-none absolute bottom-1.5 right-1.5 md:bottom-2 md:right-2">
-            <span className="inline-block bg-black text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-[10px] md:text-sm font-extrabold tracking-wide">4-3-3</span>
+          <div className="pointer-events-none absolute bottom-1 right-1 md:bottom-2 md:right-2">
+            <span className="inline-block bg-black text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-[9px] md:text-sm font-extrabold tracking-wide">4-3-3</span>
           </div>
 
           {/* Players */}
-          <div className="relative flex flex-col justify-between h-full py-1 md:py-2">
+          <div className="relative flex flex-col justify-between h-full py-0.5 md:py-1">
             {/* Atacantes */}
-            <div className="flex items-center justify-around py-0.5 md:py-1">
-              {(lineup?.atacs || [null, null, null]).map((a, i) => (
+            <div className="flex items-center justify-around py-0.5">
+              {(displayLineup?.atacs || [null, null, null]).map((a, i) => (
                 <PlayerCardPitch
                   key={a?.atleta_id || `atk-${i}`}
                   atleta={a}
                   clube={a ? clubes[String(a.clube_id)] : undefined}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
-                  isCaptain={!!a && lineup?.capitaoId === a.atleta_id}
+                  isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
+                  isSubIn={!!a && subInIds.has(a.atleta_id)}
                   onClick={() => a && setSelectedAtleta(a)}
                 />
               ))}
             </div>
             {/* Meias */}
-            <div className="flex items-center justify-around py-0.5 md:py-1">
-              {(lineup?.meis || [null, null, null]).map((a, i) => (
+            <div className="flex items-center justify-around py-0.5">
+              {(displayLineup?.meis || [null, null, null]).map((a, i) => (
                 <PlayerCardPitch
                   key={a?.atleta_id || `mei-${i}`}
                   atleta={a}
                   clube={a ? clubes[String(a.clube_id)] : undefined}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
-                  isCaptain={!!a && lineup?.capitaoId === a.atleta_id}
+                  isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
+                  isSubIn={!!a && subInIds.has(a.atleta_id)}
                   onClick={() => a && setSelectedAtleta(a)}
                 />
               ))}
             </div>
             {/* Defesa */}
-            <div className="flex items-center justify-around py-0.5 md:py-1">
+            <div className="flex items-center justify-around py-0.5">
               {[
-                lineup?.lats?.[0] || null,
-                lineup?.zags?.[0] || null,
-                lineup?.zags?.[1] || null,
-                lineup?.lats?.[1] || null,
+                displayLineup?.lats?.[0] || null,
+                displayLineup?.zags?.[0] || null,
+                displayLineup?.zags?.[1] || null,
+                displayLineup?.lats?.[1] || null,
               ].map((a, i) => (
                 <PlayerCardPitch
                   key={a?.atleta_id || `def-${i}`}
@@ -621,29 +739,85 @@ export function TimeRodadaView() {
                   clube={a ? clubes[String(a.clube_id)] : undefined}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
-                  isCaptain={!!a && lineup?.capitaoId === a.atleta_id}
+                  isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
+                  isSubIn={!!a && subInIds.has(a.atleta_id)}
                   onClick={() => a && setSelectedAtleta(a)}
                 />
               ))}
             </div>
             {/* Goleiro */}
-            <div className="flex items-center justify-around py-0.5 md:py-1">
+            <div className="flex items-center justify-around py-0.5">
               <PlayerCardPitch
-                atleta={lineup?.gk || null}
-                clube={lineup?.gk ? clubes[String(lineup.gk.clube_id)] : undefined}
+                atleta={displayLineup?.gk || null}
+                clube={displayLineup?.gk ? clubes[String(displayLineup.gk.clube_id)] : undefined}
                 showPrice={mercadoAberto}
-                pontuacao={!mercadoAberto && lineup?.gk ? pontuadosData?.atletas?.[String(lineup.gk.atleta_id)]?.pontuacao : undefined}
-                isCaptain={!!lineup?.gk && lineup?.capitaoId === lineup.gk.atleta_id}
-                onClick={() => lineup?.gk && setSelectedAtleta(lineup.gk)}
+                pontuacao={!mercadoAberto && displayLineup?.gk ? pontuadosData?.atletas?.[String(displayLineup.gk.atleta_id)]?.pontuacao : undefined}
+                isCaptain={!!displayLineup?.gk && displayLineup?.capitaoId === displayLineup.gk.atleta_id}
+                isSubIn={!!displayLineup?.gk && subInIds.has(displayLineup.gk.atleta_id)}
+                onClick={() => displayLineup?.gk && setSelectedAtleta(displayLineup.gk)}
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Strategy rules card hidden - logic preserved */}
+      {/* ── Bench / Banco de Reservas ── */}
+      {displayLineup && displayLineup.bench && displayLineup.bench.length > 0 && (
+        <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1.5 rounded-xl overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, hsl(280, 40%, 94%), hsl(330, 35%, 93%))' }}
+        >
+          <div className="px-3 py-1.5 flex items-center gap-2">
+            <span className="text-[10px] md:text-xs font-black text-foreground/80 uppercase tracking-wider">🪑 Banco de Reservas</span>
+            {substitutions.length > 0 && (
+              <span className="text-[9px] md:text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full animate-fade-in">
+                {substitutions.length} sub{substitutions.length > 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-around px-2 pb-2.5 pt-0.5 gap-1">
+            {/* Show all 5 bench positions, even if some were subbed in */}
+            {lineup?.bench.map((slot) => {
+              const wasSubbedIn = subInIds.has(slot.atleta.atleta_id);
+              return (
+                <BenchCard
+                  key={slot.atleta.atleta_id}
+                  atleta={slot.atleta}
+                  clube={clubes[String(slot.atleta.clube_id)]}
+                  posicaoId={slot.posicaoId}
+                  isLuxo={slot.isLuxo}
+                  showPrice={mercadoAberto}
+                  pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(slot.atleta.atleta_id)]?.pontuacao : undefined}
+                  wasSubbedIn={wasSubbedIn}
+                  onClick={() => setSelectedAtleta(slot.atleta)}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-      {/* Player Detail Modal */}
+      {/* Substitution log */}
+      {substitutions.length > 0 && (
+        <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
+          {substitutions.map((sub, i) => {
+            const inPlayer = [...(lineup?.bench || [])].find(b => b.atleta.atleta_id === sub.inId);
+            const outPlayer = allLineupPlayers.find(a => a.atleta_id === sub.outId) ||
+              [lineup?.gk, ...(lineup?.lats || []), ...(lineup?.zags || []), ...(lineup?.meis || []), ...(lineup?.atacs || [])].find(a => a?.atleta_id === sub.outId);
+            return (
+              <div key={i} className="flex items-center gap-1.5 text-[9px] md:text-[10px] py-0.5 animate-fade-in">
+                <ArrowUp className="w-3 h-3 text-green-600" />
+                <span className="font-bold text-green-700">{inPlayer?.atleta.apelido || '?'}</span>
+                <span className="text-muted-foreground">entrou no lugar de</span>
+                <span className="font-bold text-red-600">{(outPlayer as any)?.apelido || '?'}</span>
+                <span className="text-muted-foreground/60">
+                  ({sub.reason === 'luxo' ? '⭐ Luxo' : 'Ausência'})
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <PlayerDetailModal
         atleta={selectedAtleta}
         clube={selectedAtleta ? clubes[String(selectedAtleta.clube_id)] : undefined}
@@ -662,6 +836,7 @@ function PlayerCardPitch({
   showPrice,
   pontuacao,
   isCaptain,
+  isSubIn,
   onClick,
 }: {
   atleta: CartolaAtleta | null;
@@ -669,12 +844,16 @@ function PlayerCardPitch({
   showPrice?: boolean;
   pontuacao?: number;
   isCaptain?: boolean;
+  isSubIn?: boolean;
   onClick?: () => void;
 }) {
   if (!atleta) return <div className="w-10 h-10 md:w-12 md:h-12" />;
   return (
     <div
-      className="relative flex flex-col items-center cursor-pointer transition-transform duration-300 hover:scale-110"
+      className={cn(
+        "relative flex flex-col items-center cursor-pointer transition-transform duration-300 hover:scale-110",
+        isSubIn && "animate-fade-in"
+      )}
       onClick={onClick}
     >
       {isCaptain && (
@@ -682,12 +861,18 @@ function PlayerCardPitch({
           <span className="text-[8px] md:text-[10px] font-black text-yellow-900">C</span>
         </div>
       )}
+      {isSubIn && (
+        <div className="absolute -top-1 -left-1 md:-top-1.5 md:-left-1.5 z-10 w-4 h-4 md:w-5 md:h-5 bg-green-500 rounded-full flex items-center justify-center ring-1 ring-green-700 shadow">
+          <ArrowUp className="w-2.5 h-2.5 text-white" />
+        </div>
+      )}
       <img
         src={atleta.foto?.replace('FORMATO', '80x80')}
         alt={atleta.apelido}
         className={cn(
           "w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-lg ring-1 ring-white",
-          isCaptain && "ring-2 ring-yellow-400"
+          isCaptain && "ring-2 ring-yellow-400",
+          isSubIn && "ring-2 ring-green-400"
         )}
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
@@ -707,6 +892,74 @@ function PlayerCardPitch({
           <span className="text-[7px] md:text-[9px] font-black">{(isCaptain ? pontuacao * 1.5 : pontuacao).toFixed(1)} pts</span>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Bench Card ──
+function BenchCard({
+  atleta,
+  clube,
+  posicaoId,
+  isLuxo,
+  showPrice,
+  pontuacao,
+  wasSubbedIn,
+  onClick,
+}: {
+  atleta: CartolaAtleta;
+  clube?: CartolaClube;
+  posicaoId: number;
+  isLuxo: boolean;
+  showPrice?: boolean;
+  pontuacao?: number;
+  wasSubbedIn?: boolean;
+  onClick?: () => void;
+}) {
+  const posLabel = POSICOES[posicaoId]?.abreviacao || '?';
+
+  return (
+    <div
+      className={cn(
+        "relative flex flex-col items-center cursor-pointer transition-all duration-300 hover:scale-105",
+        wasSubbedIn && "opacity-40 scale-95"
+      )}
+      onClick={onClick}
+    >
+      {/* Luxo badge */}
+      {isLuxo && (
+        <div className="absolute -top-1.5 -right-0.5 z-10 flex items-center gap-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 px-1 py-0.5 rounded-full shadow ring-1 ring-yellow-600">
+          <Star className="w-2.5 h-2.5 text-yellow-900 fill-yellow-900" />
+          <span className="text-[6px] md:text-[7px] font-black text-yellow-900 uppercase">Luxo</span>
+        </div>
+      )}
+      {/* Subbed-in indicator */}
+      {wasSubbedIn && (
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 bg-green-500 text-white px-1.5 py-0.5 rounded-full text-[6px] font-black shadow">
+          EM CAMPO ↑
+        </div>
+      )}
+      <img
+        src={atleta.foto?.replace('FORMATO', '80x80')}
+        alt={atleta.apelido}
+        className={cn(
+          "w-9 h-9 md:w-11 md:h-11 rounded-full object-cover shadow ring-1 ring-foreground/20",
+          isLuxo && "ring-2 ring-yellow-400"
+        )}
+        onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+      />
+      <div className="mt-0.5 px-1 py-px bg-white rounded shadow-sm">
+        <div className="flex items-center gap-0.5">
+          <span className="text-[7px] md:text-[9px] font-bold text-foreground truncate max-w-[48px] md:max-w-[56px]">{atleta.apelido}</span>
+          {clube && <ClubeEscudo clube={clube} size="xs" />}
+        </div>
+      </div>
+      <div className={cn(
+        "mt-px px-1 py-px rounded text-[6px] md:text-[8px] font-black",
+        isLuxo ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900" : "bg-foreground/80 text-background"
+      )}>
+        {posLabel} • {showPrice ? `C$ ${atleta.preco_num.toFixed(2)}` : (pontuacao !== undefined ? `${pontuacao.toFixed(1)} pts` : '-')}
+      </div>
     </div>
   );
 }
