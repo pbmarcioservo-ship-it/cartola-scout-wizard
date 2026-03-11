@@ -490,6 +490,7 @@ export function TimeRodadaView() {
             <option value="tiro-curto">🛡️ Tiro Curto</option>
             <option value="bom-e-barato">💰 Bom e Barato</option>
             <option value="liga-classica">🏆 Liga Clássica</option>
+            <option value="valorizacao">📈 Valorização</option>
           </select>
 
           <div className="flex items-center gap-1.5 border border-primary-foreground/40 rounded px-2.5 py-1">
