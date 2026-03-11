@@ -65,14 +65,14 @@ export function FilterBar({
   const clubeList = [...(clubeOptions || [])].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   return (
-    <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
+    <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50 max-md:gap-1.5 max-md:p-2 max-md:mb-2 max-md:rounded-none max-md:shadow-sm">
       {showSearchFilter && (
         <input
           type="text"
           placeholder="Buscar Atleta..."
           value={search}
           onChange={(e) => onSearchChange?.(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70 max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         />
       )}
       
@@ -80,7 +80,7 @@ export function FilterBar({
         <select
           value={mando}
           onChange={(e) => onMandoChange?.(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="casa_fora">Casa x Fora</option>
           <option value="todos">Todos</option>
@@ -91,7 +91,7 @@ export function FilterBar({
         <select
           value={ultimas}
           onChange={(e) => onUltimasChange?.(Number(e.target.value))}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value={3}>Últimas 3</option>
           <option value={5}>Últimas 5</option>
@@ -103,7 +103,7 @@ export function FilterBar({
         <select
           value={posicao}
           onChange={(e) => onPosicaoChange?.(e.target.value as PosicaoFilter)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="todos">Todas Posições</option>
           <option value="goleiro">Goleiro</option>
@@ -119,7 +119,7 @@ export function FilterBar({
         <select
           value={scout}
           onChange={(e) => onScoutChange?.(e.target.value as ScoutFilter)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="gols">⚽ Gols (G)</option>
           <option value="assistencias">🅰️ Assist (A)</option>
@@ -148,7 +148,7 @@ export function FilterBar({
         <select
           value={time}
           onChange={(e) => onTimeChange?.(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="todos">Todos os Times</option>
           {clubeList.length > 0
@@ -170,7 +170,7 @@ export function FilterBar({
         <select
           value={status}
           onChange={(e) => onStatusChange?.(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[130px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="todos">📋 Status</option>
           <option value="7">✅ Pro</option>
