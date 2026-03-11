@@ -570,7 +570,7 @@ function PlayerCardPitch({
   pontuacao?: number;
   onClick?: () => void;
 }) {
-  if (!atleta) return <div className="w-10 h-10 md:w-16 md:h-16" />;
+  if (!atleta) return <div className="w-10 h-10 md:w-12 md:h-12" />;
   return (
     <div
       className="relative flex flex-col items-center cursor-pointer transition-transform duration-300 hover:scale-110"
@@ -579,23 +579,23 @@ function PlayerCardPitch({
       <img
         src={atleta.foto?.replace('FORMATO', '80x80')}
         alt={atleta.apelido}
-        className="w-10 h-10 md:w-16 md:h-16 rounded-full object-cover shadow-lg ring-1 md:ring-2 ring-white"
+        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-lg ring-1 ring-white"
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
-      <div className="mt-0.5 md:mt-1 px-1 md:px-2 py-px md:py-0.5 bg-white/85 rounded">
-        <div className="flex items-center gap-0.5 md:gap-1">
-          <span className="text-[8px] md:text-[11px] font-bold text-foreground truncate max-w-[60px] md:max-w-none">{atleta.apelido}</span>
+      <div className="mt-0.5 px-1 md:px-1.5 py-px bg-white/85 rounded">
+        <div className="flex items-center gap-0.5">
+          <span className="text-[8px] md:text-[10px] font-bold text-foreground truncate max-w-[60px] md:max-w-[70px]">{atleta.apelido}</span>
           {clube && <ClubeEscudo clube={clube} size="xs" />}
         </div>
       </div>
       {showPrice && (
-        <div className="mt-px md:mt-0.5 px-1 md:px-2 py-px md:py-0.5 bg-black rounded text-white">
-          <span className="text-[7px] md:text-[10px] font-black">C$ {atleta.preco_num.toFixed(2)}</span>
+        <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
+          <span className="text-[7px] md:text-[9px] font-black">C$ {atleta.preco_num.toFixed(2)}</span>
         </div>
       )}
       {!showPrice && pontuacao !== undefined && (
-        <div className="mt-px md:mt-0.5 px-1 md:px-2 py-px md:py-0.5 bg-black rounded text-white">
-          <span className="text-[7px] md:text-[10px] font-black">{pontuacao.toFixed(1)} pts</span>
+        <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
+          <span className="text-[7px] md:text-[9px] font-black">{pontuacao.toFixed(1)} pts</span>
         </div>
       )}
     </div>
