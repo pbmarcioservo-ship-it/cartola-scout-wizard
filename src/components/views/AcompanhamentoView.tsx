@@ -209,59 +209,75 @@ function ScoutMiniCard({ scout, value }: { scout: string; value: number }) {
 }
 
 // ── Athlete Row ──
-function AtletaRow({ atleta, clube, onAtletaClick }: {
+function AtletaRow({ atleta, clube }: {
   atleta: any;
   clube?: CartolaClube;
-  onAtletaClick: (id: number) => void;
 }) {
   const pontuacao = atleta.pontuacao || 0;
   const scout = atleta.scout || {};
   const scoutEntries = Object.entries(scout).filter(([, v]) => v && (v as number) !== 0);
   const posInfo = POSICOES[atleta.posicao_id];
-
-  // Simple heuristic: if a player has very few scouts, they might be a sub
   const isSubstitute = atleta.is_substitute;
 
   return (
-    <div
-      className="flex items-center gap-1.5 py-0.5 px-1.5 border-b border-border/30 last:border-b-0 cursor-pointer transition-all duration-200 hover:bg-muted/30"
-      onClick={() => onAtletaClick(atleta.atleta_id)}
-    >
-      {/* Substitution indicator */}
+    <div className="flex items-center gap-1.5 py-0.5 px-1.5 border-b border-border/30 last:border-b-0">
       <div className="w-3 flex-shrink-0">
         {isSubstitute === 'in' && <ArrowUpCircle className="w-3 h-3 text-success" />}
         {isSubstitute === 'out' && <ArrowDownCircle className="w-3 h-3 text-destructive" />}
       </div>
-
-      {/* Player photo */}
       <img
         src={atleta.foto?.replace('FORMATO', '50x50')}
         alt={atleta.apelido}
         className="w-6 h-6 rounded-full object-cover ring-1 ring-border flex-shrink-0"
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
-
-      {/* Player info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-0.5">
           <span className="text-[11px] font-bold text-foreground truncate">{atleta.apelido}</span>
           {clube && <ClubeEscudo clube={clube} size="xs" />}
           <span className="text-[8px] text-muted-foreground font-bold ml-0.5">{posInfo?.abreviacao}</span>
         </div>
-        {/* Scout mini-cards */}
         <div className="flex flex-wrap gap-0.5">
           {scoutEntries.map(([k, v]) => (
             <ScoutMiniCard key={k} scout={k} value={v as number} />
           ))}
         </div>
       </div>
-
-      {/* Score */}
       <div className={cn(
         'px-1.5 py-0.5 rounded text-xs font-black min-w-[44px] text-center flex-shrink-0',
         pontuacao > 0 ? 'bg-success/15 text-success' : pontuacao < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
       )}>
         {pontuacao.toFixed(1)}
+      </div>
+    </div>
+  );
+}
+
+// ── Team Athletes Block ──
+function TeamBlock({ clube, atletas, total, clubes }: {
+  clube: CartolaClube;
+  atletas: any[];
+  total: number;
+  clubes: Record<string, CartolaClube>;
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10">
+        {clube && <ClubeEscudo clube={clube} size="xs" />}
+        <span className="text-[11px] font-black text-primary uppercase">{clube?.abreviacao}</span>
+        <span className="text-[9px] text-muted-foreground ml-auto">{atletas.length} jog.</span>
+      </div>
+      <div>
+        {atletas.map((a: any) => (
+          <AtletaRow key={a.atleta_id} atleta={a} clube={clubes[String(a.clube_id)]} />
+        ))}
+      </div>
+      <div className="flex items-center justify-between px-2 py-1 bg-primary/5 border-t border-border">
+        <span className="text-[10px] font-black text-primary uppercase">Total</span>
+        <span className={cn(
+          'text-xs font-black px-2 py-0.5 rounded',
+          total > 0 ? 'bg-success/15 text-success' : total < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
+        )}>{total.toFixed(1)} pts</span>
       </div>
     </div>
   );
@@ -278,7 +294,6 @@ function MatchCard({
   totalCasa,
   totalVisitante,
   clubes,
-  onAtletaClick,
 }: {
   clubeCasa: CartolaClube;
   clubeVisitante: CartolaClube;
@@ -289,21 +304,62 @@ function MatchCard({
   totalCasa: number;
   totalVisitante: number;
   clubes: Record<string, CartolaClube>;
-  onAtletaClick: (id: number) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
+  // 'none' = collapsed, 'both' = desktop expanded, 'casa' | 'visitante' = mobile single team
+  const [expanded, setExpanded] = useState<'none' | 'both' | 'casa' | 'visitante'>('none');
   const hasAtletas = atletasCasa.length > 0 || atletasVisitante.length > 0;
+
+  const handleHeaderClick = () => {
+    if (isMobile) return; // On mobile, clicks on individual shields open teams
+    setExpanded(e => e === 'none' ? 'both' : 'none');
+  };
+
+  const handleTeamClick = (team: 'casa' | 'visitante', e: React.MouseEvent) => {
+    if (!isMobile) return; // Desktop uses full header click
+    e.stopPropagation();
+    setExpanded(prev => prev === team ? 'none' : team);
+  };
+
+  const handleBack = () => setExpanded('none');
+
+  const isOpen = expanded !== 'none';
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-      {/* Header: Scoreboard - Sticky */}
-      <button onClick={() => setOpen(o => !o)} className="w-full px-3 py-2 transition-all duration-200 hover:bg-muted/20 sticky top-0 z-10 bg-card">
+      {/* Back button on mobile when expanded */}
+      {isMobile && isOpen && (
+        <button
+          onClick={handleBack}
+          className="w-full flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-black"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar
+        </button>
+      )}
+
+      {/* Header: Scoreboard */}
+      <div
+        onClick={handleHeaderClick}
+        className={cn(
+          'w-full px-3 py-2 transition-all duration-200 sticky top-0 z-10 bg-card',
+          !isMobile && 'cursor-pointer hover:bg-muted/20'
+        )}
+      >
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex items-center justify-end gap-2">
+          {/* Home team - clickable on mobile */}
+          <div
+            className={cn(
+              'flex items-center justify-end gap-2',
+              isMobile && 'cursor-pointer rounded-lg px-1 py-0.5 transition-colors',
+              isMobile && expanded === 'casa' && 'bg-primary/10'
+            )}
+            onClick={(e) => handleTeamClick('casa', e)}
+          >
             {clubeCasa && <ClubeEscudo clube={clubeCasa} size="sm" />}
-            <span className="text-sm font-bold text-foreground">{clubeCasa?.nome || clubeCasa?.abreviacao}</span>
+            <span className="text-sm font-bold text-foreground">{clubeCasa?.abreviacao || clubeCasa?.nome}</span>
           </div>
-          <div className="text-center min-w-[100px]">
+          <div className="text-center min-w-[80px]">
             <div className="text-xl font-extrabold text-primary">{placar}</div>
             {horario && (
               <div className="flex items-center justify-center gap-1 mt-0.5">
@@ -312,63 +368,38 @@ function MatchCard({
               </div>
             )}
           </div>
-          <div className="flex items-center justify-start gap-2">
-            <span className="text-sm font-bold text-foreground">{clubeVisitante?.nome || clubeVisitante?.abreviacao}</span>
+          {/* Away team - clickable on mobile */}
+          <div
+            className={cn(
+              'flex items-center justify-start gap-2',
+              isMobile && 'cursor-pointer rounded-lg px-1 py-0.5 transition-colors',
+              isMobile && expanded === 'visitante' && 'bg-primary/10'
+            )}
+            onClick={(e) => handleTeamClick('visitante', e)}
+          >
+            <span className="text-sm font-bold text-foreground">{clubeVisitante?.abreviacao || clubeVisitante?.nome}</span>
             {clubeVisitante && <ClubeEscudo clube={clubeVisitante} size="sm" />}
           </div>
         </div>
-      </button>
+      </div>
 
-      {/* Expanded: Athletes list - NO internal scroll */}
-      {open && (
+      {/* Expanded athletes */}
+      {isOpen && (
         <div className="border-t border-border">
           {!hasAtletas ? (
             <div className="text-center text-muted-foreground text-xs py-4">
               Aguardando dados dos atletas para este confronto...
             </div>
-          ) : (
+          ) : expanded === 'both' ? (
+            /* Desktop: both teams side by side */
             <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
-              {/* Casa */}
-              <div>
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10">
-                  {clubeCasa && <ClubeEscudo clube={clubeCasa} size="xs" />}
-                  <span className="text-[11px] font-black text-primary uppercase">{clubeCasa?.abreviacao}</span>
-                  <span className="text-[9px] text-muted-foreground ml-auto">{atletasCasa.length} jog.</span>
-                </div>
-                <div>
-                  {atletasCasa.map((a: any) => (
-                    <AtletaRow key={a.atleta_id} atleta={a} clube={clubes[String(a.clube_id)]} onAtletaClick={onAtletaClick} />
-                  ))}
-                </div>
-                <div className="flex items-center justify-between px-2 py-1 bg-primary/5 border-t border-border">
-                  <span className="text-[10px] font-black text-primary uppercase">Total</span>
-                  <span className={cn(
-                    'text-xs font-black px-2 py-0.5 rounded',
-                    totalCasa > 0 ? 'bg-success/15 text-success' : totalCasa < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
-                  )}>{totalCasa.toFixed(1)} pts</span>
-                </div>
-              </div>
-              {/* Visitante */}
-              <div>
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10">
-                  {clubeVisitante && <ClubeEscudo clube={clubeVisitante} size="xs" />}
-                  <span className="text-[11px] font-black text-primary uppercase">{clubeVisitante?.abreviacao}</span>
-                  <span className="text-[9px] text-muted-foreground ml-auto">{atletasVisitante.length} jog.</span>
-                </div>
-                <div>
-                  {atletasVisitante.map((a: any) => (
-                    <AtletaRow key={a.atleta_id} atleta={a} clube={clubes[String(a.clube_id)]} onAtletaClick={onAtletaClick} />
-                  ))}
-                </div>
-                <div className="flex items-center justify-between px-2 py-1 bg-primary/5 border-t border-border">
-                  <span className="text-[10px] font-black text-primary uppercase">Total</span>
-                  <span className={cn(
-                    'text-xs font-black px-2 py-0.5 rounded',
-                    totalVisitante > 0 ? 'bg-success/15 text-success' : totalVisitante < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
-                  )}>{totalVisitante.toFixed(1)} pts</span>
-                </div>
-              </div>
+              <TeamBlock clube={clubeCasa} atletas={atletasCasa} total={totalCasa} clubes={clubes} />
+              <TeamBlock clube={clubeVisitante} atletas={atletasVisitante} total={totalVisitante} clubes={clubes} />
             </div>
+          ) : expanded === 'casa' ? (
+            <TeamBlock clube={clubeCasa} atletas={atletasCasa} total={totalCasa} clubes={clubes} />
+          ) : (
+            <TeamBlock clube={clubeVisitante} atletas={atletasVisitante} total={totalVisitante} clubes={clubes} />
           )}
         </div>
       )}
