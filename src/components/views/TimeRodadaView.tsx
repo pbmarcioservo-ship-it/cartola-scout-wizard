@@ -168,6 +168,7 @@ export function TimeRodadaView() {
       forceClub?: number;
       maxPerClub?: number;
       useFullPool?: boolean;
+      bypassGlobalClub?: boolean;
     }) => {
       const maxPerClub = opts?.maxPerClub ?? (posId === 4 || posId === 5 ? 1 : 3);
       const sourcePool = opts?.useFullPool ? allAtletas : pool;
