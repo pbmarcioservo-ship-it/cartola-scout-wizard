@@ -428,9 +428,9 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
             </div>
 
             {/* Pontuação por Rodada com Confronto */}
-            <div className="mb-6">
-              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2">
-                <Award className="w-5 h-5 text-primary" /> Histórico por Rodada
+            <div className="mb-6 max-md:mb-4">
+              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2 max-md:text-sm max-md:mb-3">
+                <Award className="w-5 h-5 text-primary max-md:w-4 max-md:h-4" /> Histórico por Rodada
               </h3>
               {loadingHistorico ? (
                 <LoadingSpinner size="md" text="Carregando histórico..." />
@@ -444,10 +444,10 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 const renderRound = (round: typeof sorted[0]) => {
                   const allClubes = { ...clubes, ...round.partidaClubes };
                   return (
-                    <div key={round.rodada} className="bg-muted/20 rounded-lg p-3 border border-border">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                    <div key={round.rodada} className="bg-muted/20 rounded-lg p-3 border border-border max-md:p-2">
+                      <div className="flex justify-between items-center mb-2 max-md:mb-1">
+                        <div className="flex items-center gap-3 max-md:gap-1.5">
+                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded max-md:text-[10px] max-md:px-1.5">
                             R{round.rodada}
                           </span>
                           {round.partida && (
@@ -455,7 +455,7 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                           )}
                         </div>
                         <span className={cn(
-                          'text-xl font-black',
+                          'text-xl font-black max-md:text-base',
                           round.pontuacao > 0 ? 'text-success' : round.pontuacao < 0 ? 'text-destructive' : 'text-muted-foreground'
                         )}>
                           {round.pontuacao.toFixed(1)} pts
@@ -467,13 +467,13 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 };
 
                 return (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1 max-md:gap-2">
                     <div>
                       <h4 className="text-xs font-bold text-success uppercase mb-2 text-center">🏠 Em Casa</h4>
                       {casaRounds.length === 0 ? (
                         <p className="text-muted-foreground text-xs text-center py-3">Nenhum jogo em casa.</p>
                       ) : (
-                        <div className="space-y-3">{casaRounds.map(renderRound)}</div>
+                        <div className="space-y-3 max-md:space-y-2">{casaRounds.map(renderRound)}</div>
                       )}
                     </div>
                     <div>
@@ -481,7 +481,7 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                       {foraRounds.length === 0 ? (
                         <p className="text-muted-foreground text-xs text-center py-3">Nenhum jogo fora.</p>
                       ) : (
-                        <div className="space-y-3">{foraRounds.map(renderRound)}</div>
+                        <div className="space-y-3 max-md:space-y-2">{foraRounds.map(renderRound)}</div>
                       )}
                     </div>
                   </div>
@@ -491,8 +491,8 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
 
             {/* Jogadores da mesma posição que enfrentaram o mesmo oponente */}
             <div>
-              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
+              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2 max-md:text-sm max-md:mb-3">
+                <TrendingUp className="w-5 h-5 text-primary max-md:w-4 max-md:h-4" />
                 {posicaoInfo?.nome}s vs {opponentClube?.abreviacao || 'Oponente'} ({isPlayingAway ? 'Fora' : 'Casa'})
               </h3>
               {loadingHistorico ? (
@@ -505,12 +505,12 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 <div className="space-y-1.5">
                   {mesmaPosicaoVsOponente.slice(0, 7).map((player) => {
                     const playerClube = clubes[player.clube_id];
-                    // Show the most recent round for this player
                     const latestRound = player.rounds.sort((a, b) => b.rodada - a.rodada)[0];
                     const allClubes = latestRound ? { ...clubes, ...latestRound.partidaClubes } : clubes;
                     return (
-                      <div key={player.id} className="bg-muted/20 rounded-md px-2.5 py-1.5 border border-border">
-                        <div className="flex items-center gap-2">
+                      <div key={player.id} className="bg-muted/20 rounded-md px-2.5 py-1.5 border border-border max-md:px-2 max-md:py-2">
+                        {/* Desktop layout */}
+                        <div className="flex items-center gap-2 max-md:hidden">
                           {playerClube && <ClubeEscudo clube={playerClube} size="xs" />}
                           <span className="font-bold text-xs text-foreground min-w-[80px]">
                             {player.apelido}
@@ -534,6 +534,36 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                           )}>
                             {latestRound?.pontuacao.toFixed(1)}
                           </span>
+                        </div>
+                        {/* Mobile: vertical layout - scouts below name */}
+                        <div className="hidden max-md:block">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {playerClube && <ClubeEscudo clube={playerClube} size="xs" />}
+                              <span className="font-bold text-xs text-foreground truncate">
+                                {player.apelido}
+                                {atleta.posicao_id === 2 && (() => {
+                                  const side = getLateralSideFromStore(Number(player.id)) ?? getLateralSideByName(player.apelido);
+                                  return side ? <span className="ml-1 text-[10px] text-muted-foreground">({side})</span> : null;
+                                })()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {latestRound?.partida && (
+                                <>
+                                  <MatchDisplay partida={latestRound.partida} clubes={allClubes} compact />
+                                  <span className="text-[9px] text-muted-foreground">R{latestRound.rodada}</span>
+                                </>
+                              )}
+                              <span className={cn(
+                                'text-sm font-black',
+                                (latestRound?.pontuacao ?? 0) > 0 ? 'text-success' : (latestRound?.pontuacao ?? 0) < 0 ? 'text-destructive' : 'text-muted-foreground'
+                              )}>
+                                {latestRound?.pontuacao.toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                          <ScoutSummary scout={latestRound?.scout} />
                         </div>
                       </div>
                     );
