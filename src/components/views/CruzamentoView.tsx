@@ -35,6 +35,64 @@ const POSICAO_ID_MAP: Record<string, number> = {
   goleiro: 1, lateral: 2, zagueiro: 3, meia: 4, atacante: 5, tecnico: 6,
 };
 
+/* ── Reusable match row ── */
+function MatchRow({
+  clubeLeft,
+  clubeRight,
+  leftVal,
+  rightVal,
+  leftColor,
+  rightColor,
+  maxVal,
+}: {
+  clubeLeft: CartolaClube;
+  clubeRight: CartolaClube;
+  leftVal: number;
+  rightVal: number;
+  leftColor: 'success' | 'destructive';
+  rightColor: 'success' | 'destructive';
+  maxVal: number;
+}) {
+  return (
+    <div className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-3 md:py-3.5 hover:bg-muted/30 transition-colors">
+      {/* Left bar + value */}
+      <div className="flex-1 flex items-center justify-end gap-1.5 md:gap-2 min-w-0">
+        <div className="flex-1 h-5 md:h-4 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full ml-auto ${leftColor === 'success' ? 'bg-success' : 'bg-destructive'}`}
+            style={{ width: `${Math.min((leftVal / maxVal) * 100, 100)}%` }}
+          />
+        </div>
+        <span className={`font-black text-xs md:text-sm min-w-[20px] text-right ${leftColor === 'success' ? 'text-success' : 'text-destructive'}`}>
+          {Math.round(leftVal)}
+        </span>
+      </div>
+
+      {/* Center: teams side by side */}
+      <div className="flex items-center justify-center gap-1 md:gap-2 shrink-0 px-1 md:px-3 bg-muted/20 rounded-md py-1">
+        <ClubeEscudo clube={clubeLeft} size="sm" />
+        <span className="font-black text-[10px] md:text-xs whitespace-nowrap">
+          {clubeLeft.abreviacao} x {clubeRight.abreviacao}
+        </span>
+        <ClubeEscudo clube={clubeRight} size="sm" />
+      </div>
+
+      {/* Right bar + value */}
+      <div className="flex-1 flex items-center justify-start gap-1.5 md:gap-2 min-w-0">
+        <span className={`font-black text-xs md:text-sm min-w-[20px] text-left ${rightColor === 'success' ? 'text-success' : 'text-destructive'}`}>
+          {Math.round(rightVal)}
+        </span>
+        <div className="flex-1 h-5 md:h-4 bg-muted rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full ${rightColor === 'success' ? 'bg-success' : 'bg-destructive'}`}
+            style={{ width: `${Math.min((rightVal / maxVal) * 100, 100)}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CruzamentoView() {
   const [mando, setMando] = useState('casa_fora');
   const [ultimas, setUltimas] = useState(3);
@@ -60,29 +118,24 @@ export function CruzamentoView() {
       if (!h.data?.atletas || !h.partidas?.partidas) continue;
 
       for (const [, atletaData] of Object.entries(h.data.atletas)) {
-        // Filter by position if set
         if (posicaoId && atletaData.posicao_id !== posicaoId) continue;
 
         const val = (atletaData.scout?.[scoutKey] as number) || 0;
         if (val <= 0) continue;
 
         const clubeId = atletaData.clube_id;
-        // Find this player's match
         const partida = h.partidas!.partidas.find(
           (p: CartolaPartida) => p.clube_casa_id === clubeId || p.clube_visitante_id === clubeId
         );
         if (!partida) continue;
 
-        // Filter by mando
         const isHome = partida.clube_casa_id === clubeId;
         if (mando === 'casa_fora') {
-          // no mando filter in casa_fora mode for conquista — will be split in the table
+          // no mando filter
         }
 
-        // Conquista: this club's players earned this scout
         conquista[clubeId] = (conquista[clubeId] || 0) + val;
 
-        // Cede: the opponent allowed this scout
         const opponentId = isHome ? partida.clube_visitante_id : partida.clube_casa_id;
         cede[opponentId] = (cede[opponentId] || 0) + val;
       }
@@ -181,113 +234,71 @@ export function CruzamentoView() {
       />
 
       {/* Tabela Mandantes */}
-      <div className="mb-8">
-        <div className="bg-primary text-primary-foreground p-3 font-bold text-center rounded-t-lg text-sm">
+      <div className="mb-6 md:mb-8">
+        <div className="bg-primary text-primary-foreground p-2 md:p-3 font-bold text-center rounded-t-lg text-[11px] md:text-sm">
           📊 MANDANTE CONQUISTA ({scoutLabel} - {posicaoLabel}) vs VISITANTE CEDE — Últimas {ultimas} rodadas
         </div>
-        <table className="w-full bg-card shadow-lg rounded-b-lg overflow-hidden">
-          <tbody>
-            {partidas.map((partida) => {
-              const clubeCasa = clubes[partida.clube_casa_id];
-              const clubeVisitante = clubes[partida.clube_visitante_id];
-              if (!clubeCasa || !clubeVisitante) return null;
+        <div className="bg-card shadow-lg rounded-b-lg overflow-hidden divide-y divide-border">
+          {partidas.map((partida) => {
+            const clubeCasa = clubes[partida.clube_casa_id];
+            const clubeVisitante = clubes[partida.clube_visitante_id];
+            if (!clubeCasa || !clubeVisitante) return null;
 
-              const conquistaVal = mando === 'casa_fora' && statsPerClubByMando
-                ? (statsPerClubByMando.conquistaCasa[partida.clube_casa_id] || 0)
-                : (statsPerClub.conquista[partida.clube_casa_id] || 0);
-              const cedeVal = mando === 'casa_fora' && statsPerClubByMando
-                ? (statsPerClubByMando.cedeFora[partida.clube_visitante_id] || 0)
-                : (statsPerClub.cede[partida.clube_visitante_id] || 0);
+            const conquistaVal = mando === 'casa_fora' && statsPerClubByMando
+              ? (statsPerClubByMando.conquistaCasa[partida.clube_casa_id] || 0)
+              : (statsPerClub.conquista[partida.clube_casa_id] || 0);
+            const cedeVal = mando === 'casa_fora' && statsPerClubByMando
+              ? (statsPerClubByMando.cedeFora[partida.clube_visitante_id] || 0)
+              : (statsPerClub.cede[partida.clube_visitante_id] || 0);
 
-              return (
-                <tr key={partida.partida_id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                  <td className="w-[15%] text-right pr-2 font-black text-success text-sm py-3"></td>
-                  <td className="w-[25%]">
-                    <div className="flex items-center justify-end gap-2 p-2">
-                      <div className="flex-1 max-w-[160px]">
-                        <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" reverse showValue={false} />
-                      </div>
-                      <span className="font-black text-sm text-success">{Math.round(conquistaVal)}</span>
-                    </div>
-                  </td>
-                  <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
-                    <div className="flex items-center justify-center gap-2">
-                      <ClubeEscudo clube={clubeCasa} size="sm" />
-                      <span className="font-black text-xs">
-                        {clubeCasa.abreviacao} x {clubeVisitante.abreviacao}
-                      </span>
-                      <ClubeEscudo clube={clubeVisitante} size="sm" />
-                    </div>
-                  </td>
-                  <td className="w-[25%]">
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <span className="font-black text-sm text-destructive">{Math.round(cedeVal)}</span>
-                      <div className="flex-1 max-w-[160px]">
-                        <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" showValue={false} />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="w-[15%] text-left pl-2 font-black text-destructive text-sm py-3"></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+            return (
+              <MatchRow
+                key={partida.partida_id}
+                clubeLeft={clubeCasa}
+                clubeRight={clubeVisitante}
+                leftVal={conquistaVal}
+                rightVal={cedeVal}
+                leftColor="success"
+                rightColor="destructive"
+                maxVal={maxVal}
+              />
+            );
+          })}
+        </div>
       </div>
 
-      {/* Tabela Visitantes - Mandante CEDE (vermelho esquerda) vs Visitante CONQUISTA (verde direita) */}
+      {/* Tabela Visitantes */}
       <div>
-        <div className="bg-secondary text-secondary-foreground p-3 font-bold text-center rounded-t-lg text-sm">
+        <div className="bg-secondary text-secondary-foreground p-2 md:p-3 font-bold text-center rounded-t-lg text-[11px] md:text-sm">
           📊 MANDANTE CEDE ({scoutLabel} - {posicaoLabel}) vs VISITANTE CONQUISTA — Últimas {ultimas} rodadas
         </div>
-        <table className="w-full bg-card shadow-lg rounded-b-lg overflow-hidden">
-          <tbody>
-            {partidas.map((partida) => {
-              const clubeCasa = clubes[partida.clube_casa_id];
-              const clubeVisitante = clubes[partida.clube_visitante_id];
-              if (!clubeCasa || !clubeVisitante) return null;
+        <div className="bg-card shadow-lg rounded-b-lg overflow-hidden divide-y divide-border">
+          {partidas.map((partida) => {
+            const clubeCasa = clubes[partida.clube_casa_id];
+            const clubeVisitante = clubes[partida.clube_visitante_id];
+            if (!clubeCasa || !clubeVisitante) return null;
 
-              const cedeVal = mando === 'casa_fora' && statsPerClubByMando
-                ? (statsPerClubByMando.cedeCasa[partida.clube_casa_id] || 0)
-                : (statsPerClub.cede[partida.clube_casa_id] || 0);
-              const conquistaVal = mando === 'casa_fora' && statsPerClubByMando
-                ? (statsPerClubByMando.conquistaFora[partida.clube_visitante_id] || 0)
-                : (statsPerClub.conquista[partida.clube_visitante_id] || 0);
+            const cedeVal = mando === 'casa_fora' && statsPerClubByMando
+              ? (statsPerClubByMando.cedeCasa[partida.clube_casa_id] || 0)
+              : (statsPerClub.cede[partida.clube_casa_id] || 0);
+            const conquistaVal = mando === 'casa_fora' && statsPerClubByMando
+              ? (statsPerClubByMando.conquistaFora[partida.clube_visitante_id] || 0)
+              : (statsPerClub.conquista[partida.clube_visitante_id] || 0);
 
-              return (
-                <tr key={partida.partida_id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                  <td className="w-[15%] text-right pr-2 font-black text-destructive text-sm py-3"></td>
-                  <td className="w-[25%]">
-                    <div className="flex items-center justify-end gap-2 p-2">
-                      <div className="flex-1 max-w-[160px]">
-                        <ProgressBar value={cedeVal} maxValue={maxVal} color="destructive" reverse showValue={false} />
-                      </div>
-                      <span className="font-black text-sm text-destructive">{Math.round(cedeVal)}</span>
-                    </div>
-                  </td>
-                  <td className="w-[20%] text-center py-3 bg-muted/20 border-x border-border">
-                    <div className="flex items-center justify-center gap-2">
-                      <ClubeEscudo clube={clubeCasa} size="sm" />
-                      <span className="font-black text-xs">
-                        {clubeCasa.abreviacao} x {clubeVisitante.abreviacao}
-                      </span>
-                      <ClubeEscudo clube={clubeVisitante} size="sm" />
-                    </div>
-                  </td>
-                  <td className="w-[25%]">
-                    <div className="flex items-center justify-start gap-2 p-2">
-                      <span className="font-black text-sm text-success">{Math.round(conquistaVal)}</span>
-                      <div className="flex-1 max-w-[160px]">
-                        <ProgressBar value={conquistaVal} maxValue={maxVal} color="success" showValue={false} />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="w-[15%] text-left pl-2 font-black text-success text-sm py-3"></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+            return (
+              <MatchRow
+                key={partida.partida_id}
+                clubeLeft={clubeCasa}
+                clubeRight={clubeVisitante}
+                leftVal={cedeVal}
+                rightVal={conquistaVal}
+                leftColor="destructive"
+                rightColor="success"
+                maxVal={maxVal}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );
