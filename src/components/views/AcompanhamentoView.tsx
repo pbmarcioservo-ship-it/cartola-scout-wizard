@@ -105,12 +105,6 @@ export function AcompanhamentoView() {
     return { ...partidasData?.clubes, ...mercadoData?.clubes, ...pontuadosData?.clubes } as Record<string, CartolaClube>;
   }, [partidasData, mercadoData, pontuadosData]);
 
-  const handleAtletaClick = (atletaId: number) => {
-    if (!mercadoData?.atletas) return;
-    const atleta = mercadoData.atletas.find(a => a.atleta_id === atletaId);
-    if (atleta) setSelectedAtleta(atleta);
-  };
-
   return (
     <div className="w-full animate-fade-in">
       <div className="bg-primary text-primary-foreground px-3 py-2 mb-3 text-center font-black rounded-lg">
@@ -191,20 +185,11 @@ export function AcompanhamentoView() {
                 totalCasa={totalCasa}
                 totalVisitante={totalVisitante}
                 clubes={clubes}
-                onAtletaClick={handleAtletaClick}
               />
             );
           })}
         </div>
       )}
-
-      <PlayerDetailModal
-        atleta={selectedAtleta}
-        clube={selectedAtleta ? allClubes[String(selectedAtleta.clube_id)] : undefined}
-        clubes={allClubes as any}
-        open={!!selectedAtleta}
-        onOpenChange={(open) => !open && setSelectedAtleta(null)}
-      />
     </div>
   );
 }
