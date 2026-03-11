@@ -680,35 +680,24 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
                     : pct >= 61 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                     : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
                   return (
-                    <div key={t.timeId}>
-                      {/* Desktop layout */}
-                      <div className={cn('hidden md:flex items-center gap-3 px-4 py-3', idx < topSGTimes.length - 1 && 'border-b border-border')}>
-                        <span className="text-muted-foreground font-bold w-6 text-center text-sm">{idx + 1}º</span>
-                        <ClubeEscudo clube={clube} size="sm" showName />
-                        <div className="ml-auto text-xs font-bold">
-                          <ProbBadge label="SG" value={pct} />
-                        </div>
+                    <div key={t.timeId} className={cn(
+                      'rounded-lg p-2.5 md:p-3 flex items-center gap-2 md:gap-3',
+                      idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
+                    )}>
+                      <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                        <span className="text-muted-foreground text-xs md:text-sm font-black w-5 md:w-6 text-center">
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`}
+                        </span>
+                        <ClubeEscudo clube={clube} size="sm" />
                       </div>
-                      {/* Mobile mini-card layout */}
-                      <div className={cn(
-                        'md:hidden rounded-lg p-2.5 flex items-center gap-2',
-                        idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
-                      )}>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-muted-foreground text-xs font-black w-5 text-center">
-                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`}
-                          </span>
-                          <ClubeEscudo clube={clube} size="xs" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-foreground text-xs truncate leading-tight">{clube.nome}</p>
-                          <p className="text-[9px] text-muted-foreground leading-tight">{clube.abreviacao}</p>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <div className={cn('flex flex-col items-center rounded border px-1.5 py-0.5', badgeColor)}>
-                            <span className="text-[8px] font-bold leading-none">SG</span>
-                            <span className="text-[10px] font-black leading-tight">{pct}%</span>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-foreground text-xs md:text-sm truncate leading-tight">{clube.nome}</p>
+                        <p className="text-[9px] md:text-xs text-muted-foreground leading-tight">{clube.abreviacao}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <div className={cn('flex flex-col items-center rounded border px-1.5 md:px-2 py-0.5 md:py-1', badgeColor)}>
+                          <span className="text-[8px] md:text-[10px] font-bold leading-none">SG</span>
+                          <span className="text-[10px] md:text-xs font-black leading-tight">{pct}%</span>
                         </div>
                       </div>
                     </div>
@@ -1037,117 +1026,62 @@ function ListAtletas({ title, atletas, clubes, getConfronto, calcKeyScore, keysT
       <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground max-md:p-2 max-md:text-sm">
         {title}
       </div>
-      <div className="max-md:p-1.5 max-md:space-y-1.5">
+      <div className="p-1.5 md:p-2 space-y-1 md:space-y-1.5">
         {(!atletas || atletas.length === 0) ? (
           <div className="p-6 text-center text-muted-foreground">Sem dados disponíveis</div>
         ) : (
           atletas.map((atleta, idx) => {
             const clube = clubes?.[String(atleta.clube_id)] || clubes?.[atleta.clube_id];
             const confronto = getConfronto(atleta);
-            const acum = acumulados?.[atleta.atleta_id] || { G: 0, A: 0, FD: 0, FF: 0, FT: 0, DS: 0, SG: 0, DE: 0 };
             return (
-              <div key={atleta.atleta_id}>
-                {/* Desktop layout */}
-                <div className={cn('hidden md:flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors', idx < atletas.length - 1 && 'border-b border-border')}>
-                  <span className="text-muted-foreground text-sm font-bold w-6 text-center">{idx + 1}º</span>
-                  {confronto && (
-                    <div className="flex items-center gap-1 w-[120px]">
-                      <ClubeEscudo clube={confronto.casa} size="xs" />
-                      <span className="text-[10px] font-bold text-muted-foreground">{confronto.casa?.abreviacao?.toUpperCase() || 'CAS'}</span>
-                      <span className="mx-1 text-[10px]">x</span>
-                      <ClubeEscudo clube={confronto.fora} size="xs" />
-                      <span className="text-[10px] font-bold text-muted-foreground">{confronto.fora?.abreviacao?.toUpperCase() || 'FOR'}</span>
-                    </div>
-                  )}
-                  <img 
-                    src={atleta.foto?.replace('FORMATO', '80x80')} 
-                    alt={atleta.apelido}
-                    className="w-10 h-10 rounded-full object-cover bg-muted"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder.svg';
-                    }}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-foreground text-base truncate">
-                        {medals && idx === 0 ? '🥇 ' : medals && idx === 1 ? '🥈 ' : medals && idx === 2 ? '🥉 ' : ''}
-                        {atleta.apelido}
-                        {atleta.posicao_id === 2 && (() => {
-                          const side = getLateralSideFromStore(atleta.atleta_id);
-                          return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
-                        })()}
-                      </p>
-                      {clube && <ClubeEscudo clube={clube} size="xs" />}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground">{estimateFor(atleta)}</div>
-                    {statBuilder ? (
-                      <div className="text-[11px] text-muted-foreground">{statBuilder(atleta)}</div>
-                    ) : (
-                      <div className="text-[11px] text-muted-foreground">
-                        G: {acum.G} • ASS: {acum.A} • FD: {acum.FD} • FF: {acum.FF}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 ml-2">
-                    {keysToDisplay.map((k) => {
-                      const raw = calcKeyScore(atleta, k);
-                      const pct = Math.round((raw / (maxByKey[k] || 1)) * 100);
-                      const lbl = k === 'DS' ? 'DES' : k === 'A' ? 'ASS' : k === 'DE' ? 'DEF' : k;
-                      return <ProbBadge key={k} label={lbl} value={pct} />;
-                    })}
-                  </div>
+              <div key={atleta.atleta_id} className={cn(
+                'rounded-lg p-2.5 md:p-3 flex items-center gap-2 md:gap-3',
+                idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
+              )}>
+                {/* Left: rank + shield */}
+                <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                  <span className="text-muted-foreground text-xs md:text-sm font-black w-5 md:w-6 text-center">
+                    {medals && idx === 0 ? '🥇' : medals && idx === 1 ? '🥈' : medals && idx === 2 ? '🥉' : `${idx + 1}º`}
+                  </span>
+                  {clube && <ClubeEscudo clube={clube} size="sm" />}
                 </div>
 
-                {/* Mobile mini-card layout */}
-                <div className={cn(
-                  'md:hidden rounded-lg p-2.5 flex items-center gap-2',
-                  idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
-                )}>
-                  {/* Left: rank + shield */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="text-muted-foreground text-xs font-black w-5 text-center">
-                      {medals && idx === 0 ? '🥇' : medals && idx === 1 ? '🥈' : medals && idx === 2 ? '🥉' : `${idx + 1}º`}
-                    </span>
-                    {clube && <ClubeEscudo clube={clube} size="xs" />}
-                  </div>
+                {/* Center: name + price + confronto + estimate */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-foreground text-xs md:text-sm truncate leading-tight">
+                    {atleta.apelido}
+                    {atleta.posicao_id === 2 && (() => {
+                      const side = getLateralSideFromStore(atleta.atleta_id);
+                      return side ? <span className="ml-0.5 text-[9px] md:text-[11px] text-muted-foreground">({side})</span> : null;
+                    })()}
+                  </p>
+                  <p className="text-[9px] md:text-xs text-muted-foreground leading-tight truncate">
+                    C$ {Number(atleta.preco_num || 0).toFixed(2)}
+                    {confronto && (
+                      <span className="ml-1">
+                        • {confronto.casa?.abreviacao} x {confronto.fora?.abreviacao}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[9px] md:text-[11px] text-muted-foreground leading-tight truncate">{estimateFor(atleta)}</p>
+                </div>
 
-                  {/* Center: name + price + estimate */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground text-xs truncate leading-tight">
-                      {atleta.apelido}
-                      {atleta.posicao_id === 2 && (() => {
-                        const side = getLateralSideFromStore(atleta.atleta_id);
-                        return side ? <span className="ml-0.5 text-[9px] text-muted-foreground">({side})</span> : null;
-                      })()}
-                    </p>
-                    <p className="text-[9px] text-muted-foreground leading-tight truncate">
-                      C$ {Number(atleta.preco_num || 0).toFixed(2)}
-                      {confronto && (
-                        <span className="ml-1">
-                          • {confronto.casa?.abreviacao} x {confronto.fora?.abreviacao}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-[9px] text-muted-foreground leading-tight truncate">{estimateFor(atleta)}</p>
-                  </div>
-
-                  {/* Right: scout badges */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {keysToDisplay.map((k) => {
-                      const raw = calcKeyScore(atleta, k);
-                      const pct = Math.min(Math.round((raw / (maxByKey[k] || 1)) * 100), 98);
-                      const lbl = k === 'DS' ? 'DES' : k === 'A' ? 'ASS' : k === 'DE' ? 'DEF' : k;
-                      const badgeColor = pct >= 80 ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                        : pct >= 61 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                        : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-                      return (
-                        <div key={k} className={cn('flex flex-col items-center rounded border px-1.5 py-0.5', badgeColor)}>
-                          <span className="text-[8px] font-bold leading-none">{lbl}</span>
-                          <span className="text-[10px] font-black leading-tight">{pct}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                {/* Right: scout badges */}
+                <div className="flex items-center gap-1 md:gap-1.5 shrink-0">
+                  {keysToDisplay.map((k) => {
+                    const raw = calcKeyScore(atleta, k);
+                    const pct = Math.min(Math.round((raw / (maxByKey[k] || 1)) * 100), 98);
+                    const lbl = k === 'DS' ? 'DES' : k === 'A' ? 'ASS' : k === 'DE' ? 'DEF' : k;
+                    const badgeColor = pct >= 80 ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                      : pct >= 61 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+                    return (
+                      <div key={k} className={cn('flex flex-col items-center rounded border px-1.5 md:px-2 py-0.5 md:py-1', badgeColor)}>
+                        <span className="text-[8px] md:text-[10px] font-bold leading-none">{lbl}</span>
+                        <span className="text-[10px] md:text-xs font-black leading-tight">{pct}%</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
