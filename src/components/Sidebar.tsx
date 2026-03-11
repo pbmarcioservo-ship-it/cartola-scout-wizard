@@ -18,7 +18,6 @@ interface SidebarProps {
 }
 
 const menuItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
-  { id: 'minha-conta', label: 'Minha Conta', icon: <UserCircle className="w-5 h-5" /> },
   { id: 'cruzamento', label: 'Cruzamento Geral', icon: <BarChart3 className="w-5 h-5" /> },
   { id: 'atletas', label: 'Atletas', icon: <User className="w-5 h-5" /> },
   { id: 'medias', label: 'Top Médias', icon: <TrendingUp className="w-5 h-5" /> },
