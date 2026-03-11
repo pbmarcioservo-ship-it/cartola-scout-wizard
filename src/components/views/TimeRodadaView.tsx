@@ -219,7 +219,7 @@ export function TimeRodadaView() {
         if (result.length >= count) break;
         const cc = clubCount[a.clube_id] || 0;
         if (cc >= maxPerClub) continue;
-        if (posId === 4 || posId === 5) {
+        if ((posId === 4 || posId === 5) && !opts?.bypassGlobalClub) {
           const globalClubCount = (usedClubes[String(a.clube_id)] || 0);
           if (globalClubCount >= 1) continue;
         }
