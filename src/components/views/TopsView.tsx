@@ -984,32 +984,32 @@ function ListAtletas({ title, atletas, clubes, getConfronto, calcKeyScore, keysT
       const max = maxByKey[key] || 1;
       const r = raw / max;
       const range = r >= 0.8 ? '1 a 3 gols' : r >= 0.5 ? '1 a 2 gols' : '0 a 1 gol';
-      return `${pctFor(a)}% de chance de marcar (Estimativa: ${range})`;
+      return `${pctFor(a)}% de chance de marcar (Est: ${range})`;
     }
     if (pos === 2 || pos === 3) {
       const key = 'DS';
       const raw = calcKeyScore(a, key as any);
       const max = maxByKey[key] || 1;
       const r = raw / max;
-      const range = r >= 0.8 ? '5+ desarmes' : r >= 0.5 ? '3 a 5 desarmes' : '1 a 3 desarmes';
-      return `${pctFor(a)}% de chance de scout (Estimativa: ${range})`;
+      const range = r >= 0.8 ? '5+ desarmes' : r >= 0.5 ? '3-5 desarmes' : '1-3 desarmes';
+      return `${pctFor(a)}% de scout (Est: ${range})`;
     }
     if (pos === 1) {
       const key = 'DE';
       const raw = calcKeyScore(a, key as any);
       const max = maxByKey[key] || 1;
       const r = raw / max;
-      const range = r >= 0.8 ? '5+ defesas' : r >= 0.5 ? '3 a 5 defesas' : '1 a 3 defesas';
-      return `${pctFor(a)}% de chance de scout (Estimativa: ${range})`;
+      const range = r >= 0.8 ? '5+ defesas' : r >= 0.5 ? '3-5 defesas' : '1-3 defesas';
+      return `${pctFor(a)}% de scout (Est: ${range})`;
     }
     return '';
   };
   return (
     <div className="bg-card rounded-xl overflow-hidden shadow-lg">
-      <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground">
+      <div className="bg-primary p-3 text-center font-bold uppercase text-primary-foreground max-md:p-2 max-md:text-sm">
         {title}
       </div>
-      <div>
+      <div className="max-md:p-1.5 max-md:space-y-1.5">
         {(!atletas || atletas.length === 0) ? (
           <div className="p-6 text-center text-muted-foreground">Sem dados disponíveis</div>
         ) : (
@@ -1018,53 +1018,108 @@ function ListAtletas({ title, atletas, clubes, getConfronto, calcKeyScore, keysT
             const confronto = getConfronto(atleta);
             const acum = acumulados?.[atleta.atleta_id] || { G: 0, A: 0, FD: 0, FF: 0, FT: 0, DS: 0, SG: 0, DE: 0 };
             return (
-              <div key={atleta.atleta_id} className={cn('flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors', idx < atletas.length - 1 && 'border-b border-border')}>
-                <span className="text-muted-foreground text-sm font-bold w-6 text-center">{idx + 1}º</span>
-                {confronto && (
-                  <div className="flex items-center gap-1 w-[120px]">
-                    <ClubeEscudo clube={confronto.casa} size="xs" />
-                    <span className="text-[10px] font-bold text-muted-foreground">{confronto.casa?.abreviacao?.toUpperCase() || 'CAS'}</span>
-                    <span className="mx-1 text-[10px]">x</span>
-                    <ClubeEscudo clube={confronto.fora} size="xs" />
-                    <span className="text-[10px] font-bold text-muted-foreground">{confronto.fora?.abreviacao?.toUpperCase() || 'FOR'}</span>
+              <div key={atleta.atleta_id}>
+                {/* Desktop layout */}
+                <div className={cn('hidden md:flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors', idx < atletas.length - 1 && 'border-b border-border')}>
+                  <span className="text-muted-foreground text-sm font-bold w-6 text-center">{idx + 1}º</span>
+                  {confronto && (
+                    <div className="flex items-center gap-1 w-[120px]">
+                      <ClubeEscudo clube={confronto.casa} size="xs" />
+                      <span className="text-[10px] font-bold text-muted-foreground">{confronto.casa?.abreviacao?.toUpperCase() || 'CAS'}</span>
+                      <span className="mx-1 text-[10px]">x</span>
+                      <ClubeEscudo clube={confronto.fora} size="xs" />
+                      <span className="text-[10px] font-bold text-muted-foreground">{confronto.fora?.abreviacao?.toUpperCase() || 'FOR'}</span>
+                    </div>
+                  )}
+                  <img 
+                    src={atleta.foto?.replace('FORMATO', '80x80')} 
+                    alt={atleta.apelido}
+                    className="w-10 h-10 rounded-full object-cover bg-muted"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder.svg';
+                    }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-foreground text-base truncate">
+                        {medals && idx === 0 ? '🥇 ' : medals && idx === 1 ? '🥈 ' : medals && idx === 2 ? '🥉 ' : ''}
+                        {atleta.apelido}
+                        {atleta.posicao_id === 2 && (() => {
+                          const side = getLateralSideFromStore(atleta.atleta_id);
+                          return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                        })()}
+                      </p>
+                      {clube && <ClubeEscudo clube={clube} size="xs" />}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">{estimateFor(atleta)}</div>
+                    {statBuilder ? (
+                      <div className="text-[11px] text-muted-foreground">{statBuilder(atleta)}</div>
+                    ) : (
+                      <div className="text-[11px] text-muted-foreground">
+                        G: {acum.G} • ASS: {acum.A} • FD: {acum.FD} • FF: {acum.FF}
+                      </div>
+                    )}
                   </div>
-                )}
-                <img 
-                  src={atleta.foto?.replace('FORMATO', '80x80')} 
-                  alt={atleta.apelido}
-                  className="w-10 h-10 rounded-full object-cover bg-muted"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder.svg';
-                  }}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-foreground text-base truncate">
-                      {medals && idx === 0 ? '🥇 ' : medals && idx === 1 ? '🥈 ' : medals && idx === 2 ? '🥉 ' : ''}
+                  <div className="flex items-center gap-4 ml-2">
+                    {keysToDisplay.map((k) => {
+                      const raw = calcKeyScore(atleta, k);
+                      const pct = Math.round((raw / (maxByKey[k] || 1)) * 100);
+                      const lbl = k === 'DS' ? 'DES' : k === 'A' ? 'ASS' : k === 'DE' ? 'DEF' : k;
+                      return <ProbBadge key={k} label={lbl} value={pct} />;
+                    })}
+                  </div>
+                </div>
+
+                {/* Mobile mini-card layout */}
+                <div className={cn(
+                  'md:hidden rounded-lg p-2.5 flex items-center gap-2',
+                  idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
+                )}>
+                  {/* Left: rank + shield */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-muted-foreground text-xs font-black w-5 text-center">
+                      {medals && idx === 0 ? '🥇' : medals && idx === 1 ? '🥈' : medals && idx === 2 ? '🥉' : `${idx + 1}º`}
+                    </span>
+                    {clube && <ClubeEscudo clube={clube} size="xs" />}
+                  </div>
+
+                  {/* Center: name + price + estimate */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-foreground text-xs truncate leading-tight">
                       {atleta.apelido}
                       {atleta.posicao_id === 2 && (() => {
                         const side = getLateralSideFromStore(atleta.atleta_id);
-                        return side ? <span className="ml-1 text-[11px] text-muted-foreground">({side})</span> : null;
+                        return side ? <span className="ml-0.5 text-[9px] text-muted-foreground">({side})</span> : null;
                       })()}
                     </p>
-                    {clube && <ClubeEscudo clube={clube} size="xs" />}
+                    <p className="text-[9px] text-muted-foreground leading-tight truncate">
+                      C$ {Number(atleta.preco_num || 0).toFixed(2)}
+                      {confronto && (
+                        <span className="ml-1">
+                          • {confronto.casa?.abreviacao} x {confronto.fora?.abreviacao}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground leading-tight truncate">{estimateFor(atleta)}</p>
                   </div>
-                  <div className="text-[11px] text-muted-foreground">{estimateFor(atleta)}</div>
-                  {statBuilder ? (
-                    <div className="text-[11px] text-muted-foreground">{statBuilder(atleta)}</div>
-                  ) : (
-                    <div className="text-[11px] text-muted-foreground">
-                      G: {acum.G} • ASS: {acum.A} • FD: {acum.FD} • FF: {acum.FF}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-4 ml-2">
-                  {keysToDisplay.map((k) => {
-                    const raw = calcKeyScore(atleta, k);
-                    const pct = Math.round((raw / (maxByKey[k] || 1)) * 100);
-                    const lbl = k === 'DS' ? 'DES' : k === 'A' ? 'ASS' : k === 'DE' ? 'DEF' : k;
-                    return <ProbBadge key={k} label={lbl} value={pct} />;
-                  })}
+
+                  {/* Right: scout badges */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    {keysToDisplay.map((k) => {
+                      const raw = calcKeyScore(atleta, k);
+                      const pct = Math.min(Math.round((raw / (maxByKey[k] || 1)) * 100), 98);
+                      const lbl = k === 'DS' ? 'DES' : k === 'A' ? 'ASS' : k === 'DE' ? 'DEF' : k;
+                      const badgeColor = pct >= 80 ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                        : pct >= 61 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                        : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+                      return (
+                        <div key={k} className={cn('flex flex-col items-center rounded border px-1.5 py-0.5', badgeColor)}>
+                          <span className="text-[8px] font-bold leading-none">{lbl}</span>
+                          <span className="text-[10px] font-black leading-tight">{pct}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             );
