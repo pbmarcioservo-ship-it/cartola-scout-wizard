@@ -168,6 +168,7 @@ export function TimeRodadaView() {
       forceClub?: number;
       maxPerClub?: number;
       useFullPool?: boolean;
+      bypassGlobalClub?: boolean;
     }) => {
       const maxPerClub = opts?.maxPerClub ?? (posId === 4 || posId === 5 ? 1 : 3);
       const sourcePool = opts?.useFullPool ? allAtletas : pool;
@@ -218,7 +219,7 @@ export function TimeRodadaView() {
         if (result.length >= count) break;
         const cc = clubCount[a.clube_id] || 0;
         if (cc >= maxPerClub) continue;
-        if (posId === 4 || posId === 5) {
+        if ((posId === 4 || posId === 5) && !opts?.bypassGlobalClub) {
           const globalClubCount = (usedClubes[String(a.clube_id)] || 0);
           if (globalClubCount >= 1) continue;
         }
@@ -235,10 +236,12 @@ export function TimeRodadaView() {
     const fillGap = (posId: number, needed: number, existing: CartolaAtleta[]): CartolaAtleta[] => {
       if (existing.length >= needed) return existing;
       const missing = needed - existing.length;
-      let extras = getForPos(posId, missing, { allowSameClubDefense: true, maxPerClub: 99 });
+      // Step 1: relax club + defense constraints
+      let extras = getForPos(posId, missing, { allowSameClubDefense: true, maxPerClub: 99, bypassGlobalClub: true });
       if (extras.length < missing) {
+        // Step 2: also use full pool (including non-eligible statuses 2/7)
         const stillNeeded = missing - extras.length;
-        const fallback = getForPos(posId, stillNeeded, { allowSameClubDefense: true, maxPerClub: 99, useFullPool: true });
+        const fallback = getForPos(posId, stillNeeded, { allowSameClubDefense: true, maxPerClub: 99, bypassGlobalClub: true, useFullPool: true });
         extras = [...extras, ...fallback];
       }
       return [...existing, ...extras];
