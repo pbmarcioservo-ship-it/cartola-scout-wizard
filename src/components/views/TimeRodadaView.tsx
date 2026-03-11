@@ -27,6 +27,7 @@ interface Lineup {
   meis: CartolaAtleta[];
   atacs: CartolaAtleta[];
   tecnico: CartolaAtleta | null;
+  capitaoId: number | null;
 }
 
 const POSICAO_ID_MAP: Record<string, number> = {
