@@ -168,8 +168,9 @@ export function TimeRodadaView() {
         if (used.has(a.atleta_id)) return false;
         if (opts?.maxPrice && a.preco_num > opts.maxPrice) return false;
         if (opts?.forceClub && a.clube_id !== opts.forceClub) return false;
-        if ((posId === 4 || posId === 5 || posId === 2 || posId === 3) && !opts?.allowSameClubDefense) {
-          if (defenseOpponentId && a.clube_id === defenseOpponentId) return false;
+        // Anti-conflict: block mid/attack players whose club faces our defense
+        if ((posId === 4 || posId === 5) && !opts?.allowSameClubDefense) {
+          if (blockedOpponentIds.has(a.clube_id)) return false;
         }
         return true;
       });
