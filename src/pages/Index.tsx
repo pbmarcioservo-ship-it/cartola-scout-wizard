@@ -14,11 +14,13 @@ import { TopArtilheirosView } from '@/components/views/TopArtilheirosView';
 import { AcompanhamentoView } from '@/components/views/AcompanhamentoView';
 import { AgenteTecnicoView } from '@/components/views/AgenteTecnicoView';
 import { useRodada } from '@/hooks/useCartolaData';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Calendar, Clock, Users } from 'lucide-react';
 
 export default function Index() {
   const [activeView, setActiveView] = useState<ViewType>('cruzamento');
   const { data: rodadaData } = useRodada();
+  const isMobile = useIsMobile();
 
   const renderView = () => {
     switch (activeView) {
@@ -48,7 +50,7 @@ export default function Index() {
     <div className="flex h-screen overflow-hidden">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {rodadaData && (
           <header className="bg-card/80 backdrop-blur-sm border-b border-border px-5 py-2.5 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-5">
@@ -56,10 +58,12 @@ export default function Index() {
                 <Calendar className="w-4 h-4 text-primary/70" />
                 <span className="font-bold text-sm">Rodada {rodadaData.rodada_atual}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Fecha: {formatFechamento()}</span>
-              </div>
+              {!isMobile && (
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Fecha: {formatFechamento()}</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold ${
@@ -70,18 +74,27 @@ export default function Index() {
                 <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
                 {rodadaData.status_mercado === 1 ? 'Aberto' : 'Fechado'}
               </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                <Users className="w-3.5 h-3.5" />
-                <span>{rodadaData.times_escalados?.toLocaleString()}</span>
-              </div>
+              {!isMobile && (
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>{rodadaData.times_escalados?.toLocaleString()}</span>
+                </div>
+              )}
             </div>
           </header>
         )}
 
-        <main className="flex-1 overflow-y-auto p-5 bg-background">
+        <main className={cn(
+          'flex-1 overflow-y-auto p-5 bg-background',
+          isMobile && 'pb-20'
+        )}>
           {renderView()}
         </main>
       </div>
     </div>
   );
+}
+
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(' ');
 }
