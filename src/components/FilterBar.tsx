@@ -72,7 +72,7 @@ export function FilterBar({
           placeholder="Buscar Atleta..."
           value={search}
           onChange={(e) => onSearchChange?.(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70 max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         />
       )}
       
