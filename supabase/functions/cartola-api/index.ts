@@ -85,7 +85,23 @@ serve(async (req) => {
 
     const rawText = await response.text();
     if (!rawText || rawText.trim().length === 0) {
-      console.error(`Empty response from Cartola API for ${endpoint}`);
+      console.warn(`Empty response from Cartola API for ${endpoint}, returning fallback`);
+      // Return empty but valid fallback so the frontend doesn't break
+      const fallbacks: Record<string, unknown> = {
+        'pontuados': { atletas: {}, clubes: {}, rodada: 0 },
+        'destaques': { atletas_populares: [], capitaes: [], rodada_atual: 0 },
+        'mercado': { atletas: [], clubes: {}, posicoes: {}, status_mercado: 1, rodada_atual: 0 },
+        'partidas': { partidas: [], clubes: {} },
+        'clubes': {},
+        'rodada': null,
+      };
+      const fallback = fallbacks[endpoint];
+      if (fallback !== undefined) {
+        return new Response(
+          JSON.stringify(fallback),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       return new Response(
         JSON.stringify({ error: `Resposta vazia da API do Cartola para ${endpoint}` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
