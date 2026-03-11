@@ -82,7 +82,7 @@ function MatchRow({
         <span className={`font-black text-xs md:text-sm min-w-[20px] text-left ${rightColor === 'success' ? 'text-success' : 'text-destructive'}`}>
           {Math.round(rightVal)}
         </span>
-        <div className="flex-1 h-5 md:h-4 bg-muted rounded-full overflow-hidden">
+        <div className="flex-1 h-5 md:h-5 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full ${rightColor === 'success' ? 'bg-success' : 'bg-destructive'}`}
             style={{ width: `${Math.min((rightVal / maxVal) * 100, 100)}%` }}
