@@ -17,7 +17,7 @@ function getLateralSideFromStore(atletaId: number): 'LD' | 'LE' | null {
   } catch { return null; }
 }
 
-type Estrategia = 'tiro-curto' | 'bom-e-barato' | 'liga-classica';
+type Estrategia = 'tiro-curto' | 'bom-e-barato' | 'liga-classica' | 'valorizacao';
 type StatusFilter = 'provavel' | 'duvida';
 
 interface Lineup {
