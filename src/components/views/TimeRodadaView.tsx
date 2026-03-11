@@ -146,8 +146,7 @@ export function TimeRodadaView() {
     const used = new Set<number>();
     const usedClubes: Record<string, number> = {};
     let defenseTeamId: number | null = null;
-    // Track ALL opponent club IDs from defensive players (GK, LAT, ZAG)
-    const blockedOpponentIds = new Set<number>();
+    let defenseOpponentId: number | null = null;
 
     const pool = [...eligibleAtletas];
     // Fallback pool: ALL athletes (including Dúvida) for filling empty slots
@@ -168,9 +167,8 @@ export function TimeRodadaView() {
         if (used.has(a.atleta_id)) return false;
         if (opts?.maxPrice && a.preco_num > opts.maxPrice) return false;
         if (opts?.forceClub && a.clube_id !== opts.forceClub) return false;
-        // Anti-conflict: block mid/attack players whose club faces our defense
-        if ((posId === 4 || posId === 5) && !opts?.allowSameClubDefense) {
-          if (blockedOpponentIds.has(a.clube_id)) return false;
+        if ((posId === 4 || posId === 5 || posId === 2 || posId === 3) && !opts?.allowSameClubDefense) {
+          if (defenseOpponentId && a.clube_id === defenseOpponentId) return false;
         }
         return true;
       });
@@ -266,22 +264,14 @@ export function TimeRodadaView() {
       return scored[0]?.a.atleta_id || null;
     };
 
-    // Helper: collect all opponent club IDs from defensive players
-    const collectBlockedOpponents = (defenders: (CartolaAtleta | null)[]) => {
-      blockedOpponentIds.clear();
-      for (const d of defenders) {
-        if (!d) continue;
-        const opp = getOpponent(d.clube_id);
-        if (opp) blockedOpponentIds.add(opp.opponentId);
-      }
-    };
-
     let raw: Omit<Lineup, 'capitaoId'>;
 
     if (strat === 'tiro-curto') {
       const sgTeam = topSGTeams[0];
       if (sgTeam) {
         defenseTeamId = sgTeam.teamId;
+        const opp = getOpponent(sgTeam.teamId);
+        defenseOpponentId = opp?.opponentId || null;
       }
       const forceClub = defenseTeamId || undefined;
       const gkArr = getForPos(1, 1, { forceClub, allowSameClubDefense: true, maxPerClub: 1 });
@@ -292,19 +282,15 @@ export function TimeRodadaView() {
       if (lats.length < 2) lats.push(...getForPos(2, 2 - lats.length, {}));
       let zags = getForPos(3, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
       if (zags.length < 2) zags.push(...getForPos(3, 2 - zags.length, {}));
-
-      // Collect ALL defensive opponents BEFORE picking mid/attack
-      gk = fillSingle(1, gk);
-      lats = fillGap(2, 2, lats);
-      zags = fillGap(3, 2, zags);
-      collectBlockedOpponents([gk, ...lats, ...zags]);
-
       let tecnico = getForPos(6, 1, { forceClub, allowSameClubDefense: true })[0]
         || getForPos(6, 1, {})[0] || null;
       let meis = getForPos(4, 3, {});
       let atacs = getForPos(5, 3, {});
 
       // Guarantee all slots filled
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
@@ -327,20 +313,17 @@ export function TimeRodadaView() {
       const maxPrice = 10;
 
       let gk = getForPos(1, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
+      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
       let lats = getForPos(2, 2, { maxPrice, scoreFn: costBenefitScore, maxPerClub: 2 });
-
-      // Fill defense first, then collect blocked opponents
-      gk = fillSingle(1, gk);
-      zags = fillGap(3, 2, zags);
-      lats = fillGap(2, 2, lats);
-      collectBlockedOpponents([gk, ...zags, ...lats]);
-
       let meis = getForPos(4, 3, { maxPrice, scoreFn: costBenefitScore });
       let atacs = getForPos(5, 3, { maxPrice, scoreFn: costBenefitScore });
       let tecnico = getForPos(6, 1, { maxPrice, scoreFn: costBenefitScore })[0] || null;
 
-      // Guarantee remaining slots filled (relax price if needed)
+      // Guarantee all slots filled (relax price if needed)
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
@@ -364,20 +347,17 @@ export function TimeRodadaView() {
       };
 
       let gk = getForPos(1, 1, { scoreFn: volumeScore })[0] || null;
+      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { scoreFn: volumeScore, maxPerClub: 2 });
       let lats = getForPos(2, 2, { scoreFn: volumeScore, maxPerClub: 2 });
-
-      // Fill defense first, then collect blocked opponents
-      gk = fillSingle(1, gk);
-      zags = fillGap(3, 2, zags);
-      lats = fillGap(2, 2, lats);
-      collectBlockedOpponents([gk, ...zags, ...lats]);
-
       let meis = getForPos(4, 3, { scoreFn: volumeScore });
       let atacs = getForPos(5, 3, { scoreFn: volumeScore });
       let tecnico = getForPos(6, 1, { scoreFn: volumeScore })[0] || null;
 
-      // Guarantee remaining slots filled
+      // Guarantee all slots filled
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
