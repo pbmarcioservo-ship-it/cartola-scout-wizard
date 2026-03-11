@@ -239,32 +239,32 @@ function AtletaRow({ atleta, clube, onAtletaClick }: {
 
   return (
     <div
-      className="flex items-center gap-2 py-1.5 px-2 border-b border-border/50 last:border-b-0 cursor-pointer transition-all duration-200 hover:bg-muted/30"
+      className="flex items-center gap-1.5 py-0.5 px-1.5 border-b border-border/30 last:border-b-0 cursor-pointer transition-all duration-200 hover:bg-muted/30"
       onClick={() => onAtletaClick(atleta.atleta_id)}
     >
       {/* Substitution indicator */}
-      <div className="w-4 flex-shrink-0">
-        {isSubstitute === 'in' && <ArrowUpCircle className="w-3.5 h-3.5 text-success" />}
-        {isSubstitute === 'out' && <ArrowDownCircle className="w-3.5 h-3.5 text-destructive" />}
+      <div className="w-3 flex-shrink-0">
+        {isSubstitute === 'in' && <ArrowUpCircle className="w-3 h-3 text-success" />}
+        {isSubstitute === 'out' && <ArrowDownCircle className="w-3 h-3 text-destructive" />}
       </div>
 
       {/* Player photo */}
       <img
         src={atleta.foto?.replace('FORMATO', '50x50')}
         alt={atleta.apelido}
-        className="w-8 h-8 rounded-full object-cover ring-1 ring-border flex-shrink-0"
+        className="w-6 h-6 rounded-full object-cover ring-1 ring-border flex-shrink-0"
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
 
       {/* Player info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <span className="text-xs font-bold text-foreground truncate">{atleta.apelido}</span>
+        <div className="flex items-center gap-0.5">
+          <span className="text-[11px] font-bold text-foreground truncate">{atleta.apelido}</span>
           {clube && <ClubeEscudo clube={clube} size="xs" />}
-          <span className="text-[9px] text-muted-foreground font-bold ml-1">{posInfo?.abreviacao}</span>
+          <span className="text-[8px] text-muted-foreground font-bold ml-0.5">{posInfo?.abreviacao}</span>
         </div>
         {/* Scout mini-cards */}
-        <div className="flex flex-wrap gap-0.5 mt-0.5">
+        <div className="flex flex-wrap gap-0.5">
           {scoutEntries.map(([k, v]) => (
             <ScoutMiniCard key={k} scout={k} value={v as number} />
           ))}
@@ -273,7 +273,7 @@ function AtletaRow({ atleta, clube, onAtletaClick }: {
 
       {/* Score */}
       <div className={cn(
-        'px-2 py-1 rounded-md text-sm font-black min-w-[52px] text-center flex-shrink-0',
+        'px-1.5 py-0.5 rounded text-xs font-black min-w-[44px] text-center flex-shrink-0',
         pontuacao > 0 ? 'bg-success/15 text-success' : pontuacao < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
       )}>
         {pontuacao.toFixed(1)}
@@ -311,27 +311,22 @@ function MatchCard({
 
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-      {/* Header: Scoreboard */}
-      <button onClick={() => setOpen(o => !o)} className="w-full px-4 py-3 transition-all duration-200 hover:bg-muted/20">
+      {/* Header: Scoreboard - Sticky */}
+      <button onClick={() => setOpen(o => !o)} className="w-full px-3 py-2 transition-all duration-200 hover:bg-muted/20 sticky top-0 z-10 bg-card">
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          {/* Home team */}
           <div className="flex items-center justify-end gap-2">
             {clubeCasa && <ClubeEscudo clube={clubeCasa} size="sm" />}
             <span className="text-sm font-bold text-foreground">{clubeCasa?.nome || clubeCasa?.abreviacao}</span>
           </div>
-
-          {/* Score / Time */}
           <div className="text-center min-w-[100px]">
-            <div className="text-2xl font-extrabold text-primary">{placar}</div>
+            <div className="text-xl font-extrabold text-primary">{placar}</div>
             {horario && (
-              <div className="flex items-center justify-center gap-1 mt-1">
+              <div className="flex items-center justify-center gap-1 mt-0.5">
                 <Clock className="w-3 h-3 text-primary/60" />
                 <span className="text-[10px] font-bold text-primary/60">{horario}</span>
               </div>
             )}
           </div>
-
-          {/* Away team */}
           <div className="flex items-center justify-start gap-2">
             <span className="text-sm font-bold text-foreground">{clubeVisitante?.nome || clubeVisitante?.abreviacao}</span>
             {clubeVisitante && <ClubeEscudo clube={clubeVisitante} size="sm" />}
@@ -339,7 +334,7 @@ function MatchCard({
         </div>
       </button>
 
-      {/* Expanded: Athletes list */}
+      {/* Expanded: Athletes list - NO internal scroll */}
       {open && (
         <div className="border-t border-border">
           {!hasAtletas ? (
@@ -350,59 +345,42 @@ function MatchCard({
             <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
               {/* Casa */}
               <div>
-                <div className="flex items-center gap-2 px-3 py-2 bg-primary/10">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10">
                   {clubeCasa && <ClubeEscudo clube={clubeCasa} size="xs" />}
-                  <span className="text-xs font-black text-primary uppercase">{clubeCasa?.abreviacao}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{atletasCasa.length} jogadores</span>
+                  <span className="text-[11px] font-black text-primary uppercase">{clubeCasa?.abreviacao}</span>
+                  <span className="text-[9px] text-muted-foreground ml-auto">{atletasCasa.length} jog.</span>
                 </div>
-                <div className="max-h-[350px] overflow-y-auto">
+                <div>
                   {atletasCasa.map((a: any) => (
-                    <AtletaRow
-                      key={a.atleta_id}
-                      atleta={a}
-                      clube={clubes[String(a.clube_id)]}
-                      onAtletaClick={onAtletaClick}
-                    />
+                    <AtletaRow key={a.atleta_id} atleta={a} clube={clubes[String(a.clube_id)]} onAtletaClick={onAtletaClick} />
                   ))}
                 </div>
-                {/* Team Total */}
-                <div className="flex items-center justify-between px-3 py-2 bg-primary/5 border-t border-border">
-                  <span className="text-xs font-black text-primary uppercase">Pontuação Total</span>
+                <div className="flex items-center justify-between px-2 py-1 bg-primary/5 border-t border-border">
+                  <span className="text-[10px] font-black text-primary uppercase">Total</span>
                   <span className={cn(
-                    'text-sm font-black px-3 py-1 rounded-md',
+                    'text-xs font-black px-2 py-0.5 rounded',
                     totalCasa > 0 ? 'bg-success/15 text-success' : totalCasa < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
-                  )}>
-                    {totalCasa.toFixed(1)} pts
-                  </span>
+                  )}>{totalCasa.toFixed(1)} pts</span>
                 </div>
               </div>
-
               {/* Visitante */}
               <div>
-                <div className="flex items-center gap-2 px-3 py-2 bg-primary/10">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10">
                   {clubeVisitante && <ClubeEscudo clube={clubeVisitante} size="xs" />}
-                  <span className="text-xs font-black text-primary uppercase">{clubeVisitante?.abreviacao}</span>
-                  <span className="text-[10px] text-muted-foreground ml-auto">{atletasVisitante.length} jogadores</span>
+                  <span className="text-[11px] font-black text-primary uppercase">{clubeVisitante?.abreviacao}</span>
+                  <span className="text-[9px] text-muted-foreground ml-auto">{atletasVisitante.length} jog.</span>
                 </div>
-                <div className="max-h-[350px] overflow-y-auto">
+                <div>
                   {atletasVisitante.map((a: any) => (
-                    <AtletaRow
-                      key={a.atleta_id}
-                      atleta={a}
-                      clube={clubes[String(a.clube_id)]}
-                      onAtletaClick={onAtletaClick}
-                    />
+                    <AtletaRow key={a.atleta_id} atleta={a} clube={clubes[String(a.clube_id)]} onAtletaClick={onAtletaClick} />
                   ))}
                 </div>
-                {/* Team Total */}
-                <div className="flex items-center justify-between px-3 py-2 bg-primary/5 border-t border-border">
-                  <span className="text-xs font-black text-primary uppercase">Pontuação Total</span>
+                <div className="flex items-center justify-between px-2 py-1 bg-primary/5 border-t border-border">
+                  <span className="text-[10px] font-black text-primary uppercase">Total</span>
                   <span className={cn(
-                    'text-sm font-black px-3 py-1 rounded-md',
+                    'text-xs font-black px-2 py-0.5 rounded',
                     totalVisitante > 0 ? 'bg-success/15 text-success' : totalVisitante < 0 ? 'bg-destructive/15 text-destructive' : 'bg-muted text-muted-foreground'
-                  )}>
-                    {totalVisitante.toFixed(1)} pts
-                  </span>
+                  )}>{totalVisitante.toFixed(1)} pts</span>
                 </div>
               </div>
             </div>
