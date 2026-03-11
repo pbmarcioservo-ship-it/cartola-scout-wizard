@@ -384,85 +384,64 @@ export function TimeRodadaView() {
 
   return (
     <div className="animate-fade-in w-full flex flex-col items-center">
-      {/* ── Controls Bar ── */}
-      <div className="bg-primary text-primary-foreground px-4 py-3 mb-4 w-full max-w-[720px] rounded-lg">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold">Estratégia</span>
-            <select
-              value={estrategia}
-              onChange={(e) => setEstrategia(e.target.value as Estrategia)}
-              className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-xs font-bold cursor-pointer transition-all duration-300 hover:scale-105 hover:bg-[hsl(259,70%,60%)]"
-            >
-              <option value="tiro-curto">🛡️ Tiro Curto</option>
-              <option value="bom-e-barato">💰 Bom e Barato</option>
-              <option value="liga-classica">🏆 Liga Clássica</option>
-            </select>
-          </div>
-          <div className="font-bold uppercase text-center text-sm">
-            {estrategiaLabel[estrategia]}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setSeed(s => s + 1)}
-              className="bg-primary-foreground text-primary font-black px-3 py-1 rounded flex items-center gap-1.5 transition-all duration-300 hover:scale-105 hover:bg-[hsl(259,70%,80%)]"
-              title="Gerar novo time com a mesma estratégia"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Atualizar
-            </button>
-          </div>
-        </div>
-
-        {/* Points / Cost Panel */}
-        <div className="mt-3 flex flex-col items-center justify-center">
-          <div className="text-sm font-black uppercase">
-            {mercadoAberto ? 'CUSTO TOTAL DO TIME' : 'PONTOS TOTAIS / PONTUAÇÃO'}
-          </div>
-          <div
-            className="mt-1 min-w-[160px] h-11 rounded-md border-2 border-primary-foreground flex items-center justify-center transition-all duration-300 hover:scale-105 hover:border-[hsl(259,70%,80%)]"
+      {/* ── Compact Controls Bar ── */}
+      <div className="bg-primary text-primary-foreground px-3 py-2 md:px-4 md:py-2.5 mb-2 w-full max-w-[720px] rounded-lg">
+        {/* Row 1: Strategy select + Cost/Points + Refresh */}
+        <div className="flex items-center justify-between gap-2">
+          <select
+            value={estrategia}
+            onChange={(e) => setEstrategia(e.target.value as Estrategia)}
+            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0"
           >
-            <span className="text-lg font-black">
-              {mercadoAberto
-                ? `C$ ${totalCost.toFixed(2)}`
-                : `${livePontos.toFixed(2)} pts`
-              }
+            <option value="tiro-curto">🛡️ Tiro Curto</option>
+            <option value="bom-e-barato">💰 Bom e Barato</option>
+            <option value="liga-classica">🏆 Liga Clássica</option>
+          </select>
+
+          <div className="flex items-center gap-1.5 border border-primary-foreground/40 rounded px-2.5 py-1">
+            <span className="text-[9px] md:text-[10px] font-bold uppercase opacity-80">
+              {mercadoAberto ? 'Custo' : 'Pts'}
+            </span>
+            <span className="text-sm md:text-base font-black">
+              {mercadoAberto ? `C$ ${totalCost.toFixed(2)}` : `${livePontos.toFixed(2)}`}
             </span>
           </div>
-        </div>
 
-        {/* Strategy description */}
-        <div className="mt-2 text-[10px] text-primary-foreground/70 text-center">
-          {estrategia === 'tiro-curto' && 'Defesa completa do time com maior probabilidade de SG. Meio/Ataque baseados em scouts de finalização.'}
-          {estrategia === 'bom-e-barato' && 'Nenhum jogador acima de C$ 10. Foco em custo-benefício com alta chance de pontuar.'}
-          {estrategia === 'liga-classica' && 'Unanimidades da rodada. Regularidade e volume de scouts acumulados.'}
-        </div>
-      </div>
-
-      {/* ── Round history selector ── */}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-xs text-muted-foreground font-bold">Rodada:</span>
-        <button
-          onClick={() => setViewRodada(null)}
-          className={cn(
-            'px-2 py-1 rounded text-xs font-bold transition-all duration-300 hover:scale-105',
-            viewRodada === null ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-[hsl(259,70%,80%)]'
-          )}
-        >
-          Atual ({rodadaAtual})
-        </button>
-        {rodadaAtual && Array.from({ length: Math.min(rodadaAtual - 1, 10) }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0).map(r => (
           <button
-            key={r}
-            onClick={() => setViewRodada(r)}
+            onClick={() => setSeed(s => s + 1)}
+            className="bg-primary-foreground text-primary font-black px-2.5 py-1 rounded flex items-center gap-1 text-[11px] md:text-xs shrink-0"
+            title="Gerar novo time com a mesma estratégia"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Atualizar</span>
+          </button>
+        </div>
+
+        {/* Row 2: Rodada selector inline */}
+        <div className="flex items-center gap-1 mt-1.5 overflow-x-auto scrollbar-none">
+          <span className="text-[9px] md:text-[10px] font-bold opacity-70 shrink-0">Rodada:</span>
+          <button
+            onClick={() => setViewRodada(null)}
             className={cn(
-              'px-2 py-1 rounded text-xs font-bold transition-all duration-300 hover:scale-105',
-              viewRodada === r ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground hover:bg-[hsl(259,70%,80%)]'
+              'px-1.5 py-0.5 rounded text-[10px] md:text-xs font-bold shrink-0',
+              viewRodada === null ? 'bg-primary-foreground text-primary' : 'bg-primary-foreground/20 text-primary-foreground'
             )}
           >
-            R{r}
+            Atual
           </button>
-        ))}
+          {rodadaAtual && Array.from({ length: Math.min(rodadaAtual - 1, 10) }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0).map(r => (
+            <button
+              key={r}
+              onClick={() => setViewRodada(r)}
+              className={cn(
+                'px-1.5 py-0.5 rounded text-[10px] md:text-xs font-bold shrink-0',
+                viewRodada === r ? 'bg-primary-foreground text-primary' : 'bg-primary-foreground/20 text-primary-foreground'
+              )}
+            >
+              R{r}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ── Football Pitch ── */}
