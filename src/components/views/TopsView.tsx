@@ -680,35 +680,24 @@ export function TopsView({ initialTab, mode }: { initialTab?: string; mode?: 'fu
                     : pct >= 61 ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                     : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
                   return (
-                    <div key={t.timeId}>
-                      {/* Desktop layout */}
-                      <div className={cn('hidden md:flex items-center gap-3 px-4 py-3', idx < topSGTimes.length - 1 && 'border-b border-border')}>
-                        <span className="text-muted-foreground font-bold w-6 text-center text-sm">{idx + 1}º</span>
-                        <ClubeEscudo clube={clube} size="sm" showName />
-                        <div className="ml-auto text-xs font-bold">
-                          <ProbBadge label="SG" value={pct} />
-                        </div>
+                    <div key={t.timeId} className={cn(
+                      'rounded-lg p-2.5 md:p-3 flex items-center gap-2 md:gap-3',
+                      idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
+                    )}>
+                      <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                        <span className="text-muted-foreground text-xs md:text-sm font-black w-5 md:w-6 text-center">
+                          {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`}
+                        </span>
+                        <ClubeEscudo clube={clube} size="sm" />
                       </div>
-                      {/* Mobile mini-card layout */}
-                      <div className={cn(
-                        'md:hidden rounded-lg p-2.5 flex items-center gap-2',
-                        idx % 2 === 0 ? 'bg-muted/20' : 'bg-muted/40'
-                      )}>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-muted-foreground text-xs font-black w-5 text-center">
-                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`}
-                          </span>
-                          <ClubeEscudo clube={clube} size="xs" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-foreground text-xs truncate leading-tight">{clube.nome}</p>
-                          <p className="text-[9px] text-muted-foreground leading-tight">{clube.abreviacao}</p>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <div className={cn('flex flex-col items-center rounded border px-1.5 py-0.5', badgeColor)}>
-                            <span className="text-[8px] font-bold leading-none">SG</span>
-                            <span className="text-[10px] font-black leading-tight">{pct}%</span>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-foreground text-xs md:text-sm truncate leading-tight">{clube.nome}</p>
+                        <p className="text-[9px] md:text-xs text-muted-foreground leading-tight">{clube.abreviacao}</p>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <div className={cn('flex flex-col items-center rounded border px-1.5 md:px-2 py-0.5 md:py-1', badgeColor)}>
+                          <span className="text-[8px] md:text-[10px] font-bold leading-none">SG</span>
+                          <span className="text-[10px] md:text-xs font-black leading-tight">{pct}%</span>
                         </div>
                       </div>
                     </div>
