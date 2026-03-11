@@ -525,6 +525,7 @@ export function TimeRodadaView() {
                   clube={a ? clubes[String(a.clube_id)] : undefined}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
+                  isCaptain={!!a && lineup?.capitaoId === a.atleta_id}
                   onClick={() => a && setSelectedAtleta(a)}
                 />
               ))}
@@ -538,6 +539,7 @@ export function TimeRodadaView() {
                   clube={a ? clubes[String(a.clube_id)] : undefined}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
+                  isCaptain={!!a && lineup?.capitaoId === a.atleta_id}
                   onClick={() => a && setSelectedAtleta(a)}
                 />
               ))}
@@ -556,6 +558,7 @@ export function TimeRodadaView() {
                   clube={a ? clubes[String(a.clube_id)] : undefined}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
+                  isCaptain={!!a && lineup?.capitaoId === a.atleta_id}
                   onClick={() => a && setSelectedAtleta(a)}
                 />
               ))}
@@ -567,6 +570,7 @@ export function TimeRodadaView() {
                 clube={lineup?.gk ? clubes[String(lineup.gk.clube_id)] : undefined}
                 showPrice={mercadoAberto}
                 pontuacao={!mercadoAberto && lineup?.gk ? pontuadosData?.atletas?.[String(lineup.gk.atleta_id)]?.pontuacao : undefined}
+                isCaptain={!!lineup?.gk && lineup?.capitaoId === lineup.gk.atleta_id}
                 onClick={() => lineup?.gk && setSelectedAtleta(lineup.gk)}
               />
             </div>
