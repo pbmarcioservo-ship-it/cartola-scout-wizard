@@ -146,7 +146,8 @@ export function TimeRodadaView() {
     const used = new Set<number>();
     const usedClubes: Record<string, number> = {};
     let defenseTeamId: number | null = null;
-    let defenseOpponentId: number | null = null;
+    // Track ALL opponent club IDs from defensive players (GK, LAT, ZAG)
+    const blockedOpponentIds = new Set<number>();
 
     const pool = [...eligibleAtletas];
     // Fallback pool: ALL athletes (including Dúvida) for filling empty slots
