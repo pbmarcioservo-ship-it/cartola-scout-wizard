@@ -594,12 +594,14 @@ function PlayerCardPitch({
   clube,
   showPrice,
   pontuacao,
+  isCaptain,
   onClick,
 }: {
   atleta: CartolaAtleta | null;
   clube?: CartolaClube;
   showPrice?: boolean;
   pontuacao?: number;
+  isCaptain?: boolean;
   onClick?: () => void;
 }) {
   if (!atleta) return <div className="w-10 h-10 md:w-12 md:h-12" />;
@@ -608,10 +610,18 @@ function PlayerCardPitch({
       className="relative flex flex-col items-center cursor-pointer transition-transform duration-300 hover:scale-110"
       onClick={onClick}
     >
+      {isCaptain && (
+        <div className="absolute -top-1 -right-1 md:-top-1.5 md:-right-1.5 z-10 w-4 h-4 md:w-5 md:h-5 bg-yellow-400 rounded-full flex items-center justify-center ring-1 ring-yellow-600 shadow">
+          <span className="text-[8px] md:text-[10px] font-black text-yellow-900">C</span>
+        </div>
+      )}
       <img
         src={atleta.foto?.replace('FORMATO', '80x80')}
         alt={atleta.apelido}
-        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-lg ring-1 ring-white"
+        className={cn(
+          "w-10 h-10 md:w-12 md:h-12 rounded-full object-cover shadow-lg ring-1 ring-white",
+          isCaptain && "ring-2 ring-yellow-400"
+        )}
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
       <div className="mt-0.5 px-1 md:px-1.5 py-px bg-white/85 rounded">
@@ -627,7 +637,7 @@ function PlayerCardPitch({
       )}
       {!showPrice && pontuacao !== undefined && (
         <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
-          <span className="text-[7px] md:text-[9px] font-black">{pontuacao.toFixed(1)} pts</span>
+          <span className="text-[7px] md:text-[9px] font-black">{(isCaptain ? pontuacao * 1.5 : pontuacao).toFixed(1)} pts</span>
         </div>
       )}
     </div>
