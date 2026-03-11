@@ -20,10 +20,33 @@ export default function Auth() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
-      if (error) throw error;
+      // Detect custom domain to bypass Lovable auth-bridge
+      const isCustomDomain =
+        !window.location.hostname.includes('lovable.app') &&
+        !window.location.hostname.includes('lovableproject.com') &&
+        window.location.hostname !== 'localhost';
+
+      if (isCustomDomain) {
+        // On custom domains, use Supabase directly with skipBrowserRedirect
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+            skipBrowserRedirect: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } else {
+        // On Lovable domains, use managed auth flow
+        const { error } = await lovable.auth.signInWithOAuth('google', {
+          redirect_uri: window.location.origin,
+        });
+        if (error) throw error;
+      }
     } catch (err: any) {
       toast({ title: 'Erro ao entrar com Google', description: err.message || String(err), variant: 'destructive' });
     }
