@@ -244,32 +244,95 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-card">
-        <ScrollArea className="h-[85vh]">
-          <div className="p-6">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-card max-md:max-w-[100vw] max-md:max-h-[95vh] max-md:rounded-none">
+        <ScrollArea className="h-[85vh] max-md:h-[92vh]">
+          <div className="p-6 max-md:p-3">
             <DialogHeader>
               <DialogTitle className="sr-only">{atleta.apelido}</DialogTitle>
             </DialogHeader>
 
             {/* Próximo Confronto */}
             {upcomingMatch && (
-              <div className="bg-primary/10 border-2 border-primary rounded-xl p-4 mb-6">
-                <p className="text-xs font-bold text-primary uppercase text-center mb-2">
-                  <Swords className="w-4 h-4 inline mr-1" />
+              <div className="bg-primary/10 border-2 border-primary rounded-xl p-4 mb-6 max-md:p-2.5 max-md:mb-3 max-md:rounded-lg">
+                <p className="text-xs font-bold text-primary uppercase text-center mb-2 max-md:text-[10px] max-md:mb-1">
+                  <Swords className="w-4 h-4 inline mr-1 max-md:w-3 max-md:h-3" />
                   Próximo Confronto — Rodada {rodadaData?.rodada_atual}
                 </p>
                 <MatchDisplay
                   partida={upcomingMatch}
                   clubes={partidasAtual?.clubes || clubes}
                 />
-                <p className="text-center text-xs text-muted-foreground mt-1">
+                <p className="text-center text-xs text-muted-foreground mt-1 max-md:text-[10px]">
                   {isPlayingAway ? 'Jogando FORA' : 'Jogando em CASA'}
                 </p>
               </div>
             )}
 
-            {/* Player Header */}
-            <div className="flex gap-6 items-start mb-6">
+            {/* Player Header - Mobile */}
+            <div className="hidden max-md:block mb-3">
+              <div className="flex items-center gap-3 mb-3">
+                <img
+                  src={atleta.foto?.replace('FORMATO', '220x220')}
+                  alt={atleta.apelido}
+                  className="w-16 h-16 rounded-lg object-cover bg-muted border-2 border-primary shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    {clube && <ClubeEscudo clube={clube} size="sm" />}
+                    <h2 className="text-lg font-black text-foreground truncate">
+                      {atleta.apelido}
+                      {atleta.posicao_id === 2 && (() => {
+                        const side = getLateralSideFromStore(atleta.atleta_id) ?? getLateralSideByName(atleta.apelido, atleta.nome);
+                        return side ? <span className="ml-1 text-sm text-muted-foreground">({side})</span> : null;
+                      })()}
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-bold">
+                      {posicaoInfo?.nome}
+                    </span>
+                    {clube && <span className="text-xs text-muted-foreground truncate">{clube.nome}</span>}
+                  </div>
+                </div>
+              </div>
+              {/* Stats grid - mobile full width */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {(() => {
+                  let totalCasa = 0, jogosCasa = 0, totalFora = 0, jogosFora = 0;
+                  for (const r of atletaHistorico) {
+                    if (r.partida) {
+                      const isHome = r.partida.clube_casa_id === atleta.clube_id;
+                      if (isHome) { totalCasa += r.pontuacao; jogosCasa++; }
+                      else { totalFora += r.pontuacao; jogosFora++; }
+                    }
+                  }
+                  const mediaCasa = jogosCasa > 0 ? (totalCasa / jogosCasa) : 0;
+                  const mediaFora = jogosFora > 0 ? (totalFora / jogosFora) : 0;
+                  const minValorizar = atleta.jogos_num === 0
+                    ? atleta.preco_num * 0.29
+                    : atleta.jogos_num === 1
+                      ? atleta.preco_num * 0.50
+                      : (atleta.preco_num * 0.55) + (atleta.pontos_num * 0.30);
+                  return [
+                    { label: 'Preço', value: `C$ ${atleta.preco_num.toFixed(2)}` },
+                    { label: 'Média', value: atleta.media_num.toFixed(2) },
+                    { label: 'Min. Valor.', value: `C$ ${minValorizar.toFixed(2)}` },
+                    { label: 'Jogos', value: String(atleta.jogos_num) },
+                    { label: 'M. Casa', value: mediaCasa.toFixed(2), color: 'text-success' },
+                    { label: 'M. Fora', value: mediaFora.toFixed(2), color: 'text-amber-500' },
+                  ].map(stat => (
+                    <div key={stat.label} className="bg-muted/50 rounded-md p-2 text-center border border-border">
+                      <p className="text-[9px] text-muted-foreground font-bold uppercase leading-tight">{stat.label}</p>
+                      <p className={cn('text-sm font-black', stat.color || 'text-primary')}>{stat.value}</p>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            {/* Player Header - Desktop */}
+            <div className="flex gap-6 items-start mb-6 max-md:hidden">
               <img
                 src={atleta.foto?.replace('FORMATO', '220x220')}
                 alt={atleta.apelido}
@@ -299,7 +362,6 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {(() => {
-                  // Calculate home/away averages from history
                   let totalCasa = 0, jogosCasa = 0, totalFora = 0, jogosFora = 0;
                   for (const r of atletaHistorico) {
                     if (r.partida) {
@@ -310,14 +372,11 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                   }
                   const mediaCasa = jogosCasa > 0 ? (totalCasa / jogosCasa) : 0;
                   const mediaFora = jogosFora > 0 ? (totalFora / jogosFora) : 0;
-
-                  // Mínimo para Valorizar: (Preço * 0.55) + (Última Pontuação * 0.30)
                   const minValorizar = atleta.jogos_num === 0
                     ? atleta.preco_num * 0.29
                     : atleta.jogos_num === 1
                       ? atleta.preco_num * 0.50
                       : (atleta.preco_num * 0.55) + (atleta.pontos_num * 0.30);
-
                   return [
                     { label: 'Preço', value: `C$ ${atleta.preco_num.toFixed(2)}` },
                     { label: 'Média', value: atleta.media_num.toFixed(2) },
@@ -339,29 +398,29 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
             </div>
 
             {/* Scouts Totais */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-muted/30 rounded-lg p-4 border border-border">
-                <h3 className="font-bold text-foreground flex items-center gap-2 mb-3">
+            <div className="grid grid-cols-2 gap-4 mb-6 max-md:grid-cols-1 max-md:gap-2 max-md:mb-4">
+              <div className="bg-muted/30 rounded-lg p-4 border border-border max-md:p-3">
+                <h3 className="font-bold text-foreground flex items-center gap-2 mb-3 max-md:text-sm max-md:mb-2">
                   <Target className="w-4 h-4 text-success" /> Scouts Positivos
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 max-md:gap-1.5">
                   {positiveScouts.map(([k, v]) => (
-                    <div key={k} className="flex justify-between bg-success/10 rounded px-3 py-1.5">
-                      <span className="text-xs font-bold text-foreground">{SCOUT_LABELS[k]?.label}</span>
-                      <span className="text-sm font-black text-success">{v}</span>
+                    <div key={k} className="flex justify-between bg-success/10 rounded px-3 py-1.5 max-md:px-2 max-md:py-1">
+                      <span className="text-xs font-bold text-foreground max-md:text-[11px]">{SCOUT_LABELS[k]?.label}</span>
+                      <span className="text-sm font-black text-success max-md:text-xs">{v}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="bg-muted/30 rounded-lg p-4 border border-border">
-                <h3 className="font-bold text-foreground flex items-center gap-2 mb-3">
+              <div className="bg-muted/30 rounded-lg p-4 border border-border max-md:p-3">
+                <h3 className="font-bold text-foreground flex items-center gap-2 mb-3 max-md:text-sm max-md:mb-2">
                   <Shield className="w-4 h-4 text-destructive" /> Scouts Negativos
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 max-md:gap-1.5">
                   {negativeScouts.map(([k, v]) => (
-                    <div key={k} className="flex justify-between bg-destructive/10 rounded px-3 py-1.5">
-                      <span className="text-xs font-bold text-foreground">{SCOUT_LABELS[k]?.label}</span>
-                      <span className="text-sm font-black text-destructive">{v}</span>
+                    <div key={k} className="flex justify-between bg-destructive/10 rounded px-3 py-1.5 max-md:px-2 max-md:py-1">
+                      <span className="text-xs font-bold text-foreground max-md:text-[11px]">{SCOUT_LABELS[k]?.label}</span>
+                      <span className="text-sm font-black text-destructive max-md:text-xs">{v}</span>
                     </div>
                   ))}
                 </div>
@@ -369,9 +428,9 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
             </div>
 
             {/* Pontuação por Rodada com Confronto */}
-            <div className="mb-6">
-              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2">
-                <Award className="w-5 h-5 text-primary" /> Histórico por Rodada
+            <div className="mb-6 max-md:mb-4">
+              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2 max-md:text-sm max-md:mb-3">
+                <Award className="w-5 h-5 text-primary max-md:w-4 max-md:h-4" /> Histórico por Rodada
               </h3>
               {loadingHistorico ? (
                 <LoadingSpinner size="md" text="Carregando histórico..." />
@@ -385,10 +444,10 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 const renderRound = (round: typeof sorted[0]) => {
                   const allClubes = { ...clubes, ...round.partidaClubes };
                   return (
-                    <div key={round.rodada} className="bg-muted/20 rounded-lg p-3 border border-border">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                    <div key={round.rodada} className="bg-muted/20 rounded-lg p-3 border border-border max-md:p-2">
+                      <div className="flex justify-between items-center mb-2 max-md:mb-1">
+                        <div className="flex items-center gap-3 max-md:gap-1.5">
+                          <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded max-md:text-[10px] max-md:px-1.5">
                             R{round.rodada}
                           </span>
                           {round.partida && (
@@ -396,7 +455,7 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                           )}
                         </div>
                         <span className={cn(
-                          'text-xl font-black',
+                          'text-xl font-black max-md:text-base',
                           round.pontuacao > 0 ? 'text-success' : round.pontuacao < 0 ? 'text-destructive' : 'text-muted-foreground'
                         )}>
                           {round.pontuacao.toFixed(1)} pts
@@ -408,13 +467,13 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 };
 
                 return (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1 max-md:gap-2">
                     <div>
                       <h4 className="text-xs font-bold text-success uppercase mb-2 text-center">🏠 Em Casa</h4>
                       {casaRounds.length === 0 ? (
                         <p className="text-muted-foreground text-xs text-center py-3">Nenhum jogo em casa.</p>
                       ) : (
-                        <div className="space-y-3">{casaRounds.map(renderRound)}</div>
+                        <div className="space-y-3 max-md:space-y-2">{casaRounds.map(renderRound)}</div>
                       )}
                     </div>
                     <div>
@@ -422,7 +481,7 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                       {foraRounds.length === 0 ? (
                         <p className="text-muted-foreground text-xs text-center py-3">Nenhum jogo fora.</p>
                       ) : (
-                        <div className="space-y-3">{foraRounds.map(renderRound)}</div>
+                        <div className="space-y-3 max-md:space-y-2">{foraRounds.map(renderRound)}</div>
                       )}
                     </div>
                   </div>
@@ -432,8 +491,8 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
 
             {/* Jogadores da mesma posição que enfrentaram o mesmo oponente */}
             <div>
-              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
+              <h3 className="font-bold text-foreground text-lg border-b-2 border-primary pb-2 mb-4 uppercase flex items-center gap-2 max-md:text-sm max-md:mb-3">
+                <TrendingUp className="w-5 h-5 text-primary max-md:w-4 max-md:h-4" />
                 {posicaoInfo?.nome}s vs {opponentClube?.abreviacao || 'Oponente'} ({isPlayingAway ? 'Fora' : 'Casa'})
               </h3>
               {loadingHistorico ? (
@@ -446,12 +505,12 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                 <div className="space-y-1.5">
                   {mesmaPosicaoVsOponente.slice(0, 7).map((player) => {
                     const playerClube = clubes[player.clube_id];
-                    // Show the most recent round for this player
                     const latestRound = player.rounds.sort((a, b) => b.rodada - a.rodada)[0];
                     const allClubes = latestRound ? { ...clubes, ...latestRound.partidaClubes } : clubes;
                     return (
-                      <div key={player.id} className="bg-muted/20 rounded-md px-2.5 py-1.5 border border-border">
-                        <div className="flex items-center gap-2">
+                      <div key={player.id} className="bg-muted/20 rounded-md px-2.5 py-1.5 border border-border max-md:px-2 max-md:py-2">
+                        {/* Desktop layout */}
+                        <div className="flex items-center gap-2 max-md:hidden">
                           {playerClube && <ClubeEscudo clube={playerClube} size="xs" />}
                           <span className="font-bold text-xs text-foreground min-w-[80px]">
                             {player.apelido}
@@ -475,6 +534,36 @@ export function PlayerDetailModal({ atleta, clube, clubes, open, onOpenChange }:
                           )}>
                             {latestRound?.pontuacao.toFixed(1)}
                           </span>
+                        </div>
+                        {/* Mobile: vertical layout - scouts below name */}
+                        <div className="hidden max-md:block">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {playerClube && <ClubeEscudo clube={playerClube} size="xs" />}
+                              <span className="font-bold text-xs text-foreground truncate">
+                                {player.apelido}
+                                {atleta.posicao_id === 2 && (() => {
+                                  const side = getLateralSideFromStore(Number(player.id)) ?? getLateralSideByName(player.apelido);
+                                  return side ? <span className="ml-1 text-[10px] text-muted-foreground">({side})</span> : null;
+                                })()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {latestRound?.partida && (
+                                <>
+                                  <MatchDisplay partida={latestRound.partida} clubes={allClubes} compact />
+                                  <span className="text-[9px] text-muted-foreground">R{latestRound.rodada}</span>
+                                </>
+                              )}
+                              <span className={cn(
+                                'text-sm font-black',
+                                (latestRound?.pontuacao ?? 0) > 0 ? 'text-success' : (latestRound?.pontuacao ?? 0) < 0 ? 'text-destructive' : 'text-muted-foreground'
+                              )}>
+                                {latestRound?.pontuacao.toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                          <ScoutSummary scout={latestRound?.scout} />
                         </div>
                       </div>
                     );
