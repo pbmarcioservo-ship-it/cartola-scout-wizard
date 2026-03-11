@@ -236,10 +236,12 @@ export function TimeRodadaView() {
     const fillGap = (posId: number, needed: number, existing: CartolaAtleta[]): CartolaAtleta[] => {
       if (existing.length >= needed) return existing;
       const missing = needed - existing.length;
-      let extras = getForPos(posId, missing, { allowSameClubDefense: true, maxPerClub: 99 });
+      // Step 1: relax club + defense constraints
+      let extras = getForPos(posId, missing, { allowSameClubDefense: true, maxPerClub: 99, bypassGlobalClub: true });
       if (extras.length < missing) {
+        // Step 2: also use full pool (including non-eligible statuses 2/7)
         const stillNeeded = missing - extras.length;
-        const fallback = getForPos(posId, stillNeeded, { allowSameClubDefense: true, maxPerClub: 99, useFullPool: true });
+        const fallback = getForPos(posId, stillNeeded, { allowSameClubDefense: true, maxPerClub: 99, bypassGlobalClub: true, useFullPool: true });
         extras = [...extras, ...fallback];
       }
       return [...existing, ...extras];
