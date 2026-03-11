@@ -10,7 +10,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 
-// STATUS FC App – sync auth config 2026-03-10
+// STATUS FC App – sync deploy 2026-03-11
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 } },
 });
