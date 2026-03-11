@@ -65,7 +65,7 @@ export function FilterBar({
   const clubeList = [...(clubeOptions || [])].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   return (
-    <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
+    <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50 max-md:gap-1.5 max-md:p-2 max-md:mb-2 max-md:rounded-none max-md:shadow-sm">
       {showSearchFilter && (
         <input
           type="text"
