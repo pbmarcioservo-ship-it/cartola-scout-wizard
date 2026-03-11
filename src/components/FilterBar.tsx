@@ -91,7 +91,7 @@ export function FilterBar({
         <select
           value={ultimas}
           onChange={(e) => onUltimasChange?.(Number(e.target.value))}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value={3}>Últimas 3</option>
           <option value={5}>Últimas 5</option>
