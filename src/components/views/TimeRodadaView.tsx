@@ -367,17 +367,20 @@ export function TimeRodadaView() {
       };
 
       let gk = getForPos(1, 1, { scoreFn: volumeScore })[0] || null;
-      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
       let zags = getForPos(3, 2, { scoreFn: volumeScore, maxPerClub: 2 });
       let lats = getForPos(2, 2, { scoreFn: volumeScore, maxPerClub: 2 });
+
+      // Fill defense first, then collect blocked opponents
+      gk = fillSingle(1, gk);
+      zags = fillGap(3, 2, zags);
+      lats = fillGap(2, 2, lats);
+      collectBlockedOpponents([gk, ...zags, ...lats]);
+
       let meis = getForPos(4, 3, { scoreFn: volumeScore });
       let atacs = getForPos(5, 3, { scoreFn: volumeScore });
       let tecnico = getForPos(6, 1, { scoreFn: volumeScore })[0] || null;
 
-      // Guarantee all slots filled
-      gk = fillSingle(1, gk);
-      lats = fillGap(2, 2, lats);
-      zags = fillGap(3, 2, zags);
+      // Guarantee remaining slots filled
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
