@@ -7,7 +7,7 @@ import { Send, Bot, User, Loader2, Volume2, VolumeX, Mic, MicOff } from 'lucide-
 import { useMercado, usePartidas, useRodada, useHistoricoRodadas } from '@/hooks/useCartolaData';
 import { buildContextData } from '@/lib/agente-tecnico-context';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+
 
 type PosicaoRapida = 'goleiros' | 'laterais' | 'zagueiros' | 'meias' | 'atacantes' | 'capitao' | 'tecnico' | null;
 
