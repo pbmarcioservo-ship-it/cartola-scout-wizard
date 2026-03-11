@@ -330,6 +330,65 @@ export function TimeRodadaView() {
 
       raw = { gk, lats, zags, meis, atacs, tecnico };
 
+    } else if (strat === 'valorizacao') {
+      // ── TIME VALORIZAÇÃO ──
+      // "Mínimo para Valorizar" formula:
+      // 0 jogos: preco * 0.29 | 1 jogo: preco * 0.50 | 2+ jogos: (preco * 0.55) + (últimaPont * 0.30)
+      const calcMinValorizar = (a: CartolaAtleta) => {
+        if (a.jogos_num === 0) return a.preco_num * 0.29;
+        if (a.jogos_num === 1) return a.preco_num * 0.50;
+        return (a.preco_num * 0.55) + (a.pontos_num * 0.30);
+      };
+
+      const valorizacaoScore = (a: CartolaAtleta) => {
+        const minVal = Math.max(calcMinValorizar(a), 0.1);
+        const opp = getOpponent(a.clube_id);
+        let crossScore = 0;
+        if (opp) {
+          if (a.posicao_id === 1 || a.posicao_id === 3) {
+            crossScore = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'SG') * 1.0
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'DE') * 0.5;
+          } else if (a.posicao_id === 2) {
+            crossScore = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'SG') * 0.8
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'DS') * 0.5
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A') * 0.4;
+          } else if (a.posicao_id === 4) {
+            crossScore = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G') * 1.0
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A') * 0.8
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'DS') * 0.4;
+          } else if (a.posicao_id === 5) {
+            crossScore = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G') * 1.2
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'A') * 0.6
+              + teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'FD') * 0.3;
+          } else if (a.posicao_id === 6) {
+            const sg = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'SG');
+            const g = teamScoreForMatch(a.clube_id, opp.opponentId, opp.isHome, 'G');
+            crossScore = (sg + g) / 2;
+          }
+        }
+        // Lower minVal = easier to appreciate → higher score
+        // Higher media = more consistent → higher score
+        // crossScore = chance of mitar
+        return (a.media_num * 3 + crossScore * 0.8) / minVal;
+      };
+
+      let gk = getForPos(1, 1, { scoreFn: valorizacaoScore })[0] || null;
+      if (gk) { const opp = getOpponent(gk.clube_id); defenseOpponentId = opp?.opponentId || null; }
+      let zags = getForPos(3, 2, { scoreFn: valorizacaoScore, maxPerClub: 2 });
+      let lats = getForPos(2, 2, { scoreFn: valorizacaoScore, maxPerClub: 2 });
+      let meis = getForPos(4, 3, { scoreFn: valorizacaoScore });
+      let atacs = getForPos(5, 3, { scoreFn: valorizacaoScore });
+      let tecnico = getForPos(6, 1, { scoreFn: valorizacaoScore })[0] || null;
+
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
+      meis = fillGap(4, 3, meis);
+      atacs = fillGap(5, 3, atacs);
+      tecnico = fillSingle(6, tecnico);
+
+      raw = { gk, lats, zags, meis, atacs, tecnico };
+
     } else {
       const volumeScore = (a: CartolaAtleta) => {
         const ac = acumulados[a.atleta_id] || {};
@@ -354,7 +413,6 @@ export function TimeRodadaView() {
       let atacs = getForPos(5, 3, { scoreFn: volumeScore });
       let tecnico = getForPos(6, 1, { scoreFn: volumeScore })[0] || null;
 
-      // Guarantee all slots filled
       gk = fillSingle(1, gk);
       lats = fillGap(2, 2, lats);
       zags = fillGap(3, 2, zags);
