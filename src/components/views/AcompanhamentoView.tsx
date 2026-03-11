@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, ArrowUpCircle, ArrowDownCircle, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowUpCircle, ArrowDownCircle, Clock, ArrowLeft } from 'lucide-react';
 import { usePartidas, useRodada, usePontuados, useMercado, POSICOES } from '@/hooks/useCartolaData';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
-import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useQueryClient } from '@tanstack/react-query';
 import { CartolaAtleta, CartolaClube, CartolaScout } from '@/lib/cartola-api';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const SCOUT_LABELS: Record<string, { label: string; abrev: string; positive: boolean }> = {
   G: { label: 'Gols', abrev: 'G', positive: true },
