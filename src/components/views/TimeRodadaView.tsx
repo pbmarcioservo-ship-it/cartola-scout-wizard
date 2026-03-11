@@ -266,14 +266,22 @@ export function TimeRodadaView() {
       return scored[0]?.a.atleta_id || null;
     };
 
+    // Helper: collect all opponent club IDs from defensive players
+    const collectBlockedOpponents = (defenders: (CartolaAtleta | null)[]) => {
+      blockedOpponentIds.clear();
+      for (const d of defenders) {
+        if (!d) continue;
+        const opp = getOpponent(d.clube_id);
+        if (opp) blockedOpponentIds.add(opp.opponentId);
+      }
+    };
+
     let raw: Omit<Lineup, 'capitaoId'>;
 
     if (strat === 'tiro-curto') {
       const sgTeam = topSGTeams[0];
       if (sgTeam) {
         defenseTeamId = sgTeam.teamId;
-        const opp = getOpponent(sgTeam.teamId);
-        defenseOpponentId = opp?.opponentId || null;
       }
       const forceClub = defenseTeamId || undefined;
       const gkArr = getForPos(1, 1, { forceClub, allowSameClubDefense: true, maxPerClub: 1 });
@@ -284,15 +292,19 @@ export function TimeRodadaView() {
       if (lats.length < 2) lats.push(...getForPos(2, 2 - lats.length, {}));
       let zags = getForPos(3, 2, { forceClub, allowSameClubDefense: true, maxPerClub: 2 });
       if (zags.length < 2) zags.push(...getForPos(3, 2 - zags.length, {}));
+
+      // Collect ALL defensive opponents BEFORE picking mid/attack
+      gk = fillSingle(1, gk);
+      lats = fillGap(2, 2, lats);
+      zags = fillGap(3, 2, zags);
+      collectBlockedOpponents([gk, ...lats, ...zags]);
+
       let tecnico = getForPos(6, 1, { forceClub, allowSameClubDefense: true })[0]
         || getForPos(6, 1, {})[0] || null;
       let meis = getForPos(4, 3, {});
       let atacs = getForPos(5, 3, {});
 
       // Guarantee all slots filled
-      gk = fillSingle(1, gk);
-      lats = fillGap(2, 2, lats);
-      zags = fillGap(3, 2, zags);
       meis = fillGap(4, 3, meis);
       atacs = fillGap(5, 3, atacs);
       tecnico = fillSingle(6, tecnico);
