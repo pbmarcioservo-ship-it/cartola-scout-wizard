@@ -701,18 +701,16 @@ export function TimeRodadaView() {
           <div className="absolute top-2 md:top-3 left-14 right-14 md:left-20 md:right-20 h-[9%] border-2 border-white/60 pointer-events-none" />
           <div className="absolute bottom-2 md:bottom-3 left-14 right-14 md:left-20 md:right-20 h-[9%] border-2 border-white/60 pointer-events-none" />
 
-          {/* Técnico */}
+          {/* Técnico - mesmo tamanho dos jogadores */}
           {displayLineup?.tecnico && (
             <div className="absolute left-1 md:left-2 bottom-2 md:bottom-4 z-20">
-              <div className="scale-[0.55] md:scale-[0.65] origin-bottom-left">
-                <PlayerCardPitch
-                  atleta={displayLineup.tecnico}
-                  clube={clubes[String(displayLineup.tecnico.clube_id)]}
-                  showPrice={mercadoAberto}
-                  pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(displayLineup.tecnico.atleta_id)]?.pontuacao : undefined}
-                  onClick={() => setSelectedAtleta(displayLineup.tecnico)}
-                />
-              </div>
+              <PlayerCardPitch
+                atleta={displayLineup.tecnico}
+                clube={clubes[String(displayLineup.tecnico.clube_id)]}
+                showPrice={mercadoAberto}
+                pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(displayLineup.tecnico.atleta_id)]?.pontuacao : undefined}
+                onClick={() => setSelectedAtleta(displayLineup.tecnico)}
+              />
             </div>
           )}
 
