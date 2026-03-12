@@ -4,7 +4,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, usePontuados, POSICOES } from '@/hooks/useCartolaData';
 import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
-import { AlertCircle, RefreshCw, ArrowUp, Star } from 'lucide-react';
+import { AlertCircle, ArrowUp, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
@@ -51,7 +51,6 @@ export function TimeRodadaView() {
   const [estrategia, setEstrategia] = useState<Estrategia>('liga-classica');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('provavel');
   const [lineup, setLineup] = useState<Lineup | null>(null);
-  const [seed, setSeed] = useState(0);
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
   const [viewRodada, setViewRodada] = useState<number | null>(null);
   const [livePontos, setLivePontos] = useState(0);
@@ -464,13 +463,21 @@ export function TimeRodadaView() {
   }, [eligibleAtletas, mercadoData?.atletas, topSGTeams, getOpponent, teamScoreForMatch, acumulados]);
 
   // Generate lineup
+  // Deterministic seed based on strategy + status filter
+  const stableSeed = useMemo(() => {
+    let hash = 0;
+    const key = `${estrategia}-${statusFilter}`;
+    for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i);
+    return Math.abs(hash);
+  }, [estrategia, statusFilter]);
+
   const eligibleCount = eligibleAtletas.length;
   useEffect(() => {
     if (eligibleCount === 0) return;
-    const newLineup = generateLineup(estrategia, seed);
+    const newLineup = generateLineup(estrategia, stableSeed);
     setLineup(newLineup);
     setSubstitutions([]);
-  }, [estrategia, statusFilter, seed, eligibleCount]);
+  }, [estrategia, statusFilter, stableSeed, eligibleCount]);
 
   // ── Live substitution logic ──
   const activeLineup = useMemo(() => {
@@ -621,15 +628,6 @@ export function TimeRodadaView() {
               {mercadoAberto ? `C$ ${totalCost.toFixed(2)}` : `${livePontos.toFixed(2)}`}
             </span>
           </div>
-
-          <button
-            onClick={() => setSeed(s => s + 1)}
-            className="bg-primary-foreground text-primary font-black px-2.5 py-1 rounded flex items-center gap-1 text-[11px] md:text-xs shrink-0"
-            title="Gerar novo time com a mesma estratégia"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Atualizar</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-1 mt-1 overflow-x-auto scrollbar-none">
@@ -885,14 +883,27 @@ function PlayerCardPitch({
           {clube && <ClubeEscudo clube={clube} size="xs" />}
         </div>
       </div>
-      {showPrice && (
-        <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
-          <span className="text-[7px] md:text-[9px] font-black">C$ {atleta.preco_num.toFixed(2)}</span>
+      {showPrice ? (
+        <div className="mt-px px-1 md:px-1.5 py-px bg-white/90 rounded shadow-sm">
+          <span className="text-[7px] md:text-[9px] font-black text-foreground">C$ {atleta.preco_num.toFixed(2)}</span>
         </div>
-      )}
-      {!showPrice && pontuacao !== undefined && (
-        <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
-          <span className="text-[7px] md:text-[9px] font-black">{(isCaptain ? pontuacao * 1.5 : pontuacao).toFixed(1)} pts</span>
+      ) : (
+        <div className={cn(
+          "mt-px px-1.5 md:px-2 py-px rounded shadow-sm",
+          pontuacao !== undefined && pontuacao !== 0
+            ? "bg-white/95 border border-green-200"
+            : "bg-white/70 border border-border/40"
+        )}>
+          <span className={cn(
+            "text-[7px] md:text-[9px] font-black",
+            pontuacao !== undefined && pontuacao !== 0
+              ? "text-green-700"
+              : "text-muted-foreground"
+          )}>
+            {pontuacao !== undefined
+              ? `${(isCaptain ? pontuacao * 1.5 : pontuacao).toFixed(1)} pts`
+              : '--'}
+          </span>
         </div>
       )}
     </div>
