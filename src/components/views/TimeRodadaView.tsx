@@ -41,6 +41,7 @@ interface SubstitutionInfo {
   outId: number;
   inId: number;
   reason: 'ausencia' | 'luxo';
+  descendedPlayer?: CartolaAtleta; // player who went down to bench
 }
 
 const POSICAO_ID_MAP: Record<string, number> = {
@@ -479,7 +480,14 @@ export function TimeRodadaView() {
     setSubstitutions([]);
   }, [estrategia, statusFilter, stableSeed, eligibleCount]);
 
-  // ── Live substitution logic ──
+  // ── Helper: check if a club's match has finished ──
+  const isMatchFinished = useCallback((clubeId: number): boolean => {
+    const p = partidas.find(p => p.clube_casa_id === clubeId || p.clube_visitante_id === clubeId);
+    if (!p) return false;
+    return p.placar_oficial_mandante !== null && p.placar_oficial_visitante !== null;
+  }, [partidas]);
+
+  // ── Live substitution logic (Cartola official rules) ──
   const activeLineup = useMemo(() => {
     if (!lineup || mercadoAberto || !pontuadosData?.atletas) return lineup;
 
@@ -493,7 +501,8 @@ export function TimeRodadaView() {
     let meis = [...lineup.meis];
     let atacs = [...lineup.atacs];
     let capitaoId = lineup.capitaoId;
-    const benchLeft = [...lineup.bench];
+    // Clone bench with mutable slots (will swap players on substitution)
+    const benchSlots = lineup.bench.map(b => ({ ...b, atleta: b.atleta }));
 
     const getPos = (posId: number) => {
       if (posId === 1) return { arr: gk ? [gk] : [], setArr: (a: CartolaAtleta[]) => { gk = a[0] || null; } };
@@ -504,55 +513,84 @@ export function TimeRodadaView() {
       return null;
     };
 
-    // 1. Absence substitutions: if starter has no pontuacao entry, reserve enters
-    for (let bi = benchLeft.length - 1; bi >= 0; bi--) {
-      const benchSlot = benchLeft[bi];
+    // 1. Absence substitutions:
+    // A reserve only enters AFTER the starter's match has FINISHED and the starter
+    // is confirmed as "didn't play" (no entry in pontuados).
+    // If the reserve scored negative, they do NOT substitute.
+    for (let bi = 0; bi < benchSlots.length; bi++) {
+      const benchSlot = benchSlots[bi];
+      if (benchSlot.isLuxo) continue; // Luxo handled separately
       const pos = getPos(benchSlot.posicaoId);
       if (!pos) continue;
 
-      // Check if any starter at this position didn't play
-      const absentIdx = pos.arr.findIndex(a => !pont[String(a.atleta_id)]);
-      if (absentIdx !== -1) {
-        const absentPlayer = pos.arr[absentIdx];
-        subs.push({ outId: absentPlayer.atleta_id, inId: benchSlot.atleta.atleta_id, reason: 'ausencia' });
-        // If absent was captain, transfer to reserve
-        if (capitaoId === absentPlayer.atleta_id) capitaoId = benchSlot.atleta.atleta_id;
-        const newArr = [...pos.arr];
-        newArr[absentIdx] = benchSlot.atleta;
-        pos.setArr(newArr);
-        benchLeft.splice(bi, 1);
-      }
+      // Find a starter at this position whose match finished but didn't play
+      const absentIdx = pos.arr.findIndex(a => {
+        const matchDone = isMatchFinished(a.clube_id);
+        const played = !!pont[String(a.atleta_id)];
+        return matchDone && !played;
+      });
+
+      if (absentIdx === -1) continue;
+
+      // Check reserve: must have scored AND score must be >= 0
+      const reservePont = pont[String(benchSlot.atleta.atleta_id)];
+      if (reservePont && reservePont.pontuacao < 0) continue; // negative → skip
+
+      const absentPlayer = pos.arr[absentIdx];
+      subs.push({
+        outId: absentPlayer.atleta_id,
+        inId: benchSlot.atleta.atleta_id,
+        reason: 'ausencia',
+        descendedPlayer: absentPlayer,
+      });
+      // If absent was captain, transfer to reserve
+      if (capitaoId === absentPlayer.atleta_id) capitaoId = benchSlot.atleta.atleta_id;
+      // Swap: reserve goes to field, starter goes to bench slot
+      const newArr = [...pos.arr];
+      newArr[absentIdx] = benchSlot.atleta;
+      pos.setArr(newArr);
+      benchSlots[bi] = { ...benchSlot, atleta: absentPlayer, isLuxo: false };
     }
 
-    // 2. Reserva de Luxo: if all attackers played, replace worst-scoring attacker if reserve scored more
-    const luxoIdx = benchLeft.findIndex(b => b.isLuxo);
+    // 2. Reserva de Luxo (4th attacker):
+    // Only activates when ALL 3 attackers' matches have FINISHED.
+    // Reserve must have scored positive AND more than the worst attacker.
+    const luxoIdx = benchSlots.findIndex(b => b.isLuxo);
     if (luxoIdx !== -1) {
-      const luxo = benchLeft[luxoIdx];
+      const luxo = benchSlots[luxoIdx];
       const luxoPont = pont[String(luxo.atleta.atleta_id)];
-      if (luxoPont) {
-        const allAtacsPlayed = atacs.every(a => !!pont[String(a.atleta_id)]);
-        if (allAtacsPlayed && atacs.length > 0) {
-          // Find worst scoring attacker
-          let worstIdx = 0;
-          let worstScore = Infinity;
-          for (let i = 0; i < atacs.length; i++) {
-            const p = pont[String(atacs[i].atleta_id)];
-            const score = p ? p.pontuacao : 0;
-            if (score < worstScore) { worstScore = score; worstIdx = i; }
-          }
-          if (luxoPont.pontuacao > worstScore) {
-            subs.push({ outId: atacs[worstIdx].atleta_id, inId: luxo.atleta.atleta_id, reason: 'luxo' });
-            if (capitaoId === atacs[worstIdx].atleta_id) capitaoId = luxo.atleta.atleta_id;
-            atacs[worstIdx] = luxo.atleta;
-            benchLeft.splice(luxoIdx, 1);
-          }
+
+      // All 3 attackers' matches must be finished
+      const allAtacsMatchesFinished = atacs.every(a => isMatchFinished(a.clube_id));
+
+      if (luxoPont && luxoPont.pontuacao > 0 && allAtacsMatchesFinished && atacs.length > 0) {
+        // Find worst scoring attacker
+        let worstIdx = 0;
+        let worstScore = Infinity;
+        for (let i = 0; i < atacs.length; i++) {
+          const p = pont[String(atacs[i].atleta_id)];
+          const score = p ? p.pontuacao : 0;
+          if (score < worstScore) { worstScore = score; worstIdx = i; }
+        }
+        if (luxoPont.pontuacao > worstScore) {
+          const descendedAtac = atacs[worstIdx];
+          subs.push({
+            outId: descendedAtac.atleta_id,
+            inId: luxo.atleta.atleta_id,
+            reason: 'luxo',
+            descendedPlayer: descendedAtac,
+          });
+          if (capitaoId === descendedAtac.atleta_id) capitaoId = luxo.atleta.atleta_id;
+          // Swap: luxo goes to field, worst attacker goes to bench
+          atacs[worstIdx] = luxo.atleta;
+          benchSlots[luxoIdx] = { ...luxo, atleta: descendedAtac, isLuxo: true };
         }
       }
     }
 
     setSubstitutions(subs);
-    return { gk, lats, zags, meis, atacs, tecnico: lineup.tecnico, capitaoId, bench: benchLeft };
-  }, [lineup, mercadoAberto, pontuadosData]);
+    return { gk, lats, zags, meis, atacs, tecnico: lineup.tecnico, capitaoId, bench: benchSlots };
+  }, [lineup, mercadoAberto, pontuadosData, isMatchFinished]);
 
   const displayLineup = activeLineup || lineup;
 
@@ -765,19 +803,22 @@ export function TimeRodadaView() {
             )}
           </div>
           <div className="flex items-center justify-around px-2 pb-2.5 pt-0.5 gap-1">
-            {/* Show all 5 bench positions, even if some were subbed in */}
-            {lineup?.bench.map((slot) => {
-              const wasSubbedIn = subInIds.has(slot.atleta.atleta_id);
+            {/* Show all 5 bench slots - after subs, descended players appear here */}
+            {displayLineup?.bench.map((slot, idx) => {
+              const isDescended = subOutIds.has(slot.atleta.atleta_id);
+              const wasOriginalReserve = lineup?.bench.some(b => b.atleta.atleta_id === slot.atleta.atleta_id);
+              const wasSubbedIn = !isDescended && !wasOriginalReserve;
               return (
                 <BenchCard
-                  key={slot.atleta.atleta_id}
+                  key={`bench-${idx}-${slot.atleta.atleta_id}`}
                   atleta={slot.atleta}
                   clube={clubes[String(slot.atleta.clube_id)]}
                   posicaoId={slot.posicaoId}
-                  isLuxo={slot.isLuxo}
+                  isLuxo={slot.isLuxo && !isDescended}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(slot.atleta.atleta_id)]?.pontuacao : undefined}
-                  wasSubbedIn={wasSubbedIn}
+                  wasSubbedIn={false}
+                  isDescended={isDescended}
                   onClick={() => setSelectedAtleta(slot.atleta)}
                 />
               );
@@ -790,15 +831,14 @@ export function TimeRodadaView() {
       {substitutions.length > 0 && (
         <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
           {substitutions.map((sub, i) => {
-            const inPlayer = [...(lineup?.bench || [])].find(b => b.atleta.atleta_id === sub.inId);
-            const outPlayer = allLineupPlayers.find(a => a.atleta_id === sub.outId) ||
-              [lineup?.gk, ...(lineup?.lats || []), ...(lineup?.zags || []), ...(lineup?.meis || []), ...(lineup?.atacs || [])].find(a => a?.atleta_id === sub.outId);
+            const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
+            const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
             return (
               <div key={i} className="flex items-center gap-1.5 text-[9px] md:text-[10px] py-0.5 animate-fade-in">
                 <ArrowUp className="w-3 h-3 text-green-600" />
-                <span className="font-bold text-green-700">{inPlayer?.atleta.apelido || '?'}</span>
+                <span className="font-bold text-green-700">{inName}</span>
                 <span className="text-muted-foreground">entrou no lugar de</span>
-                <span className="font-bold text-red-600">{(outPlayer as any)?.apelido || '?'}</span>
+                <span className="font-bold text-red-600">{outName}</span>
                 <span className="text-muted-foreground/60">
                   ({sub.reason === 'luxo' ? '⭐ Luxo' : 'Ausência'})
                 </span>
@@ -908,6 +948,7 @@ function BenchCard({
   showPrice,
   pontuacao,
   wasSubbedIn,
+  isDescended,
   onClick,
 }: {
   atleta: CartolaAtleta;
@@ -917,6 +958,7 @@ function BenchCard({
   showPrice?: boolean;
   pontuacao?: number;
   wasSubbedIn?: boolean;
+  isDescended?: boolean;
   onClick?: () => void;
 }) {
   const posLabel = POSICOES[posicaoId]?.abreviacao || '?';
@@ -925,15 +967,22 @@ function BenchCard({
     <div
       className={cn(
         "relative flex flex-col items-center cursor-pointer transition-all duration-300 hover:scale-105",
-        wasSubbedIn && "opacity-40 scale-95"
+        wasSubbedIn && "opacity-40 scale-95",
+        isDescended && "opacity-60"
       )}
       onClick={onClick}
     >
       {/* Luxo badge */}
-      {isLuxo && (
+      {isLuxo && !isDescended && (
         <div className="absolute -top-1.5 -right-0.5 z-10 flex items-center gap-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 px-1 py-0.5 rounded-full shadow ring-1 ring-yellow-600">
           <Star className="w-2.5 h-2.5 text-yellow-900 fill-yellow-900" />
           <span className="text-[6px] md:text-[7px] font-black text-yellow-900 uppercase">Luxo</span>
+        </div>
+      )}
+      {/* Descended indicator - player who came down from the field */}
+      {isDescended && (
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 bg-red-500 text-white px-1.5 py-0.5 rounded-full text-[6px] font-black shadow">
+          SUBSTITUÍDO ↓
         </div>
       )}
       {/* Subbed-in indicator */}
@@ -947,7 +996,8 @@ function BenchCard({
         alt={atleta.apelido}
         className={cn(
           "w-9 h-9 md:w-11 md:h-11 rounded-full object-cover shadow ring-1 ring-foreground/20",
-          isLuxo && "ring-2 ring-yellow-400"
+          isLuxo && !isDescended && "ring-2 ring-yellow-400",
+          isDescended && "ring-2 ring-red-400 grayscale-[30%]"
         )}
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
@@ -959,7 +1009,7 @@ function BenchCard({
       </div>
       <div className={cn(
         "mt-px px-1 py-px rounded text-[6px] md:text-[8px] font-black",
-        isLuxo ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900" : "bg-foreground/80 text-background"
+        isDescended ? "bg-red-100 text-red-700" : isLuxo ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900" : "bg-foreground/80 text-background"
       )}>
         {posLabel} • {showPrice ? `C$ ${atleta.preco_num.toFixed(2)}` : (pontuacao !== undefined ? `${pontuacao.toFixed(1)} pts` : '-')}
       </div>
