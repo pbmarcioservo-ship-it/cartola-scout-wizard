@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
         overlay: false,
       },
     },
-    base: "/",
+    base: "./",
     plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
