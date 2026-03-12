@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { ClubeEscudo } from '@/components/ClubeEscudo';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PlayerDetailModal } from '@/components/PlayerDetailModal';
+import { ParcialCard } from '@/components/ParcialCard';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, usePontuados, POSICOES } from '@/hooks/useCartolaData';
 import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
 import { AlertCircle, ArrowUp, Star } from 'lucide-react';
