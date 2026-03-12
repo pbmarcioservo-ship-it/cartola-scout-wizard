@@ -131,6 +131,16 @@ export function FilterBar({
           <option value="defesaPenalti">🏆 Def.Pen (DP)</option>
           <option value="semGol">🚫 Sem Gol (SG)</option>
           <option value="roubadaBola">💪 Roub (RB)</option>
+          <option value="faltaSofrida">🤕 F.Sofr (FS)</option>
+          <option value="passeCerto">✅ Pass.C (PS)</option>
+          <option value="cartaoAmarelo">🟨 C.Amar (CA)</option>
+          <option value="cartaoVermelho">🟥 C.Verm (CV)</option>
+          <option value="faltaCometida">⚠️ F.Com (FC)</option>
+          <option value="golContra">😱 G.Contra (GC)</option>
+          <option value="penaltiPerdido">❌ Pen.Perd (PP)</option>
+          <option value="impedimento">🚩 Imped (I)</option>
+          <option value="passeErrado">🔴 Pass.Err (PE)</option>
+          <option value="golSofrido">😞 G.Sofr (GS)</option>
         </select>
       )}
       
