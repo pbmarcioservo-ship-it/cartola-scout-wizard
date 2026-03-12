@@ -628,15 +628,6 @@ export function TimeRodadaView() {
               {mercadoAberto ? `C$ ${totalCost.toFixed(2)}` : `${livePontos.toFixed(2)}`}
             </span>
           </div>
-
-          <button
-            onClick={() => setSeed(s => s + 1)}
-            className="bg-primary-foreground text-primary font-black px-2.5 py-1 rounded flex items-center gap-1 text-[11px] md:text-xs shrink-0"
-            title="Gerar novo time com a mesma estratégia"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Atualizar</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-1 mt-1 overflow-x-auto scrollbar-none">
