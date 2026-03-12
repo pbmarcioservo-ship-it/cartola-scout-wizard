@@ -790,7 +790,7 @@ export function TimeRodadaView() {
 
       {/* ── Bench / Banco de Reservas ── */}
       {displayLineup && displayLineup.bench && displayLineup.bench.length > 0 && (
-        <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1.5 rounded-xl overflow-hidden"
+        <div className="w-full max-w-2xl mt-1.5 rounded-xl overflow-hidden"
           style={{ background: 'linear-gradient(135deg, hsl(280, 40%, 94%), hsl(330, 35%, 93%))' }}
         >
           <div className="px-3 py-1.5 flex items-center gap-2">
