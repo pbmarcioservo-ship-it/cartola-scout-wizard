@@ -687,7 +687,7 @@ export function TimeRodadaView() {
       {/* ── Football Pitch ── */}
       <div className="w-full flex justify-center">
         <div
-          className="relative rounded-2xl p-1.5 md:p-2 lg:p-3 shadow-inner mx-auto w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px]"
+          className="relative rounded-2xl p-1.5 md:p-2 lg:p-3 shadow-inner mx-auto w-full max-w-2xl"
           style={{
             backgroundColor: 'hsl(145, 63%, 30%)',
             height: 'clamp(340px, calc(100vh - 240px), 580px)',
