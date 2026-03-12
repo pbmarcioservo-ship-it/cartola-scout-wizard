@@ -608,7 +608,7 @@ export function TimeRodadaView() {
     <div className="animate-fade-in w-full flex flex-col items-center">
       {/* ── Compact Controls Bar ── */}
       <div className="bg-primary text-primary-foreground px-3 py-1.5 md:px-4 md:py-2 mb-1 w-full max-w-[720px] rounded-lg">
-        <div className="flex items-center justify-between gap-2">
+        <div className="relative flex items-center justify-between gap-2">
           {/* Rodada Dropdown (Esquerda) */}
           <select
             value={viewRodada === null ? 'atual' : String(viewRodada)}
