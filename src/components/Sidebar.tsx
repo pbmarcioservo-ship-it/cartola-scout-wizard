@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   BarChart3, 
-  Target,
+  Zap,
   Gauge,
   Trophy, 
-  LayoutDashboard,
-  Circle,
+  Shirt,
+  Target,
   UserSearch,
   Shield,
   Activity,
@@ -16,7 +16,7 @@ import {
   ChevronRight,
   MoreHorizontal,
   X,
-  UserCog
+  ClipboardList
 } from 'lucide-react';
 
 interface SidebarProps {
