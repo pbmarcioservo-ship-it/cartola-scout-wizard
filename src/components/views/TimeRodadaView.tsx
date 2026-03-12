@@ -883,14 +883,27 @@ function PlayerCardPitch({
           {clube && <ClubeEscudo clube={clube} size="xs" />}
         </div>
       </div>
-      {showPrice && (
-        <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
-          <span className="text-[7px] md:text-[9px] font-black">C$ {atleta.preco_num.toFixed(2)}</span>
+      {showPrice ? (
+        <div className="mt-px px-1 md:px-1.5 py-px bg-white/90 rounded shadow-sm">
+          <span className="text-[7px] md:text-[9px] font-black text-foreground">C$ {atleta.preco_num.toFixed(2)}</span>
         </div>
-      )}
-      {!showPrice && pontuacao !== undefined && (
-        <div className="mt-px px-1 md:px-1.5 py-px bg-black rounded text-white">
-          <span className="text-[7px] md:text-[9px] font-black">{(isCaptain ? pontuacao * 1.5 : pontuacao).toFixed(1)} pts</span>
+      ) : (
+        <div className={cn(
+          "mt-px px-1.5 md:px-2 py-px rounded shadow-sm",
+          pontuacao !== undefined && pontuacao !== 0
+            ? "bg-white/95 border border-green-200"
+            : "bg-white/70 border border-border/40"
+        )}>
+          <span className={cn(
+            "text-[7px] md:text-[9px] font-black",
+            pontuacao !== undefined && pontuacao !== 0
+              ? "text-green-700"
+              : "text-muted-foreground"
+          )}>
+            {pontuacao !== undefined
+              ? `${(isCaptain ? pontuacao * 1.5 : pontuacao).toFixed(1)} pts`
+              : '--'}
+          </span>
         </div>
       )}
     </div>
