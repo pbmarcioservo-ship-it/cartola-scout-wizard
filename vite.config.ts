@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => {
       },
     },
     base: "./",
+    build: {
+      outDir: "dist",
+      assetsDir: "assets",
+    },
     plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(supabaseUrl),
