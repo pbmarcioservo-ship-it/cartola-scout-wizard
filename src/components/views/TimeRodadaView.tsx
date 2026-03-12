@@ -847,13 +847,28 @@ export function TimeRodadaView() {
         </div>
       )}
 
-      <PlayerDetailModal
-        atleta={selectedAtleta}
-        clube={selectedAtleta ? clubes[String(selectedAtleta.clube_id)] : undefined}
-        clubes={clubes as any}
-        open={!!selectedAtleta}
-        onOpenChange={(open) => !open && setSelectedAtleta(null)}
-      />
+      {/* Mercado aberto → card de detalhes padrão; Fechado → card de parciais */}
+      {mercadoAberto ? (
+        <PlayerDetailModal
+          atleta={selectedAtleta}
+          clube={selectedAtleta ? clubes[String(selectedAtleta.clube_id)] : undefined}
+          clubes={clubes as any}
+          open={!!selectedAtleta}
+          onOpenChange={(open) => !open && setSelectedAtleta(null)}
+        />
+      ) : (
+        <ParcialCard
+          atleta={selectedAtleta}
+          clube={selectedAtleta ? clubes[String(selectedAtleta.clube_id)] : undefined}
+          clubes={clubes}
+          partidas={partidas}
+          scout={selectedAtleta ? pontuadosData?.atletas?.[String(selectedAtleta.atleta_id)]?.scout : undefined}
+          pontuacao={selectedAtleta ? pontuadosData?.atletas?.[String(selectedAtleta.atleta_id)]?.pontuacao : undefined}
+          open={!!selectedAtleta}
+          onOpenChange={(open) => !open && setSelectedAtleta(null)}
+          isCaptain={!!selectedAtleta && displayLineup?.capitaoId === selectedAtleta.atleta_id}
+        />
+      )}
     </div>
   );
 }
