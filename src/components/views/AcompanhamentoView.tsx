@@ -194,10 +194,79 @@ export function AcompanhamentoView() {
   );
 }
 
+// ── Event Icons (visual indicators) ──
+function EventIcons({ scout }: { scout: CartolaScout }) {
+  const icons: React.ReactNode[] = [];
+
+  // ⚽ Gols
+  if (scout.G && scout.G > 0) {
+    icons.push(
+      <span key="G" className="inline-flex items-center gap-0.5 text-[11px]">
+        ⚽{scout.G > 1 && <span className="text-[9px] font-black text-success">x{scout.G}</span>}
+      </span>
+    );
+  }
+
+  // 👟 Assistências
+  if (scout.A && scout.A > 0) {
+    icons.push(
+      <span key="A" className="inline-flex items-center gap-0.5 text-[11px]">
+        👟{scout.A > 1 && <span className="text-[9px] font-black text-success">x{scout.A}</span>}
+      </span>
+    );
+  }
+
+  // 🟨 Cartão Amarelo
+  if (scout.CA && scout.CA > 0) {
+    icons.push(
+      <span key="CA" className="inline-block w-2.5 h-3.5 rounded-[1px] bg-yellow-400 border border-yellow-500" title="Cartão Amarelo" />
+    );
+  }
+
+  // 🟥 Cartão Vermelho
+  if (scout.CV && scout.CV > 0) {
+    icons.push(
+      <span key="CV" className="inline-block w-2.5 h-3.5 rounded-[1px] bg-red-500 border border-red-600" title="Cartão Vermelho" />
+    );
+  }
+
+  // 🧤 Defesa de Pênalti
+  if (scout.DP && scout.DP > 0) {
+    icons.push(
+      <span key="DP" className="inline-flex items-center text-[10px]" title="Defesa de Pênalti">
+        🧤{scout.DP > 1 && <span className="text-[9px] font-black text-success">x{scout.DP}</span>}
+      </span>
+    );
+  }
+
+  // ❌ Gol Contra
+  if (scout.GC && scout.GC > 0) {
+    icons.push(
+      <span key="GC" className="inline-flex items-center text-[10px] text-destructive font-black" title="Gol Contra">
+        ⚽<span className="text-[8px] line-through">GC</span>
+      </span>
+    );
+  }
+
+  // 🚫 Pênalti Perdido
+  if (scout.PP && scout.PP > 0) {
+    icons.push(
+      <span key="PP" className="inline-flex items-center text-[10px] text-destructive font-black" title="Pênalti Perdido">
+        🚫
+      </span>
+    );
+  }
+
+  if (icons.length === 0) return null;
+  return <div className="flex items-center gap-1 flex-shrink-0">{icons}</div>;
+}
+
 // ── Scout Mini-Card ──
 function ScoutMiniCard({ scout, value }: { scout: string; value: number }) {
   const info = SCOUT_LABELS[scout];
   if (!info || !value) return null;
+  // Skip events already shown as icons
+  if (['G', 'A', 'CA', 'CV', 'DP', 'GC', 'PP'].includes(scout)) return null;
   return (
     <span className={cn(
       'inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-bold',
