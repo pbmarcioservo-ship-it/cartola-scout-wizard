@@ -26,15 +26,15 @@ interface SidebarProps {
 
 const menuItems: { id: ViewType; label: string; icon: React.ElementType }[] = [
   { id: 'cruzamento', label: 'Cruzamento Geral', icon: BarChart3 },
-  { id: 'atletas', label: 'Atletas', icon: Target },
+  { id: 'atletas', label: 'Atletas', icon: Zap },
   { id: 'medias', label: 'Top Médias', icon: Gauge },
   { id: 'tops', label: 'Tops da Rodada', icon: Trophy },
-  { id: 'time-rodada', label: 'Time da Rodada', icon: LayoutDashboard },
-  { id: 'artilheiros', label: 'Top Artilheiros', icon: Circle },
+  { id: 'time-rodada', label: 'Time da Rodada', icon: Shirt },
+  { id: 'artilheiros', label: 'Top Artilheiros', icon: Target },
   { id: 'provaveis', label: 'Prováveis', icon: UserSearch },
   { id: 'intocaveis', label: 'Top Intocáveis', icon: Shield },
   { id: 'acompanhamento', label: 'Acompanhamento', icon: Activity },
-  { id: 'agente-tecnico', label: 'Agente Técnico', icon: UserCog },
+  { id: 'agente-tecnico', label: 'Agente Técnico', icon: ClipboardList },
 ];
 
 // First 4 items shown in mobile bottom tab bar
