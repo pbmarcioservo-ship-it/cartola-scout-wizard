@@ -318,6 +318,11 @@ function AtletaRow({ atleta, clube }: {
           <span className="text-[11px] font-bold text-foreground truncate">{atleta.apelido}</span>
           {clube && <ClubeEscudo clube={clube} size="xs" />}
           <span className="text-[8px] text-muted-foreground font-bold ml-0.5">{posInfo?.abreviacao}</span>
+          {atleta.is_titular && (
+            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[7px] font-black leading-none flex-shrink-0" title="Titular">
+              T
+            </span>
+          )}
           <EventIcons scout={scout} />
         </div>
         <div className="flex flex-wrap gap-0.5">
