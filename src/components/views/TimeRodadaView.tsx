@@ -646,7 +646,7 @@ export function TimeRodadaView() {
   return (
     <div className="animate-fade-in w-full flex flex-col items-center">
       {/* ── Compact Controls Bar ── */}
-      <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 mb-1 w-full max-w-[720px] rounded-lg">
+      <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 mb-1 w-full max-w-2xl mx-auto rounded-lg">
         <div className="flex items-center justify-between gap-1.5 md:gap-3">
           {/* Rodada Dropdown (Esquerda) */}
           <select
