@@ -828,7 +828,7 @@ export function TimeRodadaView() {
 
       {/* Substitution log */}
       {substitutions.length > 0 && (
-        <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
+        <div className="w-full max-w-2xl mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
           {substitutions.map((sub, i) => {
             const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
             const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
