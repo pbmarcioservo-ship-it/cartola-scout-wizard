@@ -4,17 +4,19 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   BarChart3, 
-  User, 
-  TrendingUp, 
+  Target,
+  Gauge,
   Trophy, 
-  Users, 
-  Zap,
+  LayoutDashboard,
+  Circle,
+  UserSearch,
   Shield,
   Activity,
   ChevronLeft,
   ChevronRight,
   MoreHorizontal,
-  X
+  X,
+  UserCog
 } from 'lucide-react';
 
 interface SidebarProps {
