@@ -84,12 +84,12 @@ export function AcompanhamentoView() {
     return map;
   }, [pontuadosData]);
 
-  // Group athletes by club
+  // Group athletes by club and mark titulares (first 11 outfield + 1 coach = titulares)
   const atletasByClub = useMemo(() => {
-    const grouped: Record<number, typeof atletasMap[number][]> = {};
+    const grouped: Record<number, any[]> = {};
     for (const [id, a] of Object.entries(atletasMap)) {
       if (!grouped[a.clube_id]) grouped[a.clube_id] = [];
-      grouped[a.clube_id].push({ ...a, atleta_id: Number(id) } as any);
+      grouped[a.clube_id].push({ ...a, atleta_id: Number(id) });
     }
     // Sort each club's athletes by position then score
     for (const clubId of Object.keys(grouped)) {
@@ -97,6 +97,19 @@ export function AcompanhamentoView() {
         if (a.posicao_id !== b.posicao_id) return a.posicao_id - b.posicao_id;
         return b.pontuacao - a.pontuacao;
       });
+      // Mark first 11 non-coach players as titulares + the coach
+      let outfieldCount = 0;
+      for (const atleta of grouped[Number(clubId)]) {
+        if (atleta.posicao_id === 6) {
+          // Técnico is always titular
+          atleta.is_titular = true;
+        } else if (outfieldCount < 11) {
+          atleta.is_titular = true;
+          outfieldCount++;
+        } else {
+          atleta.is_titular = false;
+        }
+      }
     }
     return grouped;
   }, [atletasMap]);
