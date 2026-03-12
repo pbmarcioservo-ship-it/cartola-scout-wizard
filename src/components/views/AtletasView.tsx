@@ -146,6 +146,7 @@ export function AtletasView() {
           <option value="G">Gols</option>
           <option value="I">Impedimento</option>
           <option value="SG">Sem Gol (SG)</option>
+          <option value="DE">Defesas (DE)</option>
         </select>
         <Button
           variant={compareMode ? 'destructive' : 'outline'}
