@@ -4,7 +4,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { PlayerDetailModal } from '@/components/PlayerDetailModal';
 import { useMercado, useRodada, usePartidas, useHistoricoRodadas, usePontuados, POSICOES } from '@/hooks/useCartolaData';
 import { CartolaAtleta, CartolaClube } from '@/lib/cartola-api';
-import { AlertCircle, RefreshCw, ArrowUp, Star } from 'lucide-react';
+import { AlertCircle, ArrowUp, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LS_KEY_LATERAL = 'statusfc_lateral_side_by_id';
