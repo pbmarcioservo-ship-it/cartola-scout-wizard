@@ -480,7 +480,14 @@ export function TimeRodadaView() {
     setSubstitutions([]);
   }, [estrategia, statusFilter, stableSeed, eligibleCount]);
 
-  // ── Live substitution logic ──
+  // ── Helper: check if a club's match has finished ──
+  const isMatchFinished = useCallback((clubeId: number): boolean => {
+    const p = partidas.find(p => p.clube_casa_id === clubeId || p.clube_visitante_id === clubeId);
+    if (!p) return false;
+    return p.placar_oficial_mandante !== null && p.placar_oficial_visitante !== null;
+  }, [partidas]);
+
+  // ── Live substitution logic (Cartola official rules) ──
   const activeLineup = useMemo(() => {
     if (!lineup || mercadoAberto || !pontuadosData?.atletas) return lineup;
 
@@ -494,7 +501,8 @@ export function TimeRodadaView() {
     let meis = [...lineup.meis];
     let atacs = [...lineup.atacs];
     let capitaoId = lineup.capitaoId;
-    const benchLeft = [...lineup.bench];
+    // Clone bench with mutable slots (will swap players on substitution)
+    const benchSlots = lineup.bench.map(b => ({ ...b, atleta: b.atleta }));
 
     const getPos = (posId: number) => {
       if (posId === 1) return { arr: gk ? [gk] : [], setArr: (a: CartolaAtleta[]) => { gk = a[0] || null; } };
@@ -505,55 +513,84 @@ export function TimeRodadaView() {
       return null;
     };
 
-    // 1. Absence substitutions: if starter has no pontuacao entry, reserve enters
-    for (let bi = benchLeft.length - 1; bi >= 0; bi--) {
-      const benchSlot = benchLeft[bi];
+    // 1. Absence substitutions:
+    // A reserve only enters AFTER the starter's match has FINISHED and the starter
+    // is confirmed as "didn't play" (no entry in pontuados).
+    // If the reserve scored negative, they do NOT substitute.
+    for (let bi = 0; bi < benchSlots.length; bi++) {
+      const benchSlot = benchSlots[bi];
+      if (benchSlot.isLuxo) continue; // Luxo handled separately
       const pos = getPos(benchSlot.posicaoId);
       if (!pos) continue;
 
-      // Check if any starter at this position didn't play
-      const absentIdx = pos.arr.findIndex(a => !pont[String(a.atleta_id)]);
-      if (absentIdx !== -1) {
-        const absentPlayer = pos.arr[absentIdx];
-        subs.push({ outId: absentPlayer.atleta_id, inId: benchSlot.atleta.atleta_id, reason: 'ausencia' });
-        // If absent was captain, transfer to reserve
-        if (capitaoId === absentPlayer.atleta_id) capitaoId = benchSlot.atleta.atleta_id;
-        const newArr = [...pos.arr];
-        newArr[absentIdx] = benchSlot.atleta;
-        pos.setArr(newArr);
-        benchLeft.splice(bi, 1);
-      }
+      // Find a starter at this position whose match finished but didn't play
+      const absentIdx = pos.arr.findIndex(a => {
+        const matchDone = isMatchFinished(a.clube_id);
+        const played = !!pont[String(a.atleta_id)];
+        return matchDone && !played;
+      });
+
+      if (absentIdx === -1) continue;
+
+      // Check reserve: must have scored AND score must be >= 0
+      const reservePont = pont[String(benchSlot.atleta.atleta_id)];
+      if (reservePont && reservePont.pontuacao < 0) continue; // negative → skip
+
+      const absentPlayer = pos.arr[absentIdx];
+      subs.push({
+        outId: absentPlayer.atleta_id,
+        inId: benchSlot.atleta.atleta_id,
+        reason: 'ausencia',
+        descendedPlayer: absentPlayer,
+      });
+      // If absent was captain, transfer to reserve
+      if (capitaoId === absentPlayer.atleta_id) capitaoId = benchSlot.atleta.atleta_id;
+      // Swap: reserve goes to field, starter goes to bench slot
+      const newArr = [...pos.arr];
+      newArr[absentIdx] = benchSlot.atleta;
+      pos.setArr(newArr);
+      benchSlots[bi] = { ...benchSlot, atleta: absentPlayer, isLuxo: false };
     }
 
-    // 2. Reserva de Luxo: if all attackers played, replace worst-scoring attacker if reserve scored more
-    const luxoIdx = benchLeft.findIndex(b => b.isLuxo);
+    // 2. Reserva de Luxo (4th attacker):
+    // Only activates when ALL 3 attackers' matches have FINISHED.
+    // Reserve must have scored positive AND more than the worst attacker.
+    const luxoIdx = benchSlots.findIndex(b => b.isLuxo);
     if (luxoIdx !== -1) {
-      const luxo = benchLeft[luxoIdx];
+      const luxo = benchSlots[luxoIdx];
       const luxoPont = pont[String(luxo.atleta.atleta_id)];
-      if (luxoPont) {
-        const allAtacsPlayed = atacs.every(a => !!pont[String(a.atleta_id)]);
-        if (allAtacsPlayed && atacs.length > 0) {
-          // Find worst scoring attacker
-          let worstIdx = 0;
-          let worstScore = Infinity;
-          for (let i = 0; i < atacs.length; i++) {
-            const p = pont[String(atacs[i].atleta_id)];
-            const score = p ? p.pontuacao : 0;
-            if (score < worstScore) { worstScore = score; worstIdx = i; }
-          }
-          if (luxoPont.pontuacao > worstScore) {
-            subs.push({ outId: atacs[worstIdx].atleta_id, inId: luxo.atleta.atleta_id, reason: 'luxo' });
-            if (capitaoId === atacs[worstIdx].atleta_id) capitaoId = luxo.atleta.atleta_id;
-            atacs[worstIdx] = luxo.atleta;
-            benchLeft.splice(luxoIdx, 1);
-          }
+
+      // All 3 attackers' matches must be finished
+      const allAtacsMatchesFinished = atacs.every(a => isMatchFinished(a.clube_id));
+
+      if (luxoPont && luxoPont.pontuacao > 0 && allAtacsMatchesFinished && atacs.length > 0) {
+        // Find worst scoring attacker
+        let worstIdx = 0;
+        let worstScore = Infinity;
+        for (let i = 0; i < atacs.length; i++) {
+          const p = pont[String(atacs[i].atleta_id)];
+          const score = p ? p.pontuacao : 0;
+          if (score < worstScore) { worstScore = score; worstIdx = i; }
+        }
+        if (luxoPont.pontuacao > worstScore) {
+          const descendedAtac = atacs[worstIdx];
+          subs.push({
+            outId: descendedAtac.atleta_id,
+            inId: luxo.atleta.atleta_id,
+            reason: 'luxo',
+            descendedPlayer: descendedAtac,
+          });
+          if (capitaoId === descendedAtac.atleta_id) capitaoId = luxo.atleta.atleta_id;
+          // Swap: luxo goes to field, worst attacker goes to bench
+          atacs[worstIdx] = luxo.atleta;
+          benchSlots[luxoIdx] = { ...luxo, atleta: descendedAtac, isLuxo: true };
         }
       }
     }
 
     setSubstitutions(subs);
-    return { gk, lats, zags, meis, atacs, tecnico: lineup.tecnico, capitaoId, bench: benchLeft };
-  }, [lineup, mercadoAberto, pontuadosData]);
+    return { gk, lats, zags, meis, atacs, tecnico: lineup.tecnico, capitaoId, bench: benchSlots };
+  }, [lineup, mercadoAberto, pontuadosData, isMatchFinished]);
 
   const displayLineup = activeLineup || lineup;
 
