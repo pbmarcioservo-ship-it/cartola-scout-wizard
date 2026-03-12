@@ -948,6 +948,7 @@ function BenchCard({
   showPrice,
   pontuacao,
   wasSubbedIn,
+  isDescended,
   onClick,
 }: {
   atleta: CartolaAtleta;
@@ -957,6 +958,7 @@ function BenchCard({
   showPrice?: boolean;
   pontuacao?: number;
   wasSubbedIn?: boolean;
+  isDescended?: boolean;
   onClick?: () => void;
 }) {
   const posLabel = POSICOES[posicaoId]?.abreviacao || '?';
@@ -965,15 +967,22 @@ function BenchCard({
     <div
       className={cn(
         "relative flex flex-col items-center cursor-pointer transition-all duration-300 hover:scale-105",
-        wasSubbedIn && "opacity-40 scale-95"
+        wasSubbedIn && "opacity-40 scale-95",
+        isDescended && "opacity-60"
       )}
       onClick={onClick}
     >
       {/* Luxo badge */}
-      {isLuxo && (
+      {isLuxo && !isDescended && (
         <div className="absolute -top-1.5 -right-0.5 z-10 flex items-center gap-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 px-1 py-0.5 rounded-full shadow ring-1 ring-yellow-600">
           <Star className="w-2.5 h-2.5 text-yellow-900 fill-yellow-900" />
           <span className="text-[6px] md:text-[7px] font-black text-yellow-900 uppercase">Luxo</span>
+        </div>
+      )}
+      {/* Descended indicator - player who came down from the field */}
+      {isDescended && (
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 bg-red-500 text-white px-1.5 py-0.5 rounded-full text-[6px] font-black shadow">
+          SUBSTITUÍDO ↓
         </div>
       )}
       {/* Subbed-in indicator */}
@@ -987,7 +996,8 @@ function BenchCard({
         alt={atleta.apelido}
         className={cn(
           "w-9 h-9 md:w-11 md:h-11 rounded-full object-cover shadow ring-1 ring-foreground/20",
-          isLuxo && "ring-2 ring-yellow-400"
+          isLuxo && !isDescended && "ring-2 ring-yellow-400",
+          isDescended && "ring-2 ring-red-400 grayscale-[30%]"
         )}
         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
       />
@@ -999,7 +1009,7 @@ function BenchCard({
       </div>
       <div className={cn(
         "mt-px px-1 py-px rounded text-[6px] md:text-[8px] font-black",
-        isLuxo ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900" : "bg-foreground/80 text-background"
+        isDescended ? "bg-red-100 text-red-700" : isLuxo ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900" : "bg-foreground/80 text-background"
       )}>
         {posLabel} • {showPrice ? `C$ ${atleta.preco_num.toFixed(2)}` : (pontuacao !== undefined ? `${pontuacao.toFixed(1)} pts` : '-')}
       </div>
