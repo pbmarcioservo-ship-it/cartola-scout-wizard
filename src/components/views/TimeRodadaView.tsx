@@ -463,13 +463,21 @@ export function TimeRodadaView() {
   }, [eligibleAtletas, mercadoData?.atletas, topSGTeams, getOpponent, teamScoreForMatch, acumulados]);
 
   // Generate lineup
+  // Deterministic seed based on strategy + status filter
+  const stableSeed = useMemo(() => {
+    let hash = 0;
+    const key = `${estrategia}-${statusFilter}`;
+    for (let i = 0; i < key.length; i++) hash = ((hash << 5) - hash) + key.charCodeAt(i);
+    return Math.abs(hash);
+  }, [estrategia, statusFilter]);
+
   const eligibleCount = eligibleAtletas.length;
   useEffect(() => {
     if (eligibleCount === 0) return;
-    const newLineup = generateLineup(estrategia, seed);
+    const newLineup = generateLineup(estrategia, stableSeed);
     setLineup(newLineup);
     setSubstitutions([]);
-  }, [estrategia, statusFilter, seed, eligibleCount]);
+  }, [estrategia, statusFilter, stableSeed, eligibleCount]);
 
   // ── Live substitution logic ──
   const activeLineup = useMemo(() => {
