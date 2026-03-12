@@ -265,8 +265,7 @@ function EventIcons({ scout }: { scout: CartolaScout }) {
 function ScoutMiniCard({ scout, value }: { scout: string; value: number }) {
   const info = SCOUT_LABELS[scout];
   if (!info || !value) return null;
-  // Skip events already shown as icons
-  if (['G', 'A', 'CA', 'CV', 'DP', 'GC', 'PP'].includes(scout)) return null;
+  // Mostrar TODOS os scouts, inclusive os que têm ícones visuais
   return (
     <span className={cn(
       'inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-bold',
@@ -276,6 +275,7 @@ function ScoutMiniCard({ scout, value }: { scout: string; value: number }) {
     </span>
   );
 }
+
 
 // ── Athlete Row ──
 function AtletaRow({ atleta, clube }: {
