@@ -646,13 +646,13 @@ export function TimeRodadaView() {
   return (
     <div className="animate-fade-in w-full flex flex-col items-center">
       {/* ── Compact Controls Bar ── */}
-      <div className="bg-primary text-primary-foreground px-3 py-1.5 md:px-4 md:py-2 mb-1 w-full max-w-[720px] rounded-lg">
-        <div className="relative flex items-center justify-between gap-2">
+      <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 mb-1 w-full max-w-[720px] rounded-lg">
+        <div className="flex items-center justify-between gap-1.5 md:gap-3">
           {/* Rodada Dropdown (Esquerda) */}
           <select
             value={viewRodada === null ? 'atual' : String(viewRodada)}
             onChange={(e) => setViewRodada(e.target.value === 'atual' ? null : Number(e.target.value))}
-            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0"
+            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-1.5 md:px-2 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0"
           >
             <option value="atual">Rodada Atual</option>
             {rodadaAtual && Array.from({ length: Math.min(rodadaAtual - 1, 38) }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0).map(r => (
@@ -661,7 +661,7 @@ export function TimeRodadaView() {
           </select>
 
           {/* Pontuação/Custo (Centro) */}
-          <div className="flex items-center gap-1.5 border border-primary-foreground/40 rounded px-2.5 py-1 absolute left-1/2 -translate-x-1/2">
+          <div className="flex items-center gap-1 md:gap-1.5 border border-primary-foreground/40 rounded px-2 py-1">
             <span className="text-[9px] md:text-[10px] font-bold uppercase opacity-80">
               {mercadoAberto ? 'Custo' : 'Pts'}
             </span>
@@ -670,11 +670,11 @@ export function TimeRodadaView() {
             </span>
           </div>
 
-          {/* Estratégia (Direita) */}
+          {/* Estratégia (Direita) - width reduzido no mobile */}
           <select
             value={estrategia}
             onChange={(e) => setEstrategia(e.target.value as Estrategia)}
-            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-2 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0"
+            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-1.5 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0 max-w-[100px] md:max-w-none"
           >
             <option value="tiro-curto">🛡️ Tiro Curto</option>
             <option value="bom-e-barato">💰 Bom e Barato</option>
