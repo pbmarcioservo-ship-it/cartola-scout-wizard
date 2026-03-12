@@ -51,7 +51,6 @@ export function TimeRodadaView() {
   const [estrategia, setEstrategia] = useState<Estrategia>('liga-classica');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('provavel');
   const [lineup, setLineup] = useState<Lineup | null>(null);
-  const [seed, setSeed] = useState(0);
   const [selectedAtleta, setSelectedAtleta] = useState<CartolaAtleta | null>(null);
   const [viewRodada, setViewRodada] = useState<number | null>(null);
   const [livePontos, setLivePontos] = useState(0);
