@@ -136,15 +136,12 @@ export function AtletasView() {
           className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[180px] cursor-pointer"
         >
           <option value="">Ordenar por Scout</option>
+          <option value="G">Gols</option>
           <option value="A">Assistências</option>
-          <option value="DS">Desarme</option>
-          <option value="FC">Falta Cometida</option>
-          <option value="FS">Falta Sofrida</option>
           <option value="FD">Fin. Defendida</option>
           <option value="FF">Fin. Fora</option>
           <option value="FT">Fin. na Trave</option>
-          <option value="G">Gols</option>
-          <option value="I">Impedimento</option>
+          <option value="DS">Desarme</option>
           <option value="SG">Sem Gol (SG)</option>
           <option value="DE">Defesas (DE)</option>
         </select>
