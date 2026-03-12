@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
         overlay: false,
       },
     },
-    base: "./",
+    base: "/",
     build: {
       outDir: "dist",
       assetsDir: "assets",
