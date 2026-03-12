@@ -41,6 +41,7 @@ interface SubstitutionInfo {
   outId: number;
   inId: number;
   reason: 'ausencia' | 'luxo';
+  descendedPlayer?: CartolaAtleta; // player who went down to bench
 }
 
 const POSICAO_ID_MAP: Record<string, number> = {
