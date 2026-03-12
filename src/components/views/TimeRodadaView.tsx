@@ -646,7 +646,7 @@ export function TimeRodadaView() {
   return (
     <div className="animate-fade-in w-full flex flex-col items-center">
       {/* ── Compact Controls Bar ── */}
-      <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 mb-1 w-full max-w-2xl mx-auto rounded-lg">
+      <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 mb-1 w-full max-w-[720px] rounded-lg">
         <div className="flex items-center justify-between gap-1.5 md:gap-3">
           {/* Rodada Dropdown (Esquerda) */}
           <select
@@ -687,7 +687,7 @@ export function TimeRodadaView() {
       {/* ── Football Pitch ── */}
       <div className="w-full flex justify-center">
         <div
-          className="relative rounded-2xl p-1.5 md:p-2 lg:p-3 shadow-inner mx-auto w-full max-w-2xl"
+          className="relative rounded-2xl p-1.5 md:p-2 lg:p-3 shadow-inner mx-auto w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px]"
           style={{
             backgroundColor: 'hsl(145, 63%, 30%)',
             height: 'clamp(340px, calc(100vh - 240px), 580px)',
@@ -790,7 +790,7 @@ export function TimeRodadaView() {
 
       {/* ── Bench / Banco de Reservas ── */}
       {displayLineup && displayLineup.bench && displayLineup.bench.length > 0 && (
-        <div className="w-full max-w-2xl mt-1.5 rounded-xl overflow-hidden"
+        <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1.5 rounded-xl overflow-hidden"
           style={{ background: 'linear-gradient(135deg, hsl(280, 40%, 94%), hsl(330, 35%, 93%))' }}
         >
           <div className="px-3 py-1.5 flex items-center gap-2">
@@ -828,7 +828,7 @@ export function TimeRodadaView() {
 
       {/* Substitution log */}
       {substitutions.length > 0 && (
-        <div className="w-full max-w-2xl mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
+        <div className="w-[95vw] max-w-[520px] md:max-w-[480px] lg:max-w-[520px] mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
           {substitutions.map((sub, i) => {
             const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
             const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
