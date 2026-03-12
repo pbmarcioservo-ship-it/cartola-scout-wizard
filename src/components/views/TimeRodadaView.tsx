@@ -803,19 +803,22 @@ export function TimeRodadaView() {
             )}
           </div>
           <div className="flex items-center justify-around px-2 pb-2.5 pt-0.5 gap-1">
-            {/* Show all 5 bench positions, even if some were subbed in */}
-            {lineup?.bench.map((slot) => {
-              const wasSubbedIn = subInIds.has(slot.atleta.atleta_id);
+            {/* Show all 5 bench slots - after subs, descended players appear here */}
+            {displayLineup?.bench.map((slot, idx) => {
+              const isDescended = subOutIds.has(slot.atleta.atleta_id);
+              const wasOriginalReserve = lineup?.bench.some(b => b.atleta.atleta_id === slot.atleta.atleta_id);
+              const wasSubbedIn = !isDescended && !wasOriginalReserve;
               return (
                 <BenchCard
-                  key={slot.atleta.atleta_id}
+                  key={`bench-${idx}-${slot.atleta.atleta_id}`}
                   atleta={slot.atleta}
                   clube={clubes[String(slot.atleta.clube_id)]}
                   posicaoId={slot.posicaoId}
-                  isLuxo={slot.isLuxo}
+                  isLuxo={slot.isLuxo && !isDescended}
                   showPrice={mercadoAberto}
                   pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(slot.atleta.atleta_id)]?.pontuacao : undefined}
-                  wasSubbedIn={wasSubbedIn}
+                  wasSubbedIn={false}
+                  isDescended={isDescended}
                   onClick={() => setSelectedAtleta(slot.atleta)}
                 />
               );
