@@ -133,8 +133,11 @@ export interface CartolaDestaques {
   }[];
 }
 
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "";
+const CARTOLA_PROXY_URL = `${API_ORIGIN}/api/cartola`;
+
 async function fetchCartolaEndpoint<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-  const response = await fetch("/api/cartola", {
+  const response = await fetch(CARTOLA_PROXY_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

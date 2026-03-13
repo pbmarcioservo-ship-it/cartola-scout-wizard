@@ -26,7 +26,8 @@ interface ChatMessage {
   content: string;
 }
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agente-tecnico`;
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "";
+const CHAT_URL = `${API_ORIGIN}/api/agente-tecnico`;
 
 async function streamChat({
   messages,
@@ -45,7 +46,6 @@ async function streamChat({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     },
     body: JSON.stringify({ messages, contextData }),
   });
