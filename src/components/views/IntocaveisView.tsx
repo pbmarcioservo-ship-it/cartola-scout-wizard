@@ -248,8 +248,8 @@ export function IntocaveisView() {
       </div>
 
       {/* Results */}
-      <div className="bg-card rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-primary/10 p-3 border-b border-border">
+      <div className="bg-card rounded-lg shadow-lg overflow-hidden max-md:rounded-none max-md:shadow-sm">
+        <div className="bg-primary/10 p-3 border-b border-border max-md:p-2">
           <p className="text-sm text-muted-foreground">
             Máx. 3 por posição/time (1 goleiro) • Apenas Prováveis • 
             <span className="font-bold text-foreground ml-1">{intocaveis.length} atletas</span>
