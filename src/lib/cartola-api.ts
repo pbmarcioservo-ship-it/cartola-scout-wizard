@@ -1,5 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
-
 export interface CartolaClube {
   id: number;
   nome: string;
@@ -136,86 +134,60 @@ export interface CartolaDestaques {
 }
 
 async function fetchCartolaEndpoint<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-  const queryParams = new URLSearchParams({ endpoint, ...params });
-  
-  const { data, error } = await supabase.functions.invoke('cartola-api', {
-    body: null,
-    method: 'GET',
+  const response = await fetch("/api/cartola", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ endpoint, ...(params || {}) }),
   });
 
-  // Workaround: using POST with query params in body
-  const response = await supabase.functions.invoke('cartola-api', {
-    body: { endpoint, ...params },
-  });
-
-  if (response.error) {
-    throw new Error(response.error.message || 'Erro ao buscar dados do Cartola');
+  const text = await response.text().catch(() => "");
+  if (!response.ok) {
+    const suffix = text ? `: ${text.substring(0, 200)}` : "";
+    throw new Error(`Erro ao buscar dados do Cartola (${endpoint})${suffix}`);
   }
 
-  return response.data as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new Error(`Resposta inválida do proxy do Cartola (${endpoint})`);
+  }
 }
 
 export const cartolaApi = {
   // Busca todos os atletas disponíveis no mercado
   async getMercado(): Promise<CartolaMercado> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'mercado' },
-    });
-    if (error) throw error;
-    return data;
+    return fetchCartolaEndpoint<CartolaMercado>("mercado");
   },
 
   // Busca atletas que já pontuaram na rodada
   async getPontuados(): Promise<CartolaAtletasPontuados> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'pontuados' },
-    });
-    if (error) throw error;
-    return data;
+    return fetchCartolaEndpoint<CartolaAtletasPontuados>("pontuados");
   },
 
   // Busca partidas da rodada
   async getPartidas(rodada?: number): Promise<{ partidas: CartolaPartida[]; clubes: Record<string, CartolaClube> }> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'partidas', ...(rodada && { rodada: String(rodada) }) },
-    });
-    if (error) throw error;
-    return data;
+    return fetchCartolaEndpoint("partidas", rodada ? { rodada: String(rodada) } : undefined);
   },
 
   // Busca status da rodada atual
   async getRodada(): Promise<CartolaRodada> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'rodada' },
-    });
-    if (error) throw error;
-    return data;
+    return fetchCartolaEndpoint<CartolaRodada>("rodada");
   },
 
   // Busca lista de clubes
   async getClubes(): Promise<Record<string, CartolaClube>> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'clubes' },
-    });
-    if (error) throw error;
-    return data;
+    return fetchCartolaEndpoint<Record<string, CartolaClube>>("clubes");
   },
 
   // Busca pontuados de uma rodada específica
   async getPontuadosRodada(rodada: number): Promise<CartolaAtletasPontuados> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'pontuados-rodada', rodada: String(rodada) },
-    });
-    if (error) throw error;
-    return data;
+    return fetchCartolaEndpoint<CartolaAtletasPontuados>("pontuados-rodada", { rodada: String(rodada) });
   },
 
-  // Busca destaques (mais escalados) - via edge function segura
-  async getDestaques(): Promise<any> {
-    const { data, error } = await supabase.functions.invoke('cartola-api', {
-      body: { endpoint: 'destaques' },
-    });
-    if (error) throw error;
-    return data;
+  // Busca destaques (mais escalados)
+  async getDestaques(): Promise<CartolaDestaques> {
+    return fetchCartolaEndpoint<CartolaDestaques>("destaques");
   },
 };

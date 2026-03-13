@@ -3,5 +3,8 @@ project_id = "hmqxtixhrjfsubwewuzj"
 [functions.agente-tecnico]
 verify_jwt = false
 
+[functions.cartola-api]
+verify_jwt = false
+
 [functions.kiwify-webhook]
 verify_jwt = false
