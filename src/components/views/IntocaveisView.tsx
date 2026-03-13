@@ -271,7 +271,7 @@ export function IntocaveisView() {
               return (
                 <div
                   key={atleta.atleta_id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in cursor-pointer max-md:gap-2 max-md:px-2 max-md:py-2"
                   onClick={() => setSelectedAtleta(atleta)}
                   style={{ animationDelay: `${index * 20}ms` }}
                 >
