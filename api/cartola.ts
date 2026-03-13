@@ -13,8 +13,18 @@ const endpoints: Record<string, { path: string }> = {
   destaques: { path: "/mercado/destaques" },
 };
 
-function setCors(res: CartolaProxyResponse) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+const ALLOWED_ORIGINS = new Set([
+  "https://statusfcpro.com",
+  "https://www.statusfcpro.com",
+  "http://localhost:8080",
+  "http://localhost:5173",
+]);
+
+function setCors(req: CartolaProxyRequest, res: CartolaProxyResponse) {
+  const origin = (req.headers.origin || "").toString();
+  const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "*";
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Origin", allowOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
@@ -43,7 +53,7 @@ async function readJsonBody(req: CartolaProxyRequest): Promise<Record<string, un
 }
 
 export default async function handler(req: CartolaProxyRequest, res: CartolaProxyResponse) {
-  setCors(res);
+  setCors(req, res);
 
   if (req.method === "OPTIONS") {
     res.statusCode = 204;

@@ -133,7 +133,10 @@ export interface CartolaDestaques {
   }[];
 }
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "";
+const API_ORIGIN =
+  (typeof window !== "undefined" && (window as any).__STATUSFC_API_ORIGIN__) ||
+  import.meta.env.VITE_API_ORIGIN ||
+  "";
 const CARTOLA_PROXY_URL = `${API_ORIGIN}/api/cartola`;
 
 async function fetchCartolaEndpoint<T>(endpoint: string, params?: Record<string, string>): Promise<T> {

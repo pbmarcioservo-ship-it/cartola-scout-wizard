@@ -4,8 +4,18 @@ import { Readable } from "stream";
 type Req = IncomingMessage & { body?: unknown };
 type Res = ServerResponse & { setHeader(name: string, value: string): void };
 
-function setCors(res: Res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+const ALLOWED_ORIGINS = new Set([
+  "https://statusfcpro.com",
+  "https://www.statusfcpro.com",
+  "http://localhost:8080",
+  "http://localhost:5173",
+]);
+
+function setCors(req: Req, res: Res) {
+  const origin = (req.headers.origin || "").toString();
+  const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : "*";
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Origin", allowOrigin);
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
@@ -25,7 +35,7 @@ async function readJsonBody(req: Req): Promise<Record<string, unknown>> {
 }
 
 export default async function handler(req: Req, res: Res) {
-  setCors(res);
+  setCors(req, res);
 
   if (req.method === "OPTIONS") {
     res.statusCode = 204;
@@ -64,12 +74,15 @@ export default async function handler(req: Req, res: Res) {
       headers: {
         "Content-Type": "application/json",
         apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
       } as Record<string, string>,
       body: JSON.stringify(payload),
     });
 
     res.statusCode = upstream.status;
     res.setHeader("Content-Type", upstream.headers.get("content-type") || "application/json");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
 
     const cacheControl = upstream.headers.get("cache-control");
     if (cacheControl) res.setHeader("Cache-Control", cacheControl);
@@ -94,4 +107,3 @@ export default async function handler(req: Req, res: Res) {
     res.end(JSON.stringify({ error: e instanceof Error ? e.message : "Erro ao conectar com o Agente Técnico" }));
   }
 }
-

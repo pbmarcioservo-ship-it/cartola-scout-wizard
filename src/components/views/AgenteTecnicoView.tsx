@@ -26,7 +26,10 @@ interface ChatMessage {
   content: string;
 }
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "";
+const API_ORIGIN =
+  (typeof window !== "undefined" && (window as any).__STATUSFC_API_ORIGIN__) ||
+  import.meta.env.VITE_API_ORIGIN ||
+  "";
 const CHAT_URL = `${API_ORIGIN}/api/agente-tecnico`;
 
 async function streamChat({
