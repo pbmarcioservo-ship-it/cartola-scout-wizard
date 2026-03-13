@@ -28,7 +28,7 @@ export function MaisEscaladosView() {
   const { populares, capitaes } = useMemo(() => {
     if (!destaquesData) return { populares: [], capitaes: [] };
 
-    const raw = destaquesData;
+    const raw = destaquesData as any;
     
     let populares: any[] = [];
     let capitaes: any[] = [];

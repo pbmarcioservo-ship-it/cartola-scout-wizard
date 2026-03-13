@@ -188,12 +188,12 @@ export function IntocaveisView() {
         TOP INTOCÁVEIS
       </h2>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50">
+      {/* Filters - sticky + compact on mobile */}
+      <div className="flex flex-wrap gap-3 bg-card p-4 rounded-lg mb-5 shadow-md sticky top-0 z-50 max-md:gap-1.5 max-md:p-2 max-md:mb-2 max-md:rounded-none max-md:shadow-sm">
         <select
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="todos">Todos os Times</option>
           {clubes.map(c => (
@@ -204,7 +204,7 @@ export function IntocaveisView() {
         <select
           value={posicao}
           onChange={(e) => setPosicao(e.target.value as PosicaoFilter)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[120px] cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         >
           <option value="todos">Todas Posições</option>
           <option value="goleiro">Goleiro</option>
@@ -220,25 +220,25 @@ export function IntocaveisView() {
           placeholder="Buscar Atleta..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70"
+          className="bg-primary text-primary-foreground border-none px-4 py-2.5 rounded-md font-bold min-w-[150px] placeholder:text-primary-foreground/70 max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:min-w-0 max-md:flex-1 max-md:rounded-sm"
         />
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground font-bold">Rodadas:</label>
+        <div className="flex items-center gap-2 max-md:gap-1 max-md:w-full">
+          <label className="text-sm text-muted-foreground font-bold max-md:text-[11px]">Rodadas:</label>
           <select
             value={rodadaInicio}
             onChange={(e) => setRodadaInicio(Number(e.target.value))}
-            className="bg-primary text-primary-foreground border-none px-3 py-2.5 rounded-md font-bold cursor-pointer"
+            className="bg-primary text-primary-foreground border-none px-3 py-2.5 rounded-md font-bold cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:rounded-sm"
           >
             {Array.from({ length: 38 }, (_, i) => i + 1).map(r => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
-          <span className="text-muted-foreground font-bold">a</span>
+          <span className="text-muted-foreground font-bold max-md:text-[11px]">a</span>
           <select
             value={rodadaFim}
             onChange={(e) => setRodadaFim(Number(e.target.value))}
-            className="bg-primary text-primary-foreground border-none px-3 py-2.5 rounded-md font-bold cursor-pointer"
+            className="bg-primary text-primary-foreground border-none px-3 py-2.5 rounded-md font-bold cursor-pointer max-md:px-2 max-md:py-1.5 max-md:text-[11px] max-md:rounded-sm"
           >
             {Array.from({ length: 38 }, (_, i) => i + 1).map(r => (
               <option key={r} value={r}>{r}</option>
@@ -248,8 +248,8 @@ export function IntocaveisView() {
       </div>
 
       {/* Results */}
-      <div className="bg-card rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-primary/10 p-3 border-b border-border">
+      <div className="bg-card rounded-lg shadow-lg overflow-hidden max-md:rounded-none max-md:shadow-sm">
+        <div className="bg-primary/10 p-3 border-b border-border max-md:p-2">
           <p className="text-sm text-muted-foreground">
             Máx. 3 por posição/time (1 goleiro) • Apenas Prováveis • 
             <span className="font-bold text-foreground ml-1">{intocaveis.length} atletas</span>
@@ -271,7 +271,7 @@ export function IntocaveisView() {
               return (
                 <div
                   key={atleta.atleta_id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors animate-slide-in cursor-pointer max-md:gap-2 max-md:px-2 max-md:py-2"
                   onClick={() => setSelectedAtleta(atleta)}
                   style={{ animationDelay: `${index * 20}ms` }}
                 >
