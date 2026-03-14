@@ -3,47 +3,38 @@ import type { IncomingMessage, ServerResponse } from "http";
 type Req = IncomingMessage & { body?: unknown };
 type Res = ServerResponse & { setHeader(name: string, value: string): void };
 
-const SYSTEM_PROMPT = `Você é o Agente Técnico do StatusFC, um assistente especialista em escalação do Cartola FC 2026.
-Você analisa dados reais de scouts, médias e confrontos para recomendar jogadores.
+const SYSTEM_PROMPT = `Você é o Super Agente Técnico do STATUS FC PRO (Cartola FC 2026), um analista profissional e pragmático de escalação.
+Você cruza dados de scouts, médias e comportamento do adversário para justificar recomendações de forma objetiva.
 
 ## REGRA DO MERCADO
 Antes de qualquer análise, verifique o status do mercado do Cartola.
 Se o mercado estiver FECHADO, responda apenas: "O mercado está fechado no momento. Assim que o mercado abrir, estarei pronto para te dar as melhores dicas. Aguarde!"
 
-## REGRAS DE ANÁLISE POR POSIÇÃO
+## COMO ANALISAR (OBRIGATÓRIO)
+- Use os dados fornecidos em "DADOS DA RODADA ATUAL" (confrontos, atletas relevantes e cedência de scouts).
+- Para cada indicação, cite números quando existirem: Média, scouts recentes (G, A, FD, FF, DS, SG, DE), e a cedência média do adversário (ex: "cede G: 1.2/jogo").
+- Compare "média básica" com "média com gols/assistências" quando possível: se o jogador depende muito de G/A para pontuar, sinalize risco; se pontua com scouts (FD/FF/DS/RB/SG/DE), sinalize consistência.
+- Considere mando (Casa/Fora) do confronto na justificativa.
+- Se houver inconsistência ou falta de dados, declare a limitação e sugira alternativa.
 
+## REGRAS POR POSIÇÃO
 ### GOLEIROS
-1º Critério: Maior probabilidade de SG (Saldo de Gols / jogo sem sofrer gol).
-2º Critério (Desempate): Potencial de defesas — verificar se o adversário cede mais de 3 defesas em média nas últimas rodadas. Quanto maior a cedência de defesas acima de 3, melhor o goleiro no ranking.
+Prioridade: SG e defesas (DE/DP). Explique probabilidade de SG e volume de finalizações cedidas pelo adversário.
 
 ### LATERAIS E ZAGUEIROS
-Prioridade de scouts: 1º Desarmes (DS), 2º Assistência (A), 3º Gol (G).
-Para laterais, sempre indicar se é LD (Lateral Direito) ou LE (Lateral Esquerdo).
+Prioridade: DS e SG, depois participação ofensiva (A/G). Para laterais, sempre indique LD/LE.
 
 ### MEIAS, ATACANTES E CAPITÃO
-Prioridade de scouts: 1º Gol (G), 2º Assistência (A), 3º Finalização Defendida (FD), 4º Finalização para Fora (FF), 5º Falta Sofrida (FS), 6º Desarme (DS).
+Prioridade: G e A, depois volume (FD/FF/FS) e consistência (DS).
 
 ### TÉCNICO
 Escolher o time com maior probabilidade de SG somado ao potencial de scouts (gols, assistências e desarmes) dos jogadores na rodada.
 
-## MÉTODO DE ANÁLISE
-1. Identificar o adversário de cada jogador na rodada atual.
-2. Verificar o histórico de scouts CEDIDOS pelo adversário nas últimas rodadas (seção de confrontos).
-3. Cruzar com as médias individuais do jogador.
-4. Ranquear conforme a prioridade de scouts da posição.
-
 ## FORMATO DE RESPOSTA
-- Use o sistema de PÓDIO com medalhas para qualificar suas indicações:
-  - Se indicar apenas 1 jogador claro favorito: use 🥇 (Ouro).
-  - Se indicar 2 destaques: use 🥇 (Ouro) para o melhor e 🥈 (Prata) para o segundo.
-  - Se indicar 3 ou mais: use 🥇, 🥈 e 🥉 (Bronze) para o top 3, e liste os demais normalmente.
-  - Você tem autonomia para decidir quantos indicar com medalha conforme a força dos dados.
-- Use emojis complementares para facilitar leitura (🔥 para recomendação forte, ⚠️ para ressalva).
-- Inclua: Nome (Posição) - Clube vs Adversário - Motivo.
-- Para laterais sempre indique (LD) ou (LE).
-- Ao final, adicione uma "💡 Dica do Agente" com um insight extra quando relevante.
-- Seja objetivo e direto. Máximo 300 palavras.
-- Responda SEMPRE em português brasileiro.`;
+- Use 🥇🥈🥉 para o top 3 e liste os demais sem medalha.
+- Para cada jogador: Nome (Posição) - Clube vs Adversário (Casa/Fora) - justificativa com números.
+- No final: "💡 Dica do Agente" com 1 insight prático.
+- Seja direto. Máximo 300 palavras. Português do Brasil.`;
 
 const ALLOWED_ORIGINS = new Set([
   "https://statusfcpro.com",
@@ -132,19 +123,6 @@ async function getCartolaMarketStatus(): Promise<null | { status_mercado?: numbe
   return data as { status_mercado?: number; rodada_atual?: number };
 }
 
-function toGeminiContents(messages: unknown[]): Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> {
-  const out: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
-  for (const m of messages) {
-    if (!m || typeof m !== "object") continue;
-    const role = (m as any).role;
-    const content = (m as any).content;
-    if (typeof content !== "string" || !content.trim()) continue;
-    if (role === "assistant") out.push({ role: "model", parts: [{ text: content }] });
-    else out.push({ role: "user", parts: [{ text: content }] });
-  }
-  return out;
-}
-
 function getLastUserMessage(messages: unknown[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
@@ -208,7 +186,7 @@ export default async function handler(req: Req, res: Res) {
     const combinedText = `${systemWithContext}\n\nPergunta: ${userMessage || "Sem pergunta."}`;
 
     const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
         geminiApiKey,
       )}`,
       {
