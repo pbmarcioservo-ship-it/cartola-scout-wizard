@@ -1,11 +1,14 @@
 import type { IncomingMessage, ServerResponse } from "http";
-import { Readable } from "stream";
 
 type Req = IncomingMessage & { body?: unknown };
 type Res = ServerResponse & { setHeader(name: string, value: string): void };
 
 const SYSTEM_PROMPT = `Você é o Agente Técnico do StatusFC, um assistente especialista em escalação do Cartola FC 2026.
 Você analisa dados reais de scouts, médias e confrontos para recomendar jogadores.
+
+## REGRA DO MERCADO
+Antes de qualquer análise, verifique o status do mercado do Cartola.
+Se o mercado estiver FECHADO, responda apenas: "O mercado está fechado no momento. Assim que o mercado abrir, estarei pronto para te dar as melhores dicas. Aguarde!"
 
 ## REGRAS DE ANÁLISE POR POSIÇÃO
 
@@ -102,6 +105,46 @@ function buildContextMessage(contextData: Record<string, unknown> | null): strin
   return msg;
 }
 
+function writeSse(res: Res, dataLine: string) {
+  res.write(`data: ${dataLine}\n\n`);
+}
+
+function streamTextAsOpenAIEvents(res: Res, fullText: string) {
+  const chunkSize = 80;
+  for (let i = 0; i < fullText.length; i += chunkSize) {
+    const chunk = fullText.slice(i, i + chunkSize);
+    writeSse(res, JSON.stringify({ choices: [{ delta: { content: chunk } }] }));
+  }
+  writeSse(res, "[DONE]");
+  res.end();
+}
+
+async function getCartolaMarketStatus(): Promise<null | { status_mercado?: number; rodada_atual?: number }> {
+  const resp = await fetch("https://api.cartola.globo.com/mercado/status", {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      Accept: "application/json",
+    },
+  });
+  if (!resp.ok) return null;
+  const data = (await resp.json().catch(() => null)) as any;
+  if (!data || typeof data !== "object") return null;
+  return data as { status_mercado?: number; rodada_atual?: number };
+}
+
+function toGeminiContents(messages: unknown[]): Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> {
+  const out: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
+  for (const m of messages) {
+    if (!m || typeof m !== "object") continue;
+    const role = (m as any).role;
+    const content = (m as any).content;
+    if (typeof content !== "string" || !content.trim()) continue;
+    if (role === "assistant") out.push({ role: "model", parts: [{ text: content }] });
+    else out.push({ role: "user", parts: [{ text: content }] });
+  }
+  return out;
+}
+
 export default async function handler(req: Req, res: Res) {
   setCors(req, res);
 
@@ -118,11 +161,11 @@ export default async function handler(req: Req, res: Res) {
     return;
   }
 
-  const lovableApiKey = process.env.LOVABLE_API_KEY;
-  if (!lovableApiKey) {
+  const geminiApiKey = process.env.GOOGLE_GEMINI_API_KEY;
+  if (!geminiApiKey) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify({ error: "LOVABLE_API_KEY não configurada na Vercel." }));
+    res.end(JSON.stringify({ error: "GOOGLE_GEMINI_API_KEY não configurada na Vercel." }));
     return;
   }
 
@@ -132,42 +175,55 @@ export default async function handler(req: Req, res: Res) {
     const contextData =
       payload.contextData && typeof payload.contextData === "object" ? (payload.contextData as Record<string, unknown>) : null;
 
-    const systemWithContext = SYSTEM_PROMPT + buildContextMessage(contextData);
-    const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [{ role: "system", content: systemWithContext }, ...messages],
-        stream: true,
-      }),
-    });
-
-    res.statusCode = upstream.status;
-    res.setHeader("Content-Type", upstream.headers.get("content-type") || "application/json");
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    const cacheControl = upstream.headers.get("cache-control");
-    if (cacheControl) res.setHeader("Cache-Control", cacheControl);
+    const market = await getCartolaMarketStatus();
+    const statusMercado = market?.status_mercado;
 
-    if (!upstream.ok) {
-      const txt = await upstream.text().catch(() => "");
-      res.end(txt || JSON.stringify({ error: `Upstream error ${upstream.status}` }));
+    if (statusMercado !== 1) {
+      const msg =
+        "O mercado está fechado no momento. Assim que o mercado abrir, estarei pronto para te dar as melhores dicas. Aguarde!";
+      streamTextAsOpenAIEvents(res, msg);
       return;
     }
 
-    if (!upstream.body) {
-      const txt = await upstream.text().catch(() => "");
-      res.end(txt || "");
+    const systemWithContext = SYSTEM_PROMPT + buildContextMessage(contextData);
+    const contents = toGeminiContents(messages);
+
+    const geminiResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
+        geminiApiKey,
+      )}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { role: "system", parts: [{ text: systemWithContext }] },
+          contents,
+          generationConfig: {
+            temperature: 0.6,
+            topP: 0.9,
+            maxOutputTokens: 900,
+          },
+        }),
+      },
+    );
+
+    if (!geminiResp.ok) {
+      const errText = await geminiResp.text().catch(() => "");
+      streamTextAsOpenAIEvents(res, `Erro ao conectar com a IA (Gemini): ${errText.slice(0, 200)}`);
       return;
     }
 
-    const nodeStream = Readable.fromWeb(upstream.body as unknown as ReadableStream);
-    nodeStream.pipe(res);
+    const geminiJson = (await geminiResp.json().catch(() => null)) as any;
+    const parts = geminiJson?.candidates?.[0]?.content?.parts;
+    const text =
+      Array.isArray(parts) ? parts.map((p: any) => (typeof p?.text === "string" ? p.text : "")).join("") : "";
+
+    streamTextAsOpenAIEvents(res, text || "Erro ao processar resposta da IA (Gemini).");
   } catch (e: unknown) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "application/json");
