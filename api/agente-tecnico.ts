@@ -241,3 +241,4 @@ export default async function handler(req: Req, res: Res) {
     res.end(JSON.stringify({ error: e instanceof Error ? e.message : "Erro ao conectar com o Agente Técnico" }));
   }
 }
+// versao chatgpt ok
