@@ -186,7 +186,7 @@ export default async function handler(req: Req, res: Res) {
     const combinedText = `${systemWithContext}\n\nPergunta: ${userMessage || "Sem pergunta."}`;
 
     const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=${encodeURIComponent(
         geminiApiKey,
       )}`,
       {
@@ -206,13 +206,9 @@ export default async function handler(req: Req, res: Res) {
     }
 
     const geminiJson = (await geminiResp.json().catch(() => null)) as any;
-    const parts = geminiJson?.candidates?.[0]?.content?.parts;
-    const text =
-      Array.isArray(parts) && typeof parts?.[0]?.text === "string"
-        ? String(parts[0].text)
-        : "";
+    const text = geminiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    streamTextAsOpenAIEvents(res, text || "Erro ao processar resposta da IA (Gemini).");
+    streamTextAsOpenAIEvents(res, typeof text === "string" && text.trim() ? text : "Erro ao processar resposta da IA (Gemini).");
   } catch (e: unknown) {
     res.statusCode = 500;
     res.setHeader("Content-Type", "application/json");
