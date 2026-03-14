@@ -401,3 +401,4 @@ export default async function handler(req: Req, res: Res) {
     sendJson(res, 500, { error: e instanceof Error ? e.message : "Erro ao conectar com o Agente Técnico" });
   }
 }
+// Ativando Agente Porta-Voz da Inteligência Interna v8
