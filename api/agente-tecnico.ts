@@ -203,12 +203,12 @@ export default async function handler(req: Req, res: Res) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemWithContext }] },
+          system_instruction: { parts: [{ text: systemWithContext }] },
           contents,
-          generationConfig: {
+          generation_config: {
             temperature: 0.6,
-            topP: 0.9,
-            maxOutputTokens: 900,
+            top_p: 0.9,
+            max_output_tokens: 900,
           },
         }),
       },
