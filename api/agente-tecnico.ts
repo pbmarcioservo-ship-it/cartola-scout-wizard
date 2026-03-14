@@ -179,9 +179,11 @@ export default async function handler(req: Req, res: Res) {
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
+    res.write(": ok\n\n");
 
     const market = await getCartolaMarketStatus();
     const statusMercado = market?.status_mercado;
+    console.log("agente-tecnico: mercado", { status_mercado: statusMercado, rodada_atual: market?.rodada_atual });
 
     if (statusMercado !== 1) {
       const msg =
@@ -194,14 +196,14 @@ export default async function handler(req: Req, res: Res) {
     const contents = toGeminiContents(messages);
 
     const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
         geminiApiKey,
       )}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          systemInstruction: { role: "system", parts: [{ text: systemWithContext }] },
+          systemInstruction: { parts: [{ text: systemWithContext }] },
           contents,
           generationConfig: {
             temperature: 0.6,
@@ -211,6 +213,7 @@ export default async function handler(req: Req, res: Res) {
         }),
       },
     );
+    console.log("agente-tecnico: gemini status", geminiResp.status);
 
     if (!geminiResp.ok) {
       const errText = await geminiResp.text().catch(() => "");
