@@ -145,6 +145,17 @@ function toGeminiContents(messages: unknown[]): Array<{ role: "user" | "model"; 
   return out;
 }
 
+function getLastUserMessage(messages: unknown[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || typeof m !== "object") continue;
+    const role = (m as any).role;
+    const content = (m as any).content;
+    if (role === "user" && typeof content === "string" && content.trim()) return content;
+  }
+  return "";
+}
+
 export default async function handler(req: Req, res: Res) {
   setCors(req, res);
 
@@ -193,23 +204,18 @@ export default async function handler(req: Req, res: Res) {
     }
 
     const systemWithContext = SYSTEM_PROMPT + buildContextMessage(contextData);
-    const contents = toGeminiContents(messages);
+    const userMessage = getLastUserMessage(messages);
+    const combinedText = `${systemWithContext}\n\nPergunta: ${userMessage || "Sem pergunta."}`;
 
     const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(
         geminiApiKey,
       )}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemWithContext }] },
-          contents,
-          generation_config: {
-            temperature: 0.6,
-            top_p: 0.9,
-            max_output_tokens: 900,
-          },
+          contents: [{ role: "user", parts: [{ text: combinedText }] }],
         }),
       },
     );
@@ -224,7 +230,9 @@ export default async function handler(req: Req, res: Res) {
     const geminiJson = (await geminiResp.json().catch(() => null)) as any;
     const parts = geminiJson?.candidates?.[0]?.content?.parts;
     const text =
-      Array.isArray(parts) ? parts.map((p: any) => (typeof p?.text === "string" ? p.text : "")).join("") : "";
+      Array.isArray(parts) && typeof parts?.[0]?.text === "string"
+        ? String(parts[0].text)
+        : "";
 
     streamTextAsOpenAIEvents(res, text || "Erro ao processar resposta da IA (Gemini).");
   } catch (e: unknown) {
@@ -233,5 +241,3 @@ export default async function handler(req: Req, res: Res) {
     res.end(JSON.stringify({ error: e instanceof Error ? e.message : "Erro ao conectar com o Agente Técnico" }));
   }
 }
-// atualização v2
-// release final v3 - corrigindo system_instruction
