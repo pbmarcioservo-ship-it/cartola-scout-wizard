@@ -834,22 +834,24 @@ export function TimeRodadaView() {
         {substitutions.length > 0 && (
           <div className="w-full mt-0 px-3 py-1.5 rounded-b-lg bg-muted/50">
             {substitutions.map((sub, i) => {
-            const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
-            const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
-            return (
-              <div key={i} className="flex items-center gap-1.5 text-[9px] md:text-[10px] py-0.5 animate-fade-in">
-                <ArrowUp className="w-3 h-3 text-green-600" />
-                <span className="font-bold text-green-700">{inName}</span>
-                <span className="text-muted-foreground">entrou no lugar de</span>
-                <span className="font-bold text-red-600">{outName}</span>
-                <span className="text-muted-foreground/60">
-                  ({sub.reason === 'luxo' ? '⭐ Luxo' : 'Ausência'})
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
+              const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
+              return (
+                <div key={i} className="flex items-center gap-1.5 text-[9px] md:text-[10px] py-0.5 animate-fade-in">
+                  <ArrowUp className="w-3 h-3 text-green-600" />
+                  <span className="font-bold text-green-700">{inName}</span>
+                  <span className="text-muted-foreground">entrou no lugar de</span>
+                  <span className="font-bold text-red-600">{outName}</span>
+                  <span className="text-muted-foreground/60">
+                    ({sub.reason === 'luxo' ? '⭐ Luxo' : 'Ausência'})
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      </div>{/* end unified container */}
 
       {/* Mercado aberto → card de detalhes padrão; Fechado → card de parciais */}
       {mercadoAberto ? (
