@@ -684,12 +684,12 @@ export function TimeRodadaView() {
           </div>
         </div>
 
-        {/* ── Football Pitch (rectangular, 3:2 aspect ratio) ── */}
+        {/* ── Football Pitch (rectangular, 2:3 aspect ratio - vertical) ── */}
         <div
           className="relative w-full overflow-hidden"
           style={{
             backgroundColor: 'hsl(145, 63%, 30%)',
-            aspectRatio: '3 / 2',
+            aspectRatio: '2 / 3',
           }}
         >
           {/* Pitch markings */}
