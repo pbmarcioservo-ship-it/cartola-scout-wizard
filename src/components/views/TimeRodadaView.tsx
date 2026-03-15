@@ -645,69 +645,71 @@ export function TimeRodadaView() {
 
   return (
     <div className="animate-fade-in w-full flex flex-col items-center">
-      {/* ── Compact Controls Bar ── */}
-      <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 mb-1 w-full max-w-[900px] rounded-lg">
-        <div className="flex items-center justify-between gap-1.5 md:gap-3">
-          {/* Rodada Dropdown (Esquerda) */}
-          <select
-            value={viewRodada === null ? 'atual' : String(viewRodada)}
-            onChange={(e) => setViewRodada(e.target.value === 'atual' ? null : Number(e.target.value))}
-            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-1.5 md:px-2 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0"
-          >
-            <option value="atual">Rodada Atual</option>
-            {rodadaAtual && Array.from({ length: Math.min(rodadaAtual - 1, 38) }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0).map(r => (
-              <option key={r} value={String(r)}>Rodada {r}</option>
-            ))}
-          </select>
+      {/* ── Unified Container: Controls + Field + Bench ── */}
+      <div className="w-full" style={{ maxWidth: 'min(95vw, 900px)', margin: '0 auto' }}>
 
-          {/* Pontuação/Custo (Centro) */}
-          <div className="flex items-center gap-1 md:gap-1.5 border border-primary-foreground/40 rounded px-2 py-1">
-            <span className="text-[9px] md:text-[10px] font-bold uppercase opacity-80">
-              {mercadoAberto ? 'Custo' : 'Pts'}
-            </span>
-            <span className="text-sm md:text-base font-black">
-              {mercadoAberto ? `C$ ${totalCost.toFixed(2)}` : `${livePontos.toFixed(2)}`}
-            </span>
+        {/* ── Compact Controls Bar ── */}
+        <div className="bg-primary text-primary-foreground px-2 md:px-4 py-1.5 md:py-2 rounded-t-lg w-full">
+          <div className="flex items-center justify-between gap-1.5 md:gap-3">
+            <select
+              value={viewRodada === null ? 'atual' : String(viewRodada)}
+              onChange={(e) => setViewRodada(e.target.value === 'atual' ? null : Number(e.target.value))}
+              className="bg-primary text-primary-foreground border border-primary-foreground/40 px-1.5 md:px-2 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0"
+            >
+              <option value="atual">Rodada Atual</option>
+              {rodadaAtual && Array.from({ length: Math.min(rodadaAtual - 1, 38) }, (_, i) => rodadaAtual - 1 - i).filter(r => r > 0).map(r => (
+                <option key={r} value={String(r)}>Rodada {r}</option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1 md:gap-1.5 border border-primary-foreground/40 rounded px-2 py-1">
+              <span className="text-[9px] md:text-[10px] font-bold uppercase opacity-80">
+                {mercadoAberto ? 'Custo' : 'Pts'}
+              </span>
+              <span className="text-sm md:text-base font-black">
+                {mercadoAberto ? `C$ ${totalCost.toFixed(2)}` : `${livePontos.toFixed(2)}`}
+              </span>
+            </div>
+
+            <select
+              value={estrategia}
+              onChange={(e) => setEstrategia(e.target.value as Estrategia)}
+              className="bg-primary text-primary-foreground border border-primary-foreground/40 px-1.5 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0 max-w-[100px] md:max-w-none"
+            >
+              <option value="tiro-curto">🛡️ Tiro Curto</option>
+              <option value="bom-e-barato">💰 Bom e Barato</option>
+              <option value="liga-classica">🏆 Liga Clássica</option>
+              <option value="valorizacao">📈 Valorização</option>
+            </select>
           </div>
-
-          {/* Estratégia (Direita) - width reduzido no mobile */}
-          <select
-            value={estrategia}
-            onChange={(e) => setEstrategia(e.target.value as Estrategia)}
-            className="bg-primary text-primary-foreground border border-primary-foreground/40 px-1.5 py-1 rounded text-[11px] md:text-xs font-bold cursor-pointer shrink-0 max-w-[100px] md:max-w-none"
-          >
-            <option value="tiro-curto">🛡️ Tiro Curto</option>
-            <option value="bom-e-barato">💰 Bom e Barato</option>
-            <option value="liga-classica">🏆 Liga Clássica</option>
-            <option value="valorizacao">📈 Valorização</option>
-          </select>
         </div>
-      </div>
 
-      {/* ── Football Pitch ── */}
-      <div className="w-full flex justify-center">
+        {/* ── Football Pitch (rectangular, 3:2 aspect ratio) ── */}
         <div
-          className="relative rounded-2xl p-1.5 md:p-2 lg:p-3 shadow-inner mx-auto overflow-hidden"
+          className="relative w-full overflow-hidden"
           style={{
             backgroundColor: 'hsl(145, 63%, 30%)',
-            height: 'clamp(340px, calc(100vh - 240px), 580px)',
-            aspectRatio: '105 / 68',
-            width: 'auto',
-            maxWidth: 'min(95vw, 900px)',
+            aspectRatio: '3 / 2',
           }}
         >
           {/* Pitch markings */}
-          <div className="absolute inset-1 md:inset-1.5 rounded-2xl border-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-1/2 left-3 right-3 md:left-4 md:right-4 -translate-y-1/2 h-0 border-t-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-20 md:h-20 rounded-full border-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-2 md:top-3 left-6 right-6 md:left-10 md:right-10 h-[16%] border-2 border-white/60 pointer-events-none" />
-          <div className="absolute bottom-2 md:bottom-3 left-6 right-6 md:left-10 md:right-10 h-[16%] border-2 border-white/60 pointer-events-none" />
-          <div className="absolute top-2 md:top-3 left-14 right-14 md:left-20 md:right-20 h-[9%] border-2 border-white/60 pointer-events-none" />
-          <div className="absolute bottom-2 md:bottom-3 left-14 right-14 md:left-20 md:right-20 h-[9%] border-2 border-white/60 pointer-events-none" />
+          <div className="absolute inset-[2%] border-2 border-white/60 pointer-events-none" />
+          {/* Center line */}
+          <div className="absolute top-1/2 left-[2%] right-[2%] -translate-y-1/2 h-0 border-t-2 border-white/60 pointer-events-none" />
+          {/* Center circle */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[12%] border-2 border-white/60 pointer-events-none" style={{ aspectRatio: '1', borderRadius: '50%' }} />
+          {/* Top penalty area */}
+          <div className="absolute top-[2%] left-[20%] right-[20%] h-[16%] border-2 border-white/60 pointer-events-none" />
+          {/* Bottom penalty area */}
+          <div className="absolute bottom-[2%] left-[20%] right-[20%] h-[16%] border-2 border-white/60 pointer-events-none" />
+          {/* Top goal area */}
+          <div className="absolute top-[2%] left-[30%] right-[30%] h-[8%] border-2 border-white/60 pointer-events-none" />
+          {/* Bottom goal area */}
+          <div className="absolute bottom-[2%] left-[30%] right-[30%] h-[8%] border-2 border-white/60 pointer-events-none" />
 
-          {/* Técnico - mesmo tamanho dos jogadores */}
+          {/* Técnico - bottom-left of field */}
           {displayLineup?.tecnico && (
-            <div className="absolute left-1 md:left-2 bottom-2 md:bottom-4 z-20">
+            <div className="absolute z-20" style={{ left: '3%', bottom: '4%' }}>
               <PlayerCardPitch
                 atleta={displayLineup.tecnico}
                 clube={clubes[String(displayLineup.tecnico.clube_id)]}
@@ -719,136 +721,137 @@ export function TimeRodadaView() {
           )}
 
           {/* Formation badge */}
-          <div className="pointer-events-none absolute bottom-1 right-1 md:bottom-2 md:right-2">
+          <div className="pointer-events-none absolute z-20" style={{ bottom: '3%', right: '3%' }}>
             <span className="inline-block bg-black text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded-md text-[9px] md:text-sm font-extrabold tracking-wide">4-3-3</span>
           </div>
 
-          {/* Players */}
-          <div className="relative flex flex-col justify-between h-full py-0.5 md:py-1">
-            {/* Atacantes */}
-            <div className="flex items-center justify-around py-0.5">
-              {(displayLineup?.atacs || [null, null, null]).map((a, i) => (
-                <PlayerCardPitch
-                  key={a?.atleta_id || `atk-${i}`}
-                  atleta={a}
-                  clube={a ? clubes[String(a.clube_id)] : undefined}
-                  showPrice={mercadoAberto}
-                  pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
-                  isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
-                  isSubIn={!!a && subInIds.has(a.atleta_id)}
-                  onClick={() => a && setSelectedAtleta(a)}
-                />
-              ))}
-            </div>
-            {/* Meias */}
-            <div className="flex items-center justify-around py-0.5">
-              {(displayLineup?.meis || [null, null, null]).map((a, i) => (
-                <PlayerCardPitch
-                  key={a?.atleta_id || `mei-${i}`}
-                  atleta={a}
-                  clube={a ? clubes[String(a.clube_id)] : undefined}
-                  showPrice={mercadoAberto}
-                  pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
-                  isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
-                  isSubIn={!!a && subInIds.has(a.atleta_id)}
-                  onClick={() => a && setSelectedAtleta(a)}
-                />
-              ))}
-            </div>
-            {/* Defesa */}
-            <div className="flex items-center justify-around py-0.5">
-              {[
-                displayLineup?.lats?.[0] || null,
-                displayLineup?.zags?.[0] || null,
-                displayLineup?.zags?.[1] || null,
-                displayLineup?.lats?.[1] || null,
-              ].map((a, i) => (
-                <PlayerCardPitch
-                  key={a?.atleta_id || `def-${i}`}
-                  atleta={a}
-                  clube={a ? clubes[String(a.clube_id)] : undefined}
-                  showPrice={mercadoAberto}
-                  pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
-                  isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
-                  isSubIn={!!a && subInIds.has(a.atleta_id)}
-                  onClick={() => a && setSelectedAtleta(a)}
-                />
-              ))}
-            </div>
-            {/* Goleiro */}
-            <div className="flex items-center justify-around py-0.5">
+          {/* Players - positioned with percentages for responsiveness */}
+          {/* Atacantes - top row ~14% from top */}
+          <div className="absolute w-full flex items-center justify-around px-[8%]" style={{ top: '10%' }}>
+            {(displayLineup?.atacs || [null, null, null]).map((a, i) => (
               <PlayerCardPitch
-                atleta={displayLineup?.gk || null}
-                clube={displayLineup?.gk ? clubes[String(displayLineup.gk.clube_id)] : undefined}
+                key={a?.atleta_id || `atk-${i}`}
+                atleta={a}
+                clube={a ? clubes[String(a.clube_id)] : undefined}
                 showPrice={mercadoAberto}
-                pontuacao={!mercadoAberto && displayLineup?.gk ? pontuadosData?.atletas?.[String(displayLineup.gk.atleta_id)]?.pontuacao : undefined}
-                isCaptain={!!displayLineup?.gk && displayLineup?.capitaoId === displayLineup.gk.atleta_id}
-                isSubIn={!!displayLineup?.gk && subInIds.has(displayLineup.gk.atleta_id)}
-                onClick={() => displayLineup?.gk && setSelectedAtleta(displayLineup.gk)}
+                pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
+                isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
+                isSubIn={!!a && subInIds.has(a.atleta_id)}
+                onClick={() => a && setSelectedAtleta(a)}
               />
-            </div>
+            ))}
+          </div>
+
+          {/* Meias - ~38% from top */}
+          <div className="absolute w-full flex items-center justify-around px-[10%]" style={{ top: '35%' }}>
+            {(displayLineup?.meis || [null, null, null]).map((a, i) => (
+              <PlayerCardPitch
+                key={a?.atleta_id || `mei-${i}`}
+                atleta={a}
+                clube={a ? clubes[String(a.clube_id)] : undefined}
+                showPrice={mercadoAberto}
+                pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
+                isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
+                isSubIn={!!a && subInIds.has(a.atleta_id)}
+                onClick={() => a && setSelectedAtleta(a)}
+              />
+            ))}
+          </div>
+
+          {/* Defesa - ~60% from top */}
+          <div className="absolute w-full flex items-center justify-around px-[5%]" style={{ top: '58%' }}>
+            {[
+              displayLineup?.lats?.[0] || null,
+              displayLineup?.zags?.[0] || null,
+              displayLineup?.zags?.[1] || null,
+              displayLineup?.lats?.[1] || null,
+            ].map((a, i) => (
+              <PlayerCardPitch
+                key={a?.atleta_id || `def-${i}`}
+                atleta={a}
+                clube={a ? clubes[String(a.clube_id)] : undefined}
+                showPrice={mercadoAberto}
+                pontuacao={!mercadoAberto && a ? pontuadosData?.atletas?.[String(a.atleta_id)]?.pontuacao : undefined}
+                isCaptain={!!a && displayLineup?.capitaoId === a.atleta_id}
+                isSubIn={!!a && subInIds.has(a.atleta_id)}
+                onClick={() => a && setSelectedAtleta(a)}
+              />
+            ))}
+          </div>
+
+          {/* Goleiro - ~82% from top */}
+          <div className="absolute w-full flex items-center justify-center" style={{ top: '80%' }}>
+            <PlayerCardPitch
+              atleta={displayLineup?.gk || null}
+              clube={displayLineup?.gk ? clubes[String(displayLineup.gk.clube_id)] : undefined}
+              showPrice={mercadoAberto}
+              pontuacao={!mercadoAberto && displayLineup?.gk ? pontuadosData?.atletas?.[String(displayLineup.gk.atleta_id)]?.pontuacao : undefined}
+              isCaptain={!!displayLineup?.gk && displayLineup?.capitaoId === displayLineup.gk.atleta_id}
+              isSubIn={!!displayLineup?.gk && subInIds.has(displayLineup.gk.atleta_id)}
+              onClick={() => displayLineup?.gk && setSelectedAtleta(displayLineup.gk)}
+            />
           </div>
         </div>
-      </div>
 
-      {/* ── Bench / Banco de Reservas ── */}
-      {displayLineup && displayLineup.bench && displayLineup.bench.length > 0 && (
-        <div className="w-[95vw] max-w-[900px] mt-1.5 rounded-xl overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, hsl(280, 40%, 94%), hsl(330, 35%, 93%))' }}
-        >
-          <div className="px-3 py-1.5 flex items-center gap-2">
-            <span className="text-[10px] md:text-xs font-black text-foreground/80 uppercase tracking-wider">🪑 Banco de Reservas</span>
-            {substitutions.length > 0 && (
-              <span className="text-[9px] md:text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full animate-fade-in">
-                {substitutions.length} sub{substitutions.length > 1 ? 's' : ''}
-              </span>
-            )}
+        {/* ── Bench / Banco de Reservas - attached to field ── */}
+        {displayLineup && displayLineup.bench && displayLineup.bench.length > 0 && (
+          <div className="w-full overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, hsl(280, 40%, 94%), hsl(330, 35%, 93%))' }}
+          >
+            <div className="px-3 py-1.5 flex items-center gap-2">
+              <span className="text-[10px] md:text-xs font-black text-foreground/80 uppercase tracking-wider">🪑 Banco de Reservas</span>
+              {substitutions.length > 0 && (
+                <span className="text-[9px] md:text-[10px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full animate-fade-in">
+                  {substitutions.length} sub{substitutions.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center justify-around px-2 pb-2.5 pt-0.5 gap-1">
+              {displayLineup?.bench.map((slot, idx) => {
+                const isDescended = subOutIds.has(slot.atleta.atleta_id);
+                const wasOriginalReserve = lineup?.bench.some(b => b.atleta.atleta_id === slot.atleta.atleta_id);
+                const wasSubbedIn = !isDescended && !wasOriginalReserve;
+                return (
+                  <BenchCard
+                    key={`bench-${idx}-${slot.atleta.atleta_id}`}
+                    atleta={slot.atleta}
+                    clube={clubes[String(slot.atleta.clube_id)]}
+                    posicaoId={slot.posicaoId}
+                    isLuxo={slot.isLuxo && !isDescended}
+                    showPrice={mercadoAberto}
+                    pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(slot.atleta.atleta_id)]?.pontuacao : undefined}
+                    wasSubbedIn={false}
+                    isDescended={isDescended}
+                    onClick={() => setSelectedAtleta(slot.atleta)}
+                  />
+                );
+              })}
+            </div>
           </div>
-          <div className="flex items-center justify-around px-2 pb-2.5 pt-0.5 gap-1">
-            {/* Show all 5 bench slots - after subs, descended players appear here */}
-            {displayLineup?.bench.map((slot, idx) => {
-              const isDescended = subOutIds.has(slot.atleta.atleta_id);
-              const wasOriginalReserve = lineup?.bench.some(b => b.atleta.atleta_id === slot.atleta.atleta_id);
-              const wasSubbedIn = !isDescended && !wasOriginalReserve;
+        )}
+
+        {/* Substitution log */}
+        {substitutions.length > 0 && (
+          <div className="w-full mt-0 px-3 py-1.5 rounded-b-lg bg-muted/50">
+            {substitutions.map((sub, i) => {
+              const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
+              const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
               return (
-                <BenchCard
-                  key={`bench-${idx}-${slot.atleta.atleta_id}`}
-                  atleta={slot.atleta}
-                  clube={clubes[String(slot.atleta.clube_id)]}
-                  posicaoId={slot.posicaoId}
-                  isLuxo={slot.isLuxo && !isDescended}
-                  showPrice={mercadoAberto}
-                  pontuacao={!mercadoAberto ? pontuadosData?.atletas?.[String(slot.atleta.atleta_id)]?.pontuacao : undefined}
-                  wasSubbedIn={false}
-                  isDescended={isDescended}
-                  onClick={() => setSelectedAtleta(slot.atleta)}
-                />
+                <div key={i} className="flex items-center gap-1.5 text-[9px] md:text-[10px] py-0.5 animate-fade-in">
+                  <ArrowUp className="w-3 h-3 text-green-600" />
+                  <span className="font-bold text-green-700">{inName}</span>
+                  <span className="text-muted-foreground">entrou no lugar de</span>
+                  <span className="font-bold text-red-600">{outName}</span>
+                  <span className="text-muted-foreground/60">
+                    ({sub.reason === 'luxo' ? '⭐ Luxo' : 'Ausência'})
+                  </span>
+                </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Substitution log */}
-      {substitutions.length > 0 && (
-        <div className="w-[95vw] max-w-[900px] mt-1 px-3 py-1.5 rounded-lg bg-muted/50">
-          {substitutions.map((sub, i) => {
-            const inName = mercadoData?.atletas.find(a => a.atleta_id === sub.inId)?.apelido || '?';
-            const outName = sub.descendedPlayer?.apelido || mercadoData?.atletas.find(a => a.atleta_id === sub.outId)?.apelido || '?';
-            return (
-              <div key={i} className="flex items-center gap-1.5 text-[9px] md:text-[10px] py-0.5 animate-fade-in">
-                <ArrowUp className="w-3 h-3 text-green-600" />
-                <span className="font-bold text-green-700">{inName}</span>
-                <span className="text-muted-foreground">entrou no lugar de</span>
-                <span className="font-bold text-red-600">{outName}</span>
-                <span className="text-muted-foreground/60">
-                  ({sub.reason === 'luxo' ? '⭐ Luxo' : 'Ausência'})
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      </div>{/* end unified container */}
 
       {/* Mercado aberto → card de detalhes padrão; Fechado → card de parciais */}
       {mercadoAberto ? (
